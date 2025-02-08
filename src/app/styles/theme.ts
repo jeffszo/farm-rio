@@ -1,0 +1,46 @@
+export const theme = {
+    colors: {
+      background: "#ffffff",
+      bagroundHeader: "#333333",
+      foreground: "#09090b",
+      card: "#ffffff",
+      cardForeground: "#09090b",
+      popover: "#ffffff",
+      popoverForeground: "#09090b",
+      primary: "#18181b",
+      primaryForeground: "#ffffff",
+      secondary: "#f4f4f5",
+      secondaryForeground: "#18181b",
+      muted: "#f4f4f5",
+      mutedForeground: "#71717a",
+      accent: "#f4f4f5",
+      accentForeground: "#18181b",
+      destructive: "#ef4444",
+      destructiveForeground: "#f8fafc",
+      border: "#e4e4e7",
+      input: "#e4e4e7",
+      ring: "#18181b",
+    },
+    fontSizes: {
+      sm: "0.875rem",
+      base: "1rem",
+      lg: "1.125rem",
+      xl: "1.25rem",
+    },
+    spacing: {
+      1: "0.25rem",
+      2: "0.5rem",
+      3: "0.75rem",
+      4: "1rem",
+      5: "1.25rem",
+      6: "1.5rem",
+    },
+    borderRadius: {
+      sm: "0.125rem",
+      md: "0.375rem",
+      lg: "0.5rem",
+      full: "9999px",
+    },
+  }
+  
+  
