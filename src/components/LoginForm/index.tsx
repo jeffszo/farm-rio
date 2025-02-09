@@ -1,20 +1,33 @@
 import { useForm, type SubmitHandler } from "react-hook-form"
-import type { LoginFormData } from "../../types/auth"
 import * as S from './styles'
+import type { LoginFormData } from "../../types/auth";
+import { api } from "../../lib/supabaseApi";
+import { useRouter } from "next/navigation";
 
 
 export default function LoginForm() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>()
-
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    // Simular um atraso de rede
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Form data:", data)
-  }
+    try {
+      const user = await api.signIn(data.email, data.password);
+
+      // Verifica o tipo de usuário
+      if (user.userType === "cliente") {
+        router.push("/customer"); // Redireciona para a página do cliente
+      } else {
+        router.push("/dashboard"); // Outros usuários vão para o dashboard
+      }
+    } catch (error: any) {
+      console.error("Erro no login:", error.message);
+      alert("Erro ao entrar. Verifique suas credenciais.");
+    }
+  };
 
   return (
     <S.Form onSubmit={handleSubmit(onSubmit)}>

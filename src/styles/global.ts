@@ -1,5 +1,22 @@
-import styled from "styled-components"
-import { theme } from "../../styles/theme"
+import { createGlobalStyle, styled } from 'styled-components';
+import { theme } from "./theme"
+
+
+const Global = createGlobalStyle`
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Nunito Sans', sans-serif;
+    scroll-behavior: smooth;
+    text-decoration: none;
+  }
+
+  /* html, body{
+    overflow: hidden;
+  } */
+`;
 
 export const Container = styled.div`
   min-height: 100vh;
@@ -15,6 +32,7 @@ export const Main = styled.main`
   align-items: center;
   justify-content: center;
   padding: ${theme.spacing[6]};
+  margin-bottom: 4rem;
 `
 
 export const FormContainer = styled.div`
@@ -35,7 +53,7 @@ export const FormTitle = styled.h1`
   font-weight: 600;
 `
 
-export const FormLink = styled.a`
+export const FormLink = styled.p`
   color: ${theme.colors.primary};
   text-decoration: none;
   text-align: center;
@@ -48,3 +66,6 @@ export const FormLink = styled.a`
   }
 `
 
+
+
+export default Global;

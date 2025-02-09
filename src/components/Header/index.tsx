@@ -1,6 +1,6 @@
 import * as S from "./styles";
 import Image from "next/image";
-import Logo from "../assets/logo.png"
+import Logo from "../../../public/logo.png"
 
 export default function Header() {
   return (
