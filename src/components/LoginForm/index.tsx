@@ -23,9 +23,10 @@ export default function LoginForm() {
       } else {
         router.push("/dashboard"); // Outros usuários vão para o dashboard
       }
-    } catch (error: any) {
-      console.error("Erro no login:", error.message);
-      alert("Erro ao entrar. Verifique suas credenciais.");
+    } catch (error: unknown) {
+      const errorMessage = (error as { message?: string }).message || "Erro desconhecido";
+      console.error("Erro no login:", errorMessage);
+      alert(errorMessage);
     }
   };
 
@@ -36,7 +37,7 @@ export default function LoginForm() {
         <S.Input
           id="email"
           type="email"
-          placeholder="seuemail@farmrio.com"
+          placeholder="joao@farmrio.com"
           {...register("email", {
             required: "Email é obrigatório",
             pattern: {
@@ -66,7 +67,7 @@ export default function LoginForm() {
       </S.InputWrapper>
 
       <S.Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Entrando..." : "Entrar"}
+        {isSubmitting ? "Entrando..." : "Login"}
       </S.Button>
     </S.Form>
   )

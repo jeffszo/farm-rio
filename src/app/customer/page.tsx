@@ -8,104 +8,106 @@ import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
 
 export default function OnboardingForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    trigger,
-  } = useForm<IFormInputs>()
-  const [isWholesaleTeam] = useState(false)
-  const [isCreditTeam] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-  const [formStatus, setFormStatus] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const router = useRouter()
+  const { register, handleSubmit, formState: { errors }, trigger } = useForm<IFormInputs>();
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+  const [formStatus, setFormStatus] = useState<string | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const router = useRouter();
 
+  const [isWholesaleTeam, setIsWholesaleTeam] = useState(false);
+  const [isCreditTeam, setIsCreditTeam] = useState(false);
+
+  // ✅ Buscar o usuário e o status do formulário corretamente
   useEffect(() => {
-    const checkFormStatus = async () => {
+    const fetchUserAndStatus = async () => {
       try {
-        const { data: user } = await api.getCurrentUser()
-        if (user) {
-          const { data, error } = await api.from("customer_forms").select("status").eq("user_id", user.id).single()
+        setIsLoading(true);
+        const currentUser = await api.getCurrentUser();
 
-          if (error && error.code !== "PGRST116") {
-            throw error
-          }
-
-          if (data) {
-            setFormStatus(data.status)
-          }
+        if (!currentUser) {
+          console.error("Usuário não autenticado.");
+          return;
         }
+
+        setUser(currentUser);
+
+        // Buscar o status do formulário
+        const formData = await api.getFormStatus(currentUser.id);
+        setFormStatus(formData?.status || null);
       } catch (error) {
-        console.error("Error checking form status:", error)
+        console.error("Erro ao buscar status do formulário:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    checkFormStatus()
-  }, [])
+    fetchUserAndStatus();
+  }, []);
 
-  const onSubmit: SubmitHandler<IFormInputs> = async (formData) => {
+  const onSubmit = async (formData: any) => {
     try {
-      setApiError(null)
-
-      // Get the current user
-      const { data: user, error: userError } = await api.getCurrentUser()
-
-      if (userError || !user) {
-        throw new Error("No authenticated user. Please log in and try again.")
+      setApiError(null);
+  
+      const user = await api.getCurrentUser();
+      if (!user || !user.id) {
+        console.error("Usuário não autenticado.");
+        setApiError("Sua sessão expirou. Faça login novamente.");
+        return;
       }
-
-      // Submit the form data
-      await api.submitForm(formData, user.id)
-      alert("Form submitted successfully!")
-
-      // Redirect to home page after successful submission
-      router.push("/")
+  
+      console.log("Usuário autenticado:", user);
+  
+      await api.submitForm(formData, user.id);
+      alert("Formulário enviado com sucesso!");
+  
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
     } catch (error: any) {
-      console.error("Error submitting form:", error.message)
-      setApiError(error.message || "An error occurred while submitting the form. Please try again.")
+      console.error("Erro ao enviar o formulário:", error.message);
+      setApiError(error.message || "Erro ao enviar o formulário. Tente novamente.");
     }
-  }
+  };
 
-  const nextStep = async () => {
-    const isValid = await trigger()
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
-    }
-  }
 
-  const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
-  }
 
+  // 🔥 **Evita erro de hidratação: só renderiza depois do carregamento**
   if (isLoading) {
-    return (
-      <S.FormContainer>
-        <S.FormHeader>
-          <S.FormTitle>Loading...</S.FormTitle>
-        </S.FormHeader>
-      </S.FormContainer>
-    )
+    return <p>Carregando...</p>;
   }
 
-  if (formStatus) {
+  // 🔥 **Se o usuário já enviou o formulário, mostra apenas o status**
+  if (user?.userType === "cliente" && formStatus) {
     return (
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Application Status</S.FormTitle>
+          <S.FormTitle>Status da Solicitação</S.FormTitle>
           <S.FormSubtitle>
-            {formStatus === "pending" && "Your application is being reviewed by our team."}
-            {formStatus === "approved" && "Your application has been approved!"}
-            {formStatus === "rejected" && "Your application has been rejected."}
+            {formStatus === "pending" && "Seu formulário está em análise."}
+            {formStatus === "approved" && "Seu formulário foi aprovado!"}
+            {formStatus === "rejected" && "Seu formulário foi reprovado. Tente novamente."}
           </S.FormSubtitle>
         </S.FormHeader>
       </S.FormContainer>
-    )
+    );
   }
+
+
+  // ✅ Criado `nextStep` corretamente
+  const nextStep = async () => {
+    const isValid = await trigger();
+    if (!isValid) return;
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+  };
+
+  // ✅ Criado `prevStep` corretamente
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
 
   return (
     <S.FormContainer>
@@ -121,7 +123,7 @@ export default function OnboardingForm() {
       </S.ProgressBar>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {currentStep === 1 && (
+      {currentStep === 1 && (
           <S.Section>
             <S.SectionTitle>Customer Information</S.SectionTitle>
             <S.Grid>

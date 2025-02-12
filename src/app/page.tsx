@@ -10,10 +10,10 @@ export default function Home() {
     <Container>
       <Main>
         <FormContainer>
-          <FormTitle>Login</FormTitle>
+          <FormTitle>Customer Onboarding</FormTitle>
           <LoginForm />
           <Link href="/signup">
-            <FormLink>Não tem uma conta? Cadastre-se</FormLink>
+            <FormLink>Don't have an account? Sign up</FormLink>
           </Link>
         </FormContainer>
       </Main>

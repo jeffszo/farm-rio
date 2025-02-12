@@ -50,11 +50,11 @@ export default function SignUp() {
     <S.Container>
       <S.Main>
         <S.FormContainer>
-          <S.FormTitle>Criar Conta</S.FormTitle>
+          <S.FormTitle>Create a new account</S.FormTitle>
           <S.Form onSubmit={handleSubmit(onSubmit)}>
             <S.InputWrapper>
-              <S.Label htmlFor="name">Nome</S.Label>
-              <S.Input id="name" type="text" {...register("name", { required: "Nome é obrigatório" })} />
+              <S.Label htmlFor="name">Full name</S.Label>
+              <S.Input id="name" type="text" {...register("name", { required: "Name is required" })} />
               {errors.name && <S.ErrorMessage>{errors.name.message}</S.ErrorMessage>}
             </S.InputWrapper>
 
@@ -64,7 +64,7 @@ export default function SignUp() {
                 id="email"
                 type="email"
                 {...register("email", {
-                  required: "Email é obrigatório",
+                  required: "Email is required",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                     message: "Email inválido",
@@ -75,17 +75,17 @@ export default function SignUp() {
             </S.InputWrapper>
 
             <S.InputWrapper>
-              <S.Label htmlFor="userType">Tipo de Usuário</S.Label>
+              <S.Label htmlFor="userType">User type</S.Label>
               <Controller
                 name="userType"
                 control={control}
-                rules={{ required: "Selecione um tipo de usuário" }}
+                rules={{ required: "Select a user type" }}
                 render={({ field }) => (
                   <S.Select {...field}>
-                    <option value="">Selecione...</option>
-                    <option value="cliente">Cliente</option>
-                    <option value="atacado">Atacado</option>
-                    <option value="credito">Crédito</option>
+                    <option value="">Select...</option>
+                    <option value="cliente">Customer</option>
+                    <option value="atacado">Wholesale</option>
+                    <option value="credito">Credit</option>
                     <option value="csc">CSC</option>
                   </S.Select>
                 )}
@@ -94,12 +94,12 @@ export default function SignUp() {
             </S.InputWrapper>
 
             <S.InputWrapper>
-              <S.Label htmlFor="password">Senha</S.Label>
+              <S.Label htmlFor="password">Password</S.Label>
               <S.Input
                 id="password"
                 type="password"
                 {...register("password", {
-                  required: "Senha é obrigatória",
+                  required: "Password is required",
                   minLength: { value: 8, message: "A senha deve ter pelo menos 8 caracteres" },
                 })}
               />
@@ -107,22 +107,22 @@ export default function SignUp() {
             </S.InputWrapper>
 
             <S.InputWrapper>
-              <S.Label htmlFor="confirmPassword">Confirmar Senha</S.Label>
+              <S.Label htmlFor="confirmPassword">Confirm password</S.Label>
               <S.Input
                 id="confirmPassword"
                 type="password"
                 {...register("confirmPassword", {
-                  required: "Confirme sua senha",
+                  required: "Confirm your password",
                   validate: (value) => value === watch("password") || "As senhas não coincidem",
                 })}
               />
               {errors.confirmPassword && <S.ErrorMessage>{errors.confirmPassword.message}</S.ErrorMessage>}
             </S.InputWrapper>
 
-            <S.Button type="submit">Criar Conta</S.Button>
+            <S.Button type="submit">Create account</S.Button>
             {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
           </S.Form>
-          <S.LoginLink href="/">Já tem uma conta? Faça login</S.LoginLink>
+          <S.LoginLink href="/">Already have an account? Log in</S.LoginLink>
         </S.FormContainer>
       </S.Main>
 
