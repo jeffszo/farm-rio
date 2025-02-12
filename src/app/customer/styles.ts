@@ -58,7 +58,7 @@ export const Input = styled.input<{ error?: boolean }>`
   width: 100%;
   padding: 0.5rem;
   font-size: 0.875rem;
-  border: 1px solid ${(props) => (props.error ? "#ef4444" : "#d4d4d8")};
+  border: 1px solid ${(props) => (props.$error ? "red" : "#ccc")};
   border-radius: 0.25rem;
   background-color: #ffffff;
   color: #18181b;
