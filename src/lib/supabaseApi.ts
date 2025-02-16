@@ -7,39 +7,39 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export class SupabaseAPI implements AuthAPI {
-  async signUp(name: string, email: string, password: string, userType: User["userType"]): Promise<User> {
+  async signUp(name: string, email: string, password: string): Promise<User> {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: { name, userType },
-      },
+      options: { data: { name } },
     });
-  
-    if (error) throw new Error(`Erro ao criar usuário: ${error.message}`);
-    if (!data.user) throw new Error("Usuário não foi criado.");
-  
-    // ✅ Corrigido: Removido `.returning("minimal")` e adicionado `.select()`
-    const { error: insertError } = await supabase.from("users").insert([
-      {
-        id: data.user.id,
-        name,
-        email,
-        role: userType,
-      },
-    ]).select(); // ✅ Garante compatibilidade com Supabase
-  
-    if (insertError) throw new Error(`Erro ao inserir usuário na tabela: ${insertError.message}`);
-  
+
+    if (error) throw new Error(`Erro ao cadastrar usuário: ${error.message}`);
+    if (!data.user) throw new Error("Erro inesperado: Usuário não retornado.");
+
+    // ✅ Insere o usuário na tabela correta (`users` e não `profiles`)
+    const { data: userData, error: profileError } = await supabase
+      .from("users")
+      .insert([
+        {
+          id: data.user.id,
+          name,
+          email,
+          role: "cliente",
+        },
+      ])
+      .select()
+      .single();
+
+    if (profileError) throw new Error(`Erro ao criar perfil: ${profileError.message}`);
+
     return {
       id: data.user.id,
       name,
-      email: data.user.email!,
-      userType,
+      email,
+      userType: "cliente",
     };
   }
-  
 
   async signIn(email: string, password: string): Promise<User> {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -53,13 +53,13 @@ export class SupabaseAPI implements AuthAPI {
       .eq("id", data.user.id)
       .single();
 
-    if (userError) throw new Error("Erro ao buscar tipo de usuário.");
+    if (userError) throw new Error(`Erro ao buscar tipo de usuário: ${userError.message}`);
 
     return {
       id: data.user.id,
       name: data.user.user_metadata?.name || "",
       email: data.user.email!,
-      userType: userData.role,
+      userType: userData?.role || "cliente",
     };
   }
 
@@ -69,50 +69,36 @@ export class SupabaseAPI implements AuthAPI {
   }
 
   async getCurrentUser(): Promise<User | null> {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  
-    if (sessionError || !sessionData.session) {
-      console.warn("Nenhuma sessão ativa encontrada.");
-      return null;
-    }
-  
-    const { data, error } = await supabase.auth.getUser();
-  
-    if (error) {
-      console.error("Erro ao obter usuário autenticado:", error.message);
-      return null;
-    }
-  
-    if (!data.user) {
-      console.warn("Nenhum usuário autenticado encontrado.");
-      return null;
-    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) return null;
 
-    // Buscar userType na tabela users
-    const { data: userData, error: userTypeError } = await supabase
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return null;
+
+    const { data: userData } = await supabase
       .from("users")
       .select("role")
       .eq("id", data.user.id)
       .single();
 
-    if (userTypeError) {
-      console.warn("Erro ao buscar tipo de usuário na tabela 'users'.");
-    }
-  
     return {
       id: data.user.id,
       name: data.user.user_metadata?.name || "Usuário",
       email: data.user.email!,
-      userType: userData?.role || "",
+      userType: userData?.role || "cliente",
     };
   }
-  async submitForm(formData: {
-    customerInfo: { legalName: string; taxId: string; resaleCertNumber: string };
-    billingAddress: object;
-    shippingAddress: object;
-    apContact: { firstName: string; lastName: string; email: string };
-    buyerInfo: { firstName: string; lastName: string; email: string };
-  }, userId: string) {
+
+  async submitForm(
+    formData: {
+      customerInfo: { legalName: string; taxId: string; resaleCertNumber: string };
+      billingAddress: object;
+      shippingAddress: object;
+      apContact: { firstName: string; lastName: string; email: string };
+      buyerInfo: { firstName: string; lastName: string; email: string };
+    },
+    userId: string
+  ) {
     const { data, error } = await supabase
       .from("customer_forms")
       .insert([
@@ -130,12 +116,12 @@ export class SupabaseAPI implements AuthAPI {
           status: "pendente",
         },
       ])
-      .select(); // ✅ Corrige o erro do `returning`
-  
+      .select()
+      .single();
+
     if (error) throw new Error(`Erro ao enviar formulário: ${error.message}`);
-    return data; // Retorna os dados inseridos, caso precise usá-los
+    return data;
   }
-  
 
   async getFormStatus(userId: string) {
     const { data, error } = await supabase
@@ -147,6 +133,33 @@ export class SupabaseAPI implements AuthAPI {
     if (error && error.code !== "PGRST116") throw new Error(`Erro ao buscar status do formulário: ${error.message}`);
     return data;
   }
+
+  async getPendingCustomers(teamRole: string) {
+    const { data, error } = await supabase
+      .from("customer_forms")
+      .select("id, customer_name, status, validated_by_atacado, validated_by_credito")
+      .eq("status", "pendente");
+  
+    if (error) {
+      console.error("Erro ao buscar clientes pendentes:", error.message);
+      return { data: null, error };
+    }
+  
+    // 🔍 Filtra os clientes conforme o time de validação
+    let filteredData = data;
+  
+    if (teamRole === "credito") {
+      filteredData = data.filter((customer) => customer.validated_by_atacado);
+    }
+  
+    if (teamRole === "csc") {
+      filteredData = data.filter((customer) => customer.validated_by_credito);
+    }
+  
+    console.log(`Clientes pendentes para ${teamRole}:`, filteredData);
+    return { data: filteredData, error: null };
+  }
+  
 }
 
 export const api = new SupabaseAPI();
