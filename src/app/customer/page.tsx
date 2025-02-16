@@ -76,7 +76,7 @@ export default function OnboardingForm() {
 
   // 🔥 **Evita erro de hidratação: só renderiza depois do carregamento**
   if (isLoading) {
-    return <p>Carregando...</p>;
+    return <p>Loading...</p>;
   }
 
   // 🔥 **Se o usuário já enviou o formulário, mostra apenas o status**
@@ -84,11 +84,11 @@ export default function OnboardingForm() {
     return (
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Status da Solicitação</S.FormTitle>
+          <S.FormTitle>Request status</S.FormTitle>
           <S.FormSubtitle>
-            {formStatus === "pending" && "Seu formulário está em análise."}
-            {formStatus === "approved" && "Seu formulário foi aprovado!"}
-            {formStatus === "rejected" && "Seu formulário foi reprovado. Tente novamente."}
+            {formStatus === "pendente" && "Your submission is under review."}
+            {formStatus === "aprovado" && "Seu formulário foi aprovado!"}
+            {formStatus === "rejeitado" && "Seu formulário foi reprovado. Tente novamente."}
           </S.FormSubtitle>
         </S.FormHeader>
       </S.FormContainer>
@@ -155,8 +155,12 @@ export default function OnboardingForm() {
                 <S.Label htmlFor="resaleCertNumber">Resale Certificate Number</S.Label>
                 <S.Input
                   id="resaleCertNumber"
+                  type="number"
                   {...register("customerInfo.resaleCertNumber", {
-                    required: "Resale certificate number is required",
+                    required: "Resale Certificate Number is required",
+                    valueAsNumber: true,
+                    validate: (value) => 
+                      isNaN(value) ? "Resale Certificate Number must be a valid number": true,
                   })}
                   $error={!!errors.customerInfo?.resaleCertNumber}
                 />
@@ -164,17 +168,23 @@ export default function OnboardingForm() {
                   <S.ErrorMessage>{errors.customerInfo.resaleCertNumber.message}</S.ErrorMessage>
                 )}
               </S.InputGroup>
-              <S.InputGroup>
-                <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
-                <S.Input
-                  id="dunNumber"
-                  {...register("customerInfo.dunNumber", { required: "D-U-N-S number is required" })}
-                  $error={!!errors.customerInfo?.dunNumber}
-                />
-                {errors.customerInfo?.dunNumber && (
-                  <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
-                )}
-              </S.InputGroup>
+                      <S.InputGroup>
+          <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
+          <S.Input
+            id="dunNumber"
+            type="number"
+            {...register("customerInfo.dunNumber", {
+              required: "D-U-N-S number is required",
+              valueAsNumber: true, // Converte automaticamente para número
+              validate: (value) =>
+                isNaN(value) ? "D-U-N-S number must be a valid number": true,
+            })}
+            $error={!!errors.customerInfo?.dunNumber}
+          />
+          {errors.customerInfo?.dunNumber && (
+            <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
+          )}
+        </S.InputGroup>
             </S.Grid>
           </S.Section>
         )}

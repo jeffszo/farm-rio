@@ -3,7 +3,7 @@ export interface ICustomerInfo {
   legalName: string
   dba: string
   taxId: string
-  resaleCertNumber: string
+  resaleCertNumber: number
   dunNumber: string
 }
 

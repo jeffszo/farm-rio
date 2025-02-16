@@ -13,15 +13,32 @@ export default function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>()
-  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    try {
-      const user = await api.signIn(data.email, data.password);
 
-      // Verifica o tipo de usuário
-      if (user.userType === "cliente") {
-        router.push("/customer"); // Redireciona para a página do cliente
+
+const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+ 
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Erro ao fazer login.");
+      }
+
+      console.log(result);
+
+
+      const user = result.user;
+
+      // ✅ Verifica se o usuário é um cliente ou parte do time de validação
+      if (user.role === "cliente") {
+        router.push("/customer");
       } else {
-        router.push("/dashboard"); // Outros usuários vão para o dashboard
+        router.push("/validations");
       }
     } catch (error: unknown) {
       const errorMessage = (error as { message?: string }).message || "Erro desconhecido";
@@ -37,7 +54,7 @@ export default function LoginForm() {
         <S.Input
           id="email"
           type="email"
-          placeholder="joao@farmrio.com"
+          placeholder="example@farmrio.com"
           {...register("email", {
             required: "Email é obrigatório",
             pattern: {
@@ -50,7 +67,7 @@ export default function LoginForm() {
       </S.InputWrapper>
 
       <S.InputWrapper>
-        <S.Label htmlFor="password">Senha</S.Label>
+        <S.Label htmlFor="password">Password</S.Label>
         <S.Input
           id="password"
           type="password"
@@ -67,7 +84,7 @@ export default function LoginForm() {
       </S.InputWrapper>
 
       <S.Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Entrando..." : "Login"}
+        {isSubmitting ? "Entrando..." : "Enter"}
       </S.Button>
     </S.Form>
   )

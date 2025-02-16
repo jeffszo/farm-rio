@@ -10,7 +10,7 @@ export default function Home() {
     <Container>
       <Main>
         <FormContainer>
-          <FormTitle>Customer Onboarding</FormTitle>
+          <FormTitle>Login</FormTitle>
           <LoginForm />
           <Link href="/signup">
             <FormLink>Don't have an account? Sign up</FormLink>

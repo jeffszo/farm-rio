@@ -1,50 +1,50 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { FaCheckCircle } from "react-icons/fa"; // Importando o ícone
-import * as S from "./styles"; // Importando os estilos
-import { api } from "../../lib/supabaseApi";
-import { useRouter } from "next/navigation";
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { FaCheckCircle } from "react-icons/fa"
+import * as S from "./styles"
+import { api } from "../../lib/supabaseApi"
+import { useRouter } from "next/navigation"
 
 interface SignUpFormData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  userType: "cliente" | "atacado" | "credito" | "csc";
+  name: string
+  email: string
+  password: string
+  confirmPassword: string
 }
 
 export default function SignUp() {
-  const { register, handleSubmit, control, formState: { errors }, watch } = useForm<SignUpFormData>();
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<SignUpFormData>()
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const router = useRouter()
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      setApiError(null);
-      await api.signUp(data.name, data.email, data.password, data.userType);
-  
-      console.log("Conta criada! Abrindo modal...");
-      setIsModalOpen(true);
+      setApiError(null)
+      await api.signUp(data.name, data.email, data.password)
+
+      console.log("Conta criada! Abrindo modal...")
+      setIsModalOpen(true)
     } catch (error: unknown) {
-      // Verifique se o erro é uma instância de Error e tem a propriedade 'message'
       if (error instanceof Error) {
-        console.error("Signup error:", error.message);
-        setApiError(error.message);
+        console.error("Signup error:", error.message)
+        setApiError(error.message)
       } else if (typeof error === "string") {
-        // Caso o erro seja uma string
-        console.error("Signup error:", error);
-        setApiError(error);
+        console.error("Signup error:", error)
+        setApiError(error)
       } else {
-        // Se o erro não for nem um Error nem uma string
-        console.error("Signup error:", error);
-        setApiError("Ocorreu um erro ao criar a conta. Por favor, tente novamente.");
+        console.error("Signup error:", error)
+        setApiError("Ocorreu um erro ao criar a conta. Por favor, tente novamente.")
       }
     }
-  };
-  
+  }
 
   return (
     <S.Container>
@@ -72,25 +72,6 @@ export default function SignUp() {
                 })}
               />
               {errors.email && <S.ErrorMessage>{errors.email.message}</S.ErrorMessage>}
-            </S.InputWrapper>
-
-            <S.InputWrapper>
-              <S.Label htmlFor="userType">User type</S.Label>
-              <Controller
-                name="userType"
-                control={control}
-                rules={{ required: "Select a user type" }}
-                render={({ field }) => (
-                  <S.Select {...field}>
-                    <option value="">Select...</option>
-                    <option value="cliente">Customer</option>
-                    <option value="atacado">Wholesale</option>
-                    <option value="credito">Credit</option>
-                    <option value="csc">CSC</option>
-                  </S.Select>
-                )}
-              />
-              {errors.userType && <S.ErrorMessage>{errors.userType.message}</S.ErrorMessage>}
             </S.InputWrapper>
 
             <S.InputWrapper>
@@ -126,7 +107,6 @@ export default function SignUp() {
         </S.FormContainer>
       </S.Main>
 
-      {/* Modal de Confirmação */}
       {isModalOpen && (
         <S.ModalOverlay>
           <S.ModalContent>
@@ -139,8 +119,8 @@ export default function SignUp() {
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {
-                setIsModalOpen(false);
-                router.push("/");
+                setIsModalOpen(false)
+                router.push("/")
               }}
             >
               OK
@@ -149,5 +129,6 @@ export default function SignUp() {
         </S.ModalOverlay>
       )}
     </S.Container>
-  );
+  )
 }
+
