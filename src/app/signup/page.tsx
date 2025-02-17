@@ -112,10 +112,10 @@ export default function SignUp() {
           <S.ModalContent>
             <S.ModalTitle>
               <FaCheckCircle style={{ color: "#4CAF50", marginRight: "12px", fontSize: "24px" }} />
-              Sucesso!
+              Ok!
             </S.ModalTitle>
             <S.ModalMessage>
-              Sua conta foi criada com sucesso! Você será redirecionado para a página inicial.
+            Your account has been successfully created! You will be redirected to the login page            
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {

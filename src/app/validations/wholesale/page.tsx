@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "../../lib/supabaseApi";
+import { api } from "../../../lib/supabaseApi";
 import * as S from "./styles";
 import { useMediaQuery } from "react-responsive";
 import { Users, ChevronLeft, ChevronRight } from "lucide-react";
@@ -28,7 +28,7 @@ export default function ValidationsPage() {
     const fetchPendingCustomers = async () => {
       try {
         setLoading(true);
-        const { data, error, count } = await api.getPendingCustomers(currentPage, itemsPerPage);
+        const { data, error, count } = await api.getPendingValidations (currentPage, itemsPerPage);
         if (error) throw new Error(error.message);
 
         setCustomers(data);
@@ -81,7 +81,7 @@ export default function ValidationsPage() {
                     <S.TableData>{new Date(customer.created_at).toLocaleString()}</S.TableData>
                     <S.TableData>
                       <S.Button
-                        onClick={() => router.push(`/validations/${customer.id}`)}
+                        onClick={() => router.push(`/validations/wholesale/${customer.id}`)}
                         aria-label={`Ver detalhes de ${customer.customer_name}`}
                       >
                         See details

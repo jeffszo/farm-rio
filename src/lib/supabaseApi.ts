@@ -130,7 +130,7 @@ export class SupabaseAPI implements AuthAPI {
     return data
   }
 
-  async getPendingCustomers(page = 1, itemsPerPage = 10) {
+  async getPendingValidations (page = 1, itemsPerPage = 10) {
     const from = (page - 1) * itemsPerPage;
     const to = from + itemsPerPage - 1;
   

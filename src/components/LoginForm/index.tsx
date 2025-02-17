@@ -37,8 +37,12 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
       // ✅ Verifica se o usuário é um cliente ou parte do time de validação
       if (user.role === "cliente") {
         router.push("/customer");
-      } else {
-        router.push("/validations");
+      } else if (user.role === "atacado") {
+        router.push("/validations/wholesale");
+      } else if (user.role === "credito") {
+        router.push("/validations/credit")
+      } else if (user.role === "csc") {
+        router.push("validations/csc")
       }
     } catch (error: unknown) {
       const errorMessage = (error as { message?: string }).message || "Erro desconhecido";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { api, supabase } from "../../../lib/supabaseApi";
+import { api, supabase } from "../../../../lib/supabaseApi";
 import * as S from "./styles";
 
 interface CustomerForm {
