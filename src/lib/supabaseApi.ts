@@ -4,7 +4,7 @@ import type { AuthAPI, User } from "../types/api"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export class SupabaseAPI implements AuthAPI {
   async signUp(name: string, email: string, password: string): Promise<User> {
@@ -109,7 +109,7 @@ export class SupabaseAPI implements AuthAPI {
           ap_contact_email: formData.apContact.email,
           buyer_name: `${formData.buyerInfo.firstName} ${formData.buyerInfo.lastName}`,
           buyer_email: formData.buyerInfo.email,
-          status: "pendente",
+          status: "pending",
         },
       ])
       .select()
@@ -130,11 +130,15 @@ export class SupabaseAPI implements AuthAPI {
     return data
   }
 
-  async getPendingCustomers() {
+  async getPendingCustomers(page = 1, itemsPerPage = 10) {
+    const from = (page - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+  
     const { data, error, count } = await supabase
       .from("customer_forms")
-      .select("*")
-      .eq("status", "pendente")
+      .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
+      .eq("status", "pending")
+      .range(from, to) // 🔥 Pegando apenas os clientes da página atual
       .order("created_at", { ascending: true });
   
     if (error) {
@@ -142,9 +146,97 @@ export class SupabaseAPI implements AuthAPI {
       return { data: [], error, count: 0 };
     }
   
-    console.log("✅ Clientes pendentes retornados:", data?.length);
+    console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count);
     return { data, error: null, count };
   }
+
+
+  async getCustomerFormById(customerId: string) {
+    const { data, error } = await supabase
+      .from("customer_forms")
+      .select("*")
+      .eq("id", customerId)
+      .single();
+  
+    if (error) {
+      console.error("Erro ao buscar formulário do cliente:", error.message);
+      return null;
+    }
+  
+    return data;
+  }  
+
+  async validateCustomer(customerId: string, teamRole: string, approved: boolean, terms: any) {
+    // Obtém o usuário autenticado
+    const { data: userSession, error: sessionError } = await supabase.auth.getUser();
+    if (sessionError || !userSession?.user) {
+      throw new Error("Usuário não autenticado.");
+    }
+  
+    const userId = userSession.user.id;
+    const userEmail = userSession.user.email;  // Pegue o e-mail do usuário atual
+  
+    // Verifica se o usuário é o autorizado para validar clientes do time de Atacado
+    if (userEmail !== 'wholesale@farm.com') {
+      throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.");
+    }
+  
+    // 🚨 Verifica se o usuário está cadastrado na tabela `team_users`
+    const { data: teamUser, error: teamError } = await supabase
+      .from("team_users")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("team_role", teamRole)
+      .single();
+
+      if (approved) {
+        const allTermsAccepted = Object.values(terms).every((term) => term === true);
+        if (!allTermsAccepted) {
+          throw new Error("Todos os termos devem ser aceitos para aprovar!");
+        }
+      }
+    
+      // ✅ Atualiza o cliente com validação do time atual
+      const updateData: any = {
+        status: approved ? "aguardando crédito" : "reprovado",
+      };
+    
+      if (teamRole === "atacado") {
+        updateData.validated_by_atacado = approved; // 🔥 Campo específico do time
+      }
+
+      
+  
+    if (teamError || !teamUser) {
+      throw new Error("Usuário não encontrado na equipe de validação.");
+    }
+  
+    // 🚨 Agora garantimos que `validated_by` seja um ID válido
+    const validatedById = teamUser.id;
+  
+    // Insere o registro na tabela `validations`
+    const { error } = await supabase.from("validations").insert([
+      {
+        term_id: customerId,
+        validated_by: validatedById, // Agora sempre será um ID válido
+        team_role: teamRole,
+        status: approved ? "aprovado" : "reprovado",
+        comments: approved ? null : "Revisão necessária",
+        created_at: new Date(),
+      },
+    ]);
+  
+    if (error) throw new Error(`Erro ao validar cliente: ${error.message}`);
+  
+    // Atualiza o status do cliente
+    if (approved) {
+      await supabase.from("customer_forms").update({ status: "aguardando crédito" }).eq("id", customerId);
+    } else {
+      await supabase.from("customer_forms").update({ status: "reprovado" }).eq("id", customerId);
+    }
+  }
+  
+  
   
 }
 

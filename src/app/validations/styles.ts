@@ -1,33 +1,51 @@
 import styled from "styled-components"
 
 export const Container = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
+  width: 150%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
 `
 
-export const Title = styled.h2`
-  font-weight: 600;
-  color: #1a202c;
+export const TitleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+
   margin-bottom: 0.5rem;
+
+
+
+`
+
+export const Title = styled.h3`
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #1a202c;
   text-align: center;
 `
 
 export const Message = styled.p`
   font-size: 1rem;
   color: #4a5568;
-  margin: 0;
   text-align: center;
 `
 
 export const Table = styled.table`
-  width: 100%;
+  width: 150%;
+  max-width: 1400px;
+  margin: 1.5rem auto;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1.5rem;
   background-color: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -61,7 +79,7 @@ export const TableData = styled.td`
 `
 
 export const Button = styled.button`
-  background-color: #007bff;
+  background-color: #333333;
   color: #ffffff;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -71,20 +89,21 @@ export const Button = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #0056b3;
+    opacity: 0.9;
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
   }
 `
 
 export const Pagination = styled.div`
   display: flex;
-  gap: 2rem;
+  justify-content: space-between;
   align-items: center;
   margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  gap: 2rem;
 `
 
 export const PageInfo = styled.span`
@@ -93,11 +112,14 @@ export const PageInfo = styled.span`
 `
 
 export const PageButton = styled(Button)`
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: #18181b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 
   &:hover {
-    background-color: #e0e0e0;
+    opacity: 0.9;
   }
 
   &:focus {
@@ -108,5 +130,44 @@ export const PageButton = styled(Button)`
     opacity: 0.5;
     cursor: not-allowed;
   }
+`
+
+export const MobileList = styled.ul`
+  list-style: none;
+  padding: 0;
+  width: 100%;
+
+
+`
+
+export const MobileListItem = styled.li`
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+
+  @media (max-width: 768px) {
+    margin: 2rem 0;
+  }
+`
+
+export const MobileListItemTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+`
+
+export const TotalCount = styled.p`
+  opacity: 0.8;
+  font-size: 0.9rem;
+`;
+
+export const MobileListItemContent = styled.p`
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
 `
 
