@@ -7,5 +7,6 @@ export const FooterContainer = styled.footer`
   padding: ${theme.spacing[4]};
   text-align: center;
   font-size: ${theme.fontSizes.sm};
-  width:100%;
-`
+  width: 100%;
+  position: relative;
+`;

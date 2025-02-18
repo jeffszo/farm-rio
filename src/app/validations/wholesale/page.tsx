@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../lib/supabaseApi";
 import PendingCustomersTable from "../../../components/PendingCustomersTable";
+import TableSkeleton from "@/components/TableSkeleton";
 
 export default function WholesaleValidationsPage() {
   const [customers, setCustomers] = useState([]);
@@ -36,7 +37,7 @@ export default function WholesaleValidationsPage() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <TableSkeleton />;   
   if (error) return <p>Error: {error}</p>;
 
   return (

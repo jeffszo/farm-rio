@@ -13,9 +13,24 @@ const Global = createGlobalStyle`
     text-decoration: none;
   }
 
-  /* html, body{
-    overflow: hidden;
-  } */
+
+  html, body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #__next {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 🔥 Faz com que o conteúdo ocupe toda a tela */
+  }
+
+  main {
+    flex: 1; /* 🔥 Faz com que o conteúdo ocupe todo o espaço disponível */
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 export const Container = styled.div`

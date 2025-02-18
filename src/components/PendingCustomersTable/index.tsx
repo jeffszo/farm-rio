@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { Users, ChevronLeft, ChevronRight } from "lucide-react";
 import * as S from "./styles";
 import { useMediaQuery } from "react-responsive";
@@ -29,7 +29,7 @@ export default function PendingCustomersTable({
   setCurrentPage,
   onViewDetails,
 }: Props) {
-  const router = useRouter();
+  // const router = useRouter();
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   return (
