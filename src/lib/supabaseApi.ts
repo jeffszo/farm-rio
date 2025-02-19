@@ -150,6 +150,46 @@ export class SupabaseAPI implements AuthAPI {
     return { data, error: null, count };
   }
 
+  async getPendingCreditValidations (page = 1, itemsPerPage = 10) {
+    const from = (page - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+  
+    const { data, error, count } = await supabase
+      .from("customer_forms")
+      .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
+      .eq("status", "approved by the wholesale team")
+      .range(from, to) // 🔥 Pegando apenas os clientes da página atual
+      .order("created_at", { ascending: true });
+  
+    if (error) {
+      console.error("❌ Erro ao buscar clientes pendentes:", error.message);
+      return { data: [], error, count: 0 };
+    }
+  
+    console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count);
+    return { data, error: null, count };
+  }
+
+ 
+  async getPendingCSCValidations (page = 1, itemsPerPage = 10) {
+    const from = (page - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+  
+    const { data, error, count } = await supabase
+      .from("customer_forms")
+      .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
+      .eq("status", "approved by the credit team")
+      .range(from, to) // 🔥 Pegando apenas os clientes da página atual
+      .order("created_at", { ascending: true });
+  
+    if (error) {
+      console.error("❌ Erro ao buscar clientes pendentes:", error.message);
+      return { data: [], error, count: 0 };
+    }
+  
+    console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count);
+    return { data, error: null, count };
+  }
 
   async getCustomerFormById(customerId: string) {
     const { data, error } = await supabase
@@ -166,7 +206,8 @@ export class SupabaseAPI implements AuthAPI {
     return data;
   }  
 
-  async validateCustomer(customerId: string, teamRole: string, approved: boolean, terms: any) {
+
+  async validateCustomer(customerId: string, teamRole: string, approved: boolean, terms: unknown) {
     // Obtém o usuário autenticado
     const { data: userSession, error: sessionError } = await supabase.auth.getUser();
     if (sessionError || !userSession?.user) {
@@ -236,7 +277,7 @@ export class SupabaseAPI implements AuthAPI {
     }
   }
 
-  async validateWholesaleCustomer(customerId: string, approved: boolean, terms: any) {
+  async validateWholesaleCustomer(customerId: string, approved: boolean, terms: unknown) {
     // ✅ Verifica se todos os checkboxes foram marcados antes de aprovar
     if (approved) {
       const allTermsAccepted = Object.values(terms).every((term) => term === true);
@@ -247,7 +288,7 @@ export class SupabaseAPI implements AuthAPI {
   
     // ✅ Atualiza o status na tabela `customer_forms`
     const updateData = {
-      status: approved ? "aguardando crédito" : "reprovado",
+      status: approved ? "approved by the wholesale team" : "reprovado",
       validated_by_atacado: approved, // 🔥 Registra que foi validado pelo atacado
     };
   
@@ -263,7 +304,7 @@ export class SupabaseAPI implements AuthAPI {
       {
         term_id: customerId,
         team_role: "atacado",
-        status: approved ? "aprovado" : "reprovado",
+        status: approved ? "approved by the wholesale team" : "reprovado",
         comments: approved ? null : "Revisão necessária",
         created_at: new Date(),
       },
@@ -271,6 +312,45 @@ export class SupabaseAPI implements AuthAPI {
   
     if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
   }
+
+
+  async validateCreditCustomer(customerId: string, approved: boolean, terms: unknown) {
+    // ✅ Verifica se todos os checkboxes foram marcados antes de aprovar
+    if (approved) {
+      const allTermsAccepted = Object.values(terms).every((term) => term === true);
+      if (!allTermsAccepted) {
+        throw new Error("⚠️ Todos os termos devem ser aceitos para aprovar!");
+      }
+    }
+  
+    // ✅ Atualiza o status na tabela `customer_forms`
+    const updateData = {
+      status: approved ? "approved by the credit team" : "reprovado",
+      validated_by_credito: approved, // 🔥 Registra que foi validado pelo crédito
+    };
+  
+    const { error: updateError } = await supabase
+      .from("customer_forms")
+      .update(updateData)
+      .eq("id", customerId);
+  
+    if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
+  
+    // ✅ Insere a validação na tabela `validations`
+    const { error: validationError } = await supabase.from("validations").insert([
+      {
+        term_id: customerId,
+        team_role: "crédito",
+        status: approved ? "approved by the credit team" : "reprovado",
+        comments: approved ? null : "Revisão necessária",
+        created_at: new Date(),
+      },
+    ]);
+  
+    if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
+  }
+
+
   
   
   

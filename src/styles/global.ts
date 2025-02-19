@@ -30,6 +30,8 @@ const Global = createGlobalStyle`
     flex: 1; /* 🔥 Faz com que o conteúdo ocupe todo o espaço disponível */
     display: flex;
     flex-direction: column;
+    position: relative;
+    min-height: 100vh;
   }
 `;
 
