@@ -235,6 +235,42 @@ export class SupabaseAPI implements AuthAPI {
       await supabase.from("customer_forms").update({ status: "reprovado" }).eq("id", customerId);
     }
   }
+
+  async validateWholesaleCustomer(customerId: string, approved: boolean, terms: any) {
+    // ✅ Verifica se todos os checkboxes foram marcados antes de aprovar
+    if (approved) {
+      const allTermsAccepted = Object.values(terms).every((term) => term === true);
+      if (!allTermsAccepted) {
+        throw new Error("⚠️ Todos os termos devem ser aceitos para aprovar!");
+      }
+    }
+  
+    // ✅ Atualiza o status na tabela `customer_forms`
+    const updateData = {
+      status: approved ? "aguardando crédito" : "reprovado",
+      validated_by_atacado: approved, // 🔥 Registra que foi validado pelo atacado
+    };
+  
+    const { error: updateError } = await supabase
+      .from("customer_forms")
+      .update(updateData)
+      .eq("id", customerId);
+  
+    if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
+  
+    // ✅ Insere a validação na tabela `validations`
+    const { error: validationError } = await supabase.from("validations").insert([
+      {
+        term_id: customerId,
+        team_role: "atacado",
+        status: approved ? "aprovado" : "reprovado",
+        comments: approved ? null : "Revisão necessária",
+        created_at: new Date(),
+      },
+    ]);
+  
+    if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
+  }
   
   
   

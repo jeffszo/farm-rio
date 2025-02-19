@@ -19,7 +19,7 @@ export const TitleWrapper = styled.div`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 
   margin-bottom: 0.5rem;
 

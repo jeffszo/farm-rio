@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { api, supabase } from "../../../../lib/supabaseApi";
+import { api } from "../../../../lib/supabaseApi";
 import * as S from "./styles";
 
 interface CustomerForm {
@@ -21,10 +21,13 @@ interface CustomerForm {
 }
 
 export default function ValidationDetailsPage() {
-  const { id } = useParams(); // 📌 Obtém o ID do cliente da URL
+  const { id } = useParams();
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const router = useRouter();
+
   const [terms, setTerms] = useState({
     warehouse: false,
     invoicingCompany: false,
@@ -33,22 +36,8 @@ export default function ValidationDetailsPage() {
     discount: false,
     credit: false,
   });
-  const router = useRouter();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const user = supabase.auth.user();
-      console.log("Usuário autenticado:", user); // Verifique os detalhes do usuário
-      if (user) {
-        setUserEmail(user.email);
-      }
-    };
-  
-    fetchUser();
-  }, []);
-  
-
+  // ✅ Obtém os detalhes do cliente
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
@@ -64,38 +53,54 @@ export default function ValidationDetailsPage() {
       }
     };
 
-    if (id) {
-      fetchCustomerDetails();
-    }
+    if (id) fetchCustomerDetails();
   }, [id]);
 
+  // ✅ Obtém o usuário autenticado (vindo do login)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await api.getCurrentUser();
+        if (!currentUser) {
+          router.push("/login");
+          return;
+        }
+        setUser({ email: currentUser.email, role: currentUser.userType });
+      } catch (err) {
+        console.error("Erro ao obter usuário:", err);
+      }
+    };
+    fetchUser();
+  }, [router]);
+
+  // ✅ Função para marcar os checkboxes
   const handleCheckboxChange = (field: string) => {
     setTerms((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  // ✅ Aprovação/Reprovação do Cliente
   const handleApproval = async (approved: boolean) => {
-    if (userEmail !== "wholesale@farm.com") {
-      alert("Você não tem permissão para validar os clientes do time de Atacado.");
-      return;
-    }
-  
+    if (!user) return;
+
     try {
       setLoading(true);
-      
-      // ✅ Validação dos checkboxes antes de aprovar
+
+      // ✅ Validação antes de aprovar
       if (approved) {
         const allTermsAccepted = Object.values(terms).every((term) => term);
         if (!allTermsAccepted) {
-          throw new Error("Marque todos os termos para aprovar!");
+          throw new Error("⚠️ Marque todos os termos para aprovar!");
         }
       }
-  
-      await api.validateCustomer(id as string, "atacado", approved, terms);
-      alert(approved ? "Cliente aprovado! Segue para o time de Crédito." : "Cliente reprovado!");
-      router.push("/validations");
+
+      // 🔥 Agora chamamos a função específica do time de atacado!
+      await api.validateWholesaleCustomer(id as string, approved, terms);
+
+      alert(approved ? "✅ Cliente aprovado! Segue para o time de Crédito." : "❌ Cliente reprovado!");
+      router.push("/validations/wholesale");
     } catch (err) {
       console.error("Erro ao validar cliente:", err);
-      alert(err instanceof Error ? err.message : "Erro desconhecido"); // ✅ Mostra erro específico
+      alert(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoading(false);
     }
@@ -119,43 +124,24 @@ export default function ValidationDetailsPage() {
         <S.FormRow><strong>Status:</strong> {customerForm.status}</S.FormRow>
       </S.FormDetails>
 
+      {/* ✅ Checkboxes de Aprovação */}
       <S.TermsContainer>
         <S.TermsTitle>Termos de Validação (Time de Atacado)</S.TermsTitle>
         <S.CheckboxWrapper>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.warehouse} onChange={() => handleCheckboxChange("warehouse")} />
-            Warehouse (Shipped From)
-          </S.CheckboxLabel>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.invoicingCompany} onChange={() => handleCheckboxChange("invoicingCompany")} />
-            Invoicing Company
-          </S.CheckboxLabel>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.currency} onChange={() => handleCheckboxChange("currency")} />
-            Currency
-          </S.CheckboxLabel>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.terms} onChange={() => handleCheckboxChange("terms")} />
-            Terms
-          </S.CheckboxLabel>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.discount} onChange={() => handleCheckboxChange("discount")} />
-            Discount
-          </S.CheckboxLabel>
-          <S.CheckboxLabel>
-            <S.Checkbox type="checkbox" checked={terms.credit} onChange={() => handleCheckboxChange("credit")} />
-            Credit
-          </S.CheckboxLabel>
+          {Object.keys(terms).map((key) => (
+            <S.CheckboxLabel key={key}>
+              <S.Checkbox type="checkbox" checked={terms[key as keyof typeof terms]} onChange={() => handleCheckboxChange(key)} />
+              {key.replace(/([A-Z])/g, " $1").trim()}
+            </S.CheckboxLabel>
+          ))}
         </S.CheckboxWrapper>
       </S.TermsContainer>
 
+      {/* ✅ Botões de Aprovação/Reprovação */}
       <S.ButtonContainer>
         <S.RejectButton onClick={() => handleApproval(false)}>Reprovar</S.RejectButton>
         <S.ApproveButton onClick={() => handleApproval(true)}>Aprovar</S.ApproveButton>
-
       </S.ButtonContainer>
-
-      {/* <S.Button onClick={() => router.push("/validations")}>Voltar</S.Button> */}
     </S.Container>
   );
 }
