@@ -1,3 +1,5 @@
+"use client"
+
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 import Image from "next/image";

@@ -1,9 +1,11 @@
 "use client";
-import { usePathname } from "next/navigation"; // 🔹 Importa o pathname para saber em qual rota está
+
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Nunito_Sans } from "next/font/google";
+import Global from "../styles/global";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import Global from "../styles/global";
 
 const nunitoSans = Nunito_Sans({
   variable: "--font-nunito-sans",
@@ -11,19 +13,20 @@ const nunitoSans = Nunito_Sans({
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname(); // 🔹 Captura a rota atual
+  const pathname = usePathname();
 
-  const isValidationPage = pathname.startsWith("/validations"); // 🔥 Verifica se está na área de validação
+  useEffect(() => {
+    document.title = "FARM Rio - Customer Onboarding"; // 🔥 Define o título dinamicamente
+  }, [pathname]); // Atualiza quando a rota mudar
+
+  const isValidationPage = pathname.startsWith("/validations");
 
   return (
     <html lang="en">
       <body className={`${nunitoSans.variable}`}>
         <Global />
-        
-        {!isValidationPage && <Header />} {/* ✅ Só renderiza o Header se NÃO for Validations */}
-        
-        <main>{children}</main> 
-
+        {!isValidationPage && <Header />}
+        <main>{children}</main>
         {!isValidationPage && <Footer />}
       </body>
     </html>

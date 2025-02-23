@@ -7,6 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export class SupabaseAPI implements AuthAPI {
+
   async signUp(name: string, email: string, password: string): Promise<User> {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -238,7 +239,7 @@ export class SupabaseAPI implements AuthAPI {
       }
     
       // ✅ Atualiza o cliente com validação do time atual
-      const updateData: any = {
+      const updateData: unknown = {
         status: approved ? "aguardando crédito" : "reprovado",
       };
     
@@ -349,6 +350,36 @@ export class SupabaseAPI implements AuthAPI {
   
     if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
   }
+
+  async getInvoicingCompanies() {
+    const { data, error } = await supabase.from("warehouses").select("invoicing_company").distinct()
+
+    if (error) {
+      console.error("Error fetching invoicing companies:", error)
+      throw new Error("Failed to fetch invoicing companies")
+    }
+
+    return data.map((item) => item.invoicing_company)
+  }
+
+
+  
+  async getWarehousesByCompany(invoicingCompany: string) {
+    if (!invoicingCompany) return []; // 🚨 Evita consultas inválidas
+    
+    const { data, error } = await supabase
+      .from("warehouses")
+      .select("name")
+      .eq("invoicing_company", invoicingCompany);
+  
+    if (error) {
+      console.error("Erro ao buscar armazéns:", error.message);
+      return []; 
+    }
+  
+    return data ?? []; 
+  }
+  
 
 
   

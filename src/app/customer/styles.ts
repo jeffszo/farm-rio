@@ -2,7 +2,11 @@ import styled from "styled-components";
 
 export const FormContainer = styled.div`
   max-width: 1200px;
-  margin: 8rem auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16rem auto;
   padding: 2rem;
   background: #ffffff;
   border-radius: 0.5rem;
@@ -23,6 +27,11 @@ export const FormTitle = styled.h1`
 export const FormSubtitle = styled.p`
   font-size: 0.875rem;
   color: #71717a;
+
+  div{
+    font-size: 1rem;
+  }
+  
 `;
 
 export const Section = styled.section`

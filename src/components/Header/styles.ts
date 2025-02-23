@@ -14,3 +14,4 @@ export const HeaderContent = styled.div`
   align-items: center;
 
 `
+

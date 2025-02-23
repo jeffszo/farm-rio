@@ -86,9 +86,26 @@ export default function OnboardingForm() {
         <S.FormHeader>
           <S.FormTitle>Request status</S.FormTitle>
           <S.FormSubtitle>
-            {formStatus === "pendente" && "Your submission is under review."}
-            {formStatus === "aprovado" && "Seu formulário foi aprovado!"}
-            {formStatus === "rejeitado" && "Seu formulário foi reprovado. Tente novamente."}
+          {formStatus === "pending" && <div>Your submission is under review.</div>}
+
+{formStatus === "approved by the wholesale team" && (
+  <div>
+    Your form has already been <strong>approved by the wholesale team</strong>. 
+    Please wait for feedback from the credit and CSC teams.
+  </div>
+)}
+
+{formStatus === "approved by the credit team" && (
+  <div>
+    Your form has already been <strong> approved by the  wholesale and credit team</strong>. 
+    All that's missing is a response from the CSC team!
+  </div>
+)}
+
+{formStatus === "approved" && <div>Your form has been <strong>approvedy all teams! </strong> </div>}
+
+{formStatus === "rejected" && <div>Your form has been <strong>rejected</strong>.</div>}
+
           </S.FormSubtitle>
         </S.FormHeader>
       </S.FormContainer>

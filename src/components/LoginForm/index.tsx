@@ -88,7 +88,7 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
       </S.InputWrapper>
 
       <S.Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Entrando..." : "Enter"}
+        {isSubmitting ? "Loading..." : "Enter"}
       </S.Button>
     </S.Form>
   )
