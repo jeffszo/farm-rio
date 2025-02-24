@@ -6,13 +6,15 @@ export const ContainerMain = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh; 
+  margin-top: 9rem;
 ` 
 
 export const FormContainer = styled.div`
 
-  width: 75%; /* Ou um valor fixo como 800px */
-  max-width: 1100px;
-  padding: 2rem;
+  width: 85%; /* Ou um valor fixo como 800px */
+  max-width: 1200px;
+  padding: 1.5rem;
+  margin-bottom: 12rem;
   background: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -29,7 +31,7 @@ export const FormHeader = styled.div`
 `;
 
 export const FormTitle = styled.h1`
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #18181b;
   margin-bottom: 0.5rem;
@@ -105,9 +107,13 @@ export const ErrorMessage = styled.span`
 `;
 
 export const Button = styled.button<{ variant?: "primary" | "secondary" }>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
+  border: none;
   border-radius: 0.25rem;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
@@ -125,7 +131,7 @@ export const Button = styled.button<{ variant?: "primary" | "secondary" }>`
           }
         `
       : `
-          background-color: #ffffff;
+          background-color: #rgba(240, 240, 240, 0.5);
           color: #18181b;
           border: 1px solid #d4d4d8;
           &:hover {

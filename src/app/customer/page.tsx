@@ -6,6 +6,7 @@ import * as S from "./styles"
 import { api } from "../../lib/supabaseApi"
 import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
+import { ChevronRight, ChevronLeft } from "lucide-react"
 
 export default function OnboardingForm() {
   const { register, handleSubmit, formState: { errors }, trigger } = useForm<IFormInputs>();
@@ -555,16 +556,16 @@ export default function OnboardingForm() {
         <S.ButtonGroup>
           {currentStep > 1 && (
             <S.Button type="button" onClick={prevStep} variant="secondary">
-              Previous
+              <ChevronLeft size={16} /> Previous
             </S.Button>
           )}
           {currentStep < totalSteps ? (
             <S.Button type="button" onClick={nextStep} variant="primary">
-              Next
+              Next <ChevronRight size={16} />
             </S.Button>
           ) : (
             <S.Button type="submit" variant="primary">
-              Submit
+              Submit 
             </S.Button>
           )}
         </S.ButtonGroup>
