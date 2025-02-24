@@ -1,7 +1,7 @@
 import styled from "styled-components"
 
 export const ContainerMain = styled.div`
-  display: 'flex';
+  display: 'flex'; 
   justify-content: 'center'; 
   align-items: 'center'; 
   height: 100vh;
@@ -18,7 +18,7 @@ export const Container = styled.div`
   align-items: stretch;
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
 `
 
 export const Header = styled.div`
@@ -50,6 +50,11 @@ export const FormDetails = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+  }
 `
 
 export const FormSection = styled.div`

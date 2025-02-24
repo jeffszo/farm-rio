@@ -127,6 +127,7 @@ export default function OnboardingForm() {
 
 
   return (
+    <S.ContainerMain>
     <S.FormContainer>
       <S.FormHeader>
         <S.FormTitle>Customer Onboarding</S.FormTitle>
@@ -569,6 +570,7 @@ export default function OnboardingForm() {
         </S.ButtonGroup>
       </form>
     </S.FormContainer>
+  </S.ContainerMain>
   )
 }
 

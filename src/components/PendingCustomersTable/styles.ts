@@ -2,16 +2,15 @@ import styled from "styled-components"
 
 export const Container = styled.div`
   max-width: 1400px;
-  width: 150%;
+  /* width: 150%; */
   margin: 0 auto;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  @media (min-width: 768px) {
-    padding: 2rem;
-  }
+  padding: 2rem;
+  width: 100%;
+  
 `
 
 export const TitleWrapper = styled.div`
@@ -20,10 +19,14 @@ export const TitleWrapper = styled.div`
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1rem;
-
   margin-bottom: 0.5rem;
 
-
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
 
 `
 
@@ -32,6 +35,8 @@ export const Title = styled.h3`
   font-weight: bold;
   color: #1a202c;
   text-align: center;
+
+
 `
 
 export const Message = styled.p`
@@ -64,6 +69,9 @@ export const TableHeader = styled.th`
   &:last-child {
     border-top-right-radius: 0.5rem;
   }
+
+  
+ 
 `
 
 export const TableRow = styled.tr`
@@ -136,7 +144,6 @@ export const MobileList = styled.ul`
   list-style: none;
   padding: 0;
   width: 100%;
-
 
 `
 

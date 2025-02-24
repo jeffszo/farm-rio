@@ -151,7 +151,7 @@ export default function ValidationDetailsPage() {
         }
       }
 
-      await api.validateCreditCustomer(id as string, approved, terms)
+      await api.validateWholesaleCustomer(id as string, approved, terms)
 
       setModalContent({
         title: "Ok!",
@@ -172,7 +172,7 @@ export default function ValidationDetailsPage() {
 
   const closeModal = () => {
     setShowModal(false)
-    router.push("/validations/credit")
+    router.push("/validations/wholesale")
   }
 
   if (loading) return <S.Message>Loading...</S.Message>
@@ -338,7 +338,7 @@ export default function ValidationDetailsPage() {
             <S.ModalContent>
               <S.ModalTitle>{modalContent.title}</S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
-              <S.ModalButton onClick={closeModal}>Close</S.ModalButton>
+              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}

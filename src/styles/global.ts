@@ -33,7 +33,6 @@ const Global = createGlobalStyle`
     flex-direction: column;
     position: relative;
     min-height: 40vh;
-    overflow-y: hidden;
   }
 `;
 

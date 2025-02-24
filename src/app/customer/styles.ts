@@ -1,16 +1,27 @@
 import styled from "styled-components";
 
-export const FormContainer = styled.div`
-  max-width: 1200px;
 
+export const ContainerMain = styled.div`
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin: 16rem auto;
+  align-items: center;
+  height: 100vh; 
+` 
+
+export const FormContainer = styled.div`
+
+  width: 75%; /* Ou um valor fixo como 800px */
+  max-width: 1100px;
   padding: 2rem;
   background: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 868px) {
+    margin-top: 12rem;
+  }
+
+
 `;
 
 export const FormHeader = styled.div`
