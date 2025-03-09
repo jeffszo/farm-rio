@@ -131,11 +131,11 @@ export const Button = styled.button<{ variant?: "primary" | "secondary" }>`
           }
         `
       : `
-          background-color: #rgba(240, 240, 240, 0.5);
-          color: #18181b;
-          border: 1px solid #d4d4d8;
+          background-color: #71717a;
+          color: #fff;
+          border: 1px solid #71717a;
           &:hover {
-            background-color: #f4f4f5;
+            opacity: 0.9
           }
           &:active {
             transform: translateY(1px);

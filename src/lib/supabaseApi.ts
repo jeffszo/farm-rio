@@ -138,7 +138,7 @@ export class SupabaseAPI implements AuthAPI {
     const { data, error, count } = await supabase
       .from("customer_forms")
       .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-      .eq("status", "pending")
+      .in("status", ["pending", "rejected by credit team"])
       .range(from, to) // 🔥 Pegando apenas os clientes da página atual
       .order("created_at", { ascending: true });
   
@@ -156,11 +156,12 @@ export class SupabaseAPI implements AuthAPI {
     const to = from + itemsPerPage - 1;
   
     const { data, error, count } = await supabase
-      .from("customer_forms")
-      .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-      .eq("status", "approved by the wholesale team")
-      .range(from, to) // 🔥 Pegando apenas os clientes da página atual
-      .order("created_at", { ascending: true });
+    .from("customer_forms")
+    .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
+    .in("status", ["approved by the wholesale team", "rejected by CSC team"]) // 🔥 Busca múltiplos status
+    .range(from, to) // 🔥 Pegando apenas os clientes da página atual
+    .order("created_at", { ascending: true });
+  
   
     if (error) {
       console.error("❌ Erro ao buscar clientes pendentes:", error.message);
@@ -206,6 +207,41 @@ export class SupabaseAPI implements AuthAPI {
   
     return data;
   }  
+
+  async validateCSCCustomer(customerId: string, approved: boolean) {
+    
+    // ✅ Atualiza o status na tabela `customer_forms`
+    const updateData = {
+      status: approved ? "approved by the CSC team" : "rejected by CSC team",
+    };
+  
+    const { error: updateError } = await supabase
+      .from("customer_forms")
+      .update(updateData)
+      .eq("id", customerId);
+  
+    if (updateError) {
+      throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
+    }
+  
+    // ✅ Insere a validação na tabela `validations`
+    const { error: validationError } = await supabase.from("validations").insert([
+      {
+        term_id: customerId,
+        team_role: "csc",
+        status: approved ? "approved by the CSC team" : "rejected by CSC team",
+        comments: approved ? null : "Revisão necessária",
+        created_at: new Date(),
+      },
+    ]);
+  
+    if (validationError) {
+      throw new Error(`Erro ao registrar validação: ${validationError.message}`);
+    }
+  }
+  
+  
+  
 
 
   async validateCustomer(customerId: string, teamRole: string, approved: boolean, terms: unknown) {
@@ -326,7 +362,7 @@ export class SupabaseAPI implements AuthAPI {
   
     // ✅ Atualiza o status na tabela `customer_forms`
     const updateData = {
-      status: approved ? "approved by the credit team" : "reprovado",
+      status: approved ? "approved by the credit team" : "rejected by credit team",
       validated_by_credito: approved, // 🔥 Registra que foi validado pelo crédito
     };
   
@@ -342,7 +378,7 @@ export class SupabaseAPI implements AuthAPI {
       {
         term_id: customerId,
         team_role: "crédito",
-        status: approved ? "approved by the credit team" : "reprovado",
+        status: approved ? "approved by the credit team" : "rejected by credit team",
         comments: approved ? null : "Revisão necessária",
         created_at: new Date(),
       },

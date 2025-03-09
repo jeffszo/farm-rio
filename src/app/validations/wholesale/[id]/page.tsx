@@ -85,7 +85,7 @@ export default function ValidationDetailsPage() {
       try {
         const currentUser = await api.getCurrentUser()
         if (!currentUser) {
-          router.push("/login")
+          // router.push("/login")
           return
         }
         setUser({ email: currentUser.email, role: currentUser.userType })
