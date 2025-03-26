@@ -115,7 +115,7 @@ export default function SignUp() {
               Ok!
             </S.ModalTitle>
             <S.ModalMessage>
-            Your form has been submitted successfully!            
+            Your account has been created successfully!        
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {

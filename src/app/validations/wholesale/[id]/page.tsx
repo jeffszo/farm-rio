@@ -116,6 +116,7 @@ export default function ValidationDetailsPage() {
   }, [terms.invoicing_company]);
   
   
+  
 
   const handleTermChange = (field: keyof ValidationTerms, value: string | number) => {
     if (field === "credit_limit" || field === "discount") {
@@ -201,7 +202,7 @@ export default function ValidationDetailsPage() {
               <strong>Resale Certificate:</strong> {customerForm.resale_certificate}
             </S.FormRow>
           </S.FormSection>
-          <S.FormSection>
+                  <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>

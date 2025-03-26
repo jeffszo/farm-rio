@@ -1,172 +1,251 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import * as S from "./styles";
-import { api } from "../../lib/supabaseApi";
-import type { IFormInputs } from "../../types/form";
-import { useRouter } from "next/navigation";
-import { ChevronRight, ChevronLeft, Upload, Clock4} from "lucide-react";
+import type React from "react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import * as S from "./styles"
+import { api } from "../../lib/supabaseApi"
+import type { IFormInputs } from "../../types/form"
+import { useRouter } from "next/navigation"
+import { ChevronRight, ChevronLeft, Upload, Clock4 } from 'lucide-react'
+import { FaCheckCircle } from "react-icons/fa"
 
 export default function OnboardingForm() {
-
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const selectedFile = event.target.files[0];
+      const selectedFile = event.target.files[0]
 
       if (selectedFile.type !== "application/pdf") {
-        alert("Apenas arquivos PDF são permitidos.");
-        return;
+        alert("Apenas arquivos PDF são permitidos.")
+        return
       }
 
-      setFile(selectedFile);
+      setFile(selectedFile)
     }
-  };
-
+  }
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     trigger,
-  } = useForm<IFormInputs>();
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
-  const [formStatus, setFormStatus] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const router = useRouter();
+  } = useForm<IFormInputs>()
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
+  const [formStatus, setFormStatus] = useState<string | null>(null)
+  const [user, setUser] = useState<any | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const [isWholesaleTeam, setIsWholesaleTeam] = useState(false);
-  const [isCreditTeam, setIsCreditTeam] = useState(false);
+  const [isWholesaleTeam, setIsWholesaleTeam] = useState(false)
+  const [isCreditTeam, setIsCreditTeam] = useState(false)
 
   // ✅ Buscar o usuário e o status do formulário corretamente
   useEffect(() => {
     const fetchUserAndStatus = async () => {
       try {
-        setIsLoading(true);
-        const currentUser = await api.getCurrentUser();
+        setIsLoading(true)
+        const currentUser = await api.getCurrentUser()
 
         if (!currentUser) {
-          console.error("Usuário não autenticado.");
-          return;
+          console.error("Usuário não autenticado.")
+          return
         }
 
-        setUser(currentUser);
+        setUser(currentUser)
 
         // Buscar o status do formulário
-        const formData = await api.getFormStatus(currentUser.id);
-        setFormStatus(formData?.status || null);
+        const formData = await api.getFormStatus(currentUser.id)
+        setFormStatus(formData?.status || null)
       } catch (error) {
-        console.error("Erro ao buscar status do formulário:", error);
+        console.error("Erro ao buscar status do formulário:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchUserAndStatus();
-  }, []);
+    fetchUserAndStatus()
+  }, [])
 
   const onSubmit = async (formData: any) => {
     try {
-      setApiError(null);
+      setApiError(null)
 
-      const user = await api.getCurrentUser();
+      const user = await api.getCurrentUser()
       if (!user || !user.id) {
-        console.error("Usuário não autenticado.");
-        setApiError("Sua sessão expirou. Faça login novamente.");
-        return;
+        console.error("Usuário não autenticado.")
+        setApiError("Sua sessão expirou. Faça login novamente.")
+        return
+      }
+      console.log("Dados recebidos no formulário:", formData) // 
+
+      // Flatten the nested structure while preserving essential field names
+      const flattenedFormData = {
+        customer_name: formData.customerInfo?.legalName || null,
+        sales_tax_id: formData.customerInfo?.taxId || null,
+        resale_certificate: formData.customerInfo?.resaleCertNumber || null,
+      
+        billing_address: Object.values(formData.billingAddress || {}).join(', '),
+        shipping_address: Object.values(formData.shippingAddress || {}).join(', '),
+      
+        ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+        ap_contact_email: formData.apContact?.email || null,
+      
+        buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+        buyer_email: formData.buyerInfo?.email || null,
       }
 
-      console.log("Usuário autenticado:", user);
+      console.log("Dados formatados para envio:", flattenedFormData)
 
-      await api.submitForm(formData, user.id);
-      alert("Formulário enviado com sucesso!");
+      // Process customerInfo
+      if (formData.customerInfo) {
+        Object.values(formData.customerInfo).forEach((value, index) => {
+          // Map to expected database fields
+          if (index === 0) flattenedFormData.customer_name = value // Assuming first value is legal name
+          // Add other mappings as needed
+        })
+      }
 
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
+      // Process other sections similarly
+      // You may need to adjust these mappings based on your database schema
+      /*if (formData.billingAddress) {
+        Object.values(formData.billingAddress).forEach((value) => {
+          flattenedFormData.billing_info = flattenedFormData.billing_info || []
+          flattenedFormData.billing_info.push(value)
+        })
+      }
+
+      if (formData.shippingAddress) {
+        Object.values(formData.shippingAddress).forEach((value) => {
+          flattenedFormData.shipping_info = flattenedFormData.shipping_info || []
+          flattenedFormData.shipping_info.push(value)
+        })
+      }*/
+
+      if (formData.apContact) {
+        Object.values(formData.apContact).forEach((value) => {
+          flattenedFormData.contact_info = flattenedFormData.contact_info || []
+          flattenedFormData.contact_info.push(value)
+        })
+      }
+
+      if (formData.buyerInfo) {
+        Object.values(formData.buyerInfo).forEach((value) => {
+          flattenedFormData.buyer_info = flattenedFormData.buyer_info || []
+          flattenedFormData.buyer_info.push(value)
+        })
+      }
+
+      console.log("Sending flattened form data:", flattenedFormData)
+      await api.submitForm(flattenedFormData, user.id)
+      setIsModalOpen(true) // Open modal instead of alert
+
+      // Router redirect is now handled in the modal close button
     } catch (error: any) {
-      console.error("Erro ao enviar o formulário:", error.message);
-      setApiError(
-        error.message || "Erro ao enviar o formulário. Tente novamente."
-      );
+      console.error("Erro ao enviar o formulário:", error.message)
+      setApiError(error.message || "Erro ao enviar o formulário. Tente novamente.")
     }
-  };
+  }
 
   // 🔥 **Evita erro de hidratação: só renderiza depois do carregamento**
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <p>Loading...</p>
   }
 
   // 🔥 **Se o usuário já enviou o formulário, mostra apenas o status**
   if (user?.userType === "cliente" && formStatus) {
     return (
       <S.ReviewContainer>
-      <S.ReviewHeader>
-        <S.ReviewTitle>Request status</S.ReviewTitle>
-        <S.ReviewSubtitle>
-          {formStatus === "pending" && <div><Clock4 /> Your submission is under review  </div>}
-    
-          {formStatus === "approved by the wholesale team" && (
-            <div>
-              Your form has already been{" "}
-              <strong>approved by the wholesale team</strong>. Please wait for
-              feedback from the credit and CSC teams.
-            </div>
-          )}
-    
-          {formStatus === "approved by the credit team" && (
-            <div>
-              Your form has already been{" "}
-              <strong>approved by the wholesale and credit team</strong>. All
-              that's missing is a response from the CSC team!
-            </div>
-          )}
-    
-          {formStatus === "approved" && (
-            <div>
-              Your form has been <strong>approved by all teams!</strong>
-            </div>
-          )}
-    
-          {formStatus === "rejected" && (
-            <div>
-              Your form has been <strong>rejected</strong>.
-            </div>
-          )}
-        </S.ReviewSubtitle>
-      </S.ReviewHeader>
-    </S.ReviewContainer>
-    
-    );
+        <S.ReviewHeader>
+          <S.ReviewTitle>Request status</S.ReviewTitle>
+          <S.ReviewSubtitle>
+            {formStatus === "pending" && (
+              <div>
+                <Clock4 /> Your submission is under review{" "}
+              </div>
+            )}
+
+            {formStatus === "approved by the wholesale team" && (
+              <div>Your form has already been approved by the wholesale team</div>
+            )}
+
+            {formStatus === "approved by the credit team" && (
+              <div>Your form has already been approved by the wholesale and credit team.</div>
+            )}
+
+            {formStatus === "rejected by CSC team" && (
+              <div>Your approval has been rejected by the credit team. Please wait.</div>
+            )}
+
+            {formStatus === "approved" && (
+              <div>
+                Your form has been <strong>approved by all teams!</strong>
+              </div>
+            )}
+
+            {formStatus === "rejected" && (
+              <div>
+                Your form has been <strong>rejected</strong>.
+              </div>
+            )}
+          </S.ReviewSubtitle>
+        </S.ReviewHeader>
+      </S.ReviewContainer>
+    )
   }
 
   // ✅ Criado `nextStep` corretamente
   const nextStep = async () => {
-    const isValid = await trigger();
-    if (!isValid) return;
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-  };
+    // Only validate the current step fields
+    let fieldsToValidate = []
+
+    if (currentStep === 1) {
+      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
+    } else if (currentStep === 2) {
+      fieldsToValidate = [
+        "billingAddress.street",
+        "billingAddress.zipCode",
+        "billingAddress.city",
+        "billingAddress.state",
+        "billingAddress.county",
+        "billingAddress.country",
+        "shippingAddress.street",
+        "shippingAddress.zipCode",
+        "shippingAddress.city",
+        "shippingAddress.state",
+        "shippingAddress.county",
+        "shippingAddress.country",
+      ]
+    } else if (currentStep === 3) {
+      fieldsToValidate = [
+        "apContact.firstName",
+        "apContact.lastName",
+        "apContact.email",
+        "apContact.countryCode",
+        "apContact.contactNumber",
+      ]
+    }
+
+    const isValid = await trigger(fieldsToValidate)
+    if (!isValid) return
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
+  }
 
   // ✅ Criado `prevStep` corretamente
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  };
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
+  }
 
   return (
     <S.ContainerMain>
       <S.FormContainer>
         <S.FormHeader>
           <S.FormTitle>Customer Onboarding</S.FormTitle>
-          <S.FormSubtitle>
-            Please fill out the form below to complete the onboarding process.
-          </S.FormSubtitle>
+          <S.FormSubtitle>Please fill out the form below to complete the onboarding process.</S.FormSubtitle>
         </S.FormHeader>
 
         {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
@@ -190,9 +269,7 @@ export default function OnboardingForm() {
                     $error={!!errors.customerInfo?.legalName}
                   />
                   {errors.customerInfo?.legalName && (
-                    <S.ErrorMessage>
-                      {errors.customerInfo.legalName.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
@@ -208,20 +285,16 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.customerInfo?.taxId}
                   />
-                  {errors.customerInfo?.taxId && (
-                    <S.ErrorMessage>
-                      {errors.customerInfo.taxId.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.FileInputContainer>
-                <S.Label htmlFor="resale">Resale Certificate</S.Label>
-      <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
-      <S.UploadButton htmlFor="file-upload">
-        <Upload size={16} />
-        {file ? file.name : "Anexar arquivo (PDF)"}
-      </S.UploadButton>
-    </S.FileInputContainer>
+                  <S.Label htmlFor="resale">Resale Certificate</S.Label>
+                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
+                  <S.UploadButton htmlFor="file-upload">
+                    <Upload size={16} />
+                    {file ? file.name : "Anexar arquivo (PDF)"}
+                  </S.UploadButton>
+                </S.FileInputContainer>
                 <S.InputGroup>
                   <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
                   <S.Input
@@ -230,17 +303,12 @@ export default function OnboardingForm() {
                     {...register("customerInfo.dunNumber", {
                       required: "D-U-N-S number is required",
                       valueAsNumber: true, // Converte automaticamente para número
-                      validate: (value) =>
-                        isNaN(value)
-                          ? "D-U-N-S number must be a valid number"
-                          : true,
+                      validate: (value) => (isNaN(value) ? "D-U-N-S number must be a valid number" : true),
                     })}
                     $error={!!errors.customerInfo?.dunNumber}
                   />
                   {errors.customerInfo?.dunNumber && (
-                    <S.ErrorMessage>
-                      {errors.customerInfo.dunNumber.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
               </S.Grid>
@@ -263,9 +331,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.street}
                     />
                     {errors.billingAddress?.street && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.street.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.street.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -278,9 +344,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.zipCode}
                     />
                     {errors.billingAddress?.zipCode && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.zipCode.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.zipCode.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -293,9 +357,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.city}
                     />
                     {errors.billingAddress?.city && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.city.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.city.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -308,9 +370,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.state}
                     />
                     {errors.billingAddress?.state && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.state.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.state.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -323,9 +383,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.county}
                     />
                     {errors.billingAddress?.county && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.county.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.county.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -338,9 +396,7 @@ export default function OnboardingForm() {
                       $error={!!errors.billingAddress?.country}
                     />
                     {errors.billingAddress?.country && (
-                      <S.ErrorMessage>
-                        {errors.billingAddress.country.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.billingAddress.country.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                 </div>
@@ -348,9 +404,7 @@ export default function OnboardingForm() {
                 <div>
                   <h3>Shipping Address</h3>
                   <S.InputGroup>
-                    <S.Label htmlFor="shippingStreet">
-                      Street and Number
-                    </S.Label>
+                    <S.Label htmlFor="shippingStreet">Street and Number</S.Label>
                     <S.Input
                       id="shippingStreet"
                       {...register("shippingAddress.street", {
@@ -359,9 +413,7 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.street}
                     />
                     {errors.shippingAddress?.street && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.street.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.street.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -374,9 +426,7 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.zipCode}
                     />
                     {errors.shippingAddress?.zipCode && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.zipCode.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.zipCode.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -389,9 +439,7 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.city}
                     />
                     {errors.shippingAddress?.city && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.city.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.city.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -404,9 +452,7 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.state}
                     />
                     {errors.shippingAddress?.state && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.state.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.state.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -419,9 +465,7 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.county}
                     />
                     {errors.shippingAddress?.county && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.county.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.county.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
@@ -434,28 +478,16 @@ export default function OnboardingForm() {
                       $error={!!errors.shippingAddress?.country}
                     />
                     {errors.shippingAddress?.country && (
-                      <S.ErrorMessage>
-                        {errors.shippingAddress.country.message}
-                      </S.ErrorMessage>
+                      <S.ErrorMessage>{errors.shippingAddress.country.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="freightForwarder">
-                      Freight Forwarder (if applicable)
-                    </S.Label>
-                    <S.Input
-                      id="freightForwarder"
-                      {...register("shippingAddress.freightForwarder")}
-                    />
+                    <S.Label htmlFor="freightForwarder">Freight Forwarder (if applicable)</S.Label>
+                    <S.Input id="freightForwarder" {...register("shippingAddress.freightForwarder")} />
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="shippingAccountNumber">
-                      Shipping Account Number (if applicable)
-                    </S.Label>
-                    <S.Input
-                      id="shippingAccountNumber"
-                      {...register("shippingAddress.shippingAccountNumber")}
-                    />
+                    <S.Label htmlFor="shippingAccountNumber">Shipping Account Number (if applicable)</S.Label>
+                    <S.Input id="shippingAccountNumber" {...register("shippingAddress.shippingAccountNumber")} />
                   </S.InputGroup>
                 </div>
               </S.Grid>
@@ -475,11 +507,7 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.apContact?.firstName}
                   />
-                  {errors.apContact?.firstName && (
-                    <S.ErrorMessage>
-                      {errors.apContact.firstName.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.apContact?.firstName && <S.ErrorMessage>{errors.apContact.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="apLastName">AP Contact Last Name</S.Label>
@@ -490,11 +518,7 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.apContact?.lastName}
                   />
-                  {errors.apContact?.lastName && (
-                    <S.ErrorMessage>
-                      {errors.apContact.lastName.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.apContact?.lastName && <S.ErrorMessage>{errors.apContact.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="apEmail">AP Contact E-mail</S.Label>
@@ -510,16 +534,10 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.apContact?.email}
                   />
-                  {errors.apContact?.email && (
-                    <S.ErrorMessage>
-                      {errors.apContact.email.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.apContact?.email && <S.ErrorMessage>{errors.apContact.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apCountryCode">
-                    AP Contact Country Code
-                  </S.Label>
+                  <S.Label htmlFor="apCountryCode">AP Contact Country Code</S.Label>
                   <S.Input
                     id="apCountryCode"
                     {...register("apContact.countryCode", {
@@ -528,9 +546,7 @@ export default function OnboardingForm() {
                     $error={!!errors.apContact?.countryCode}
                   />
                   {errors.apContact?.countryCode && (
-                    <S.ErrorMessage>
-                      {errors.apContact.countryCode.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
@@ -543,9 +559,7 @@ export default function OnboardingForm() {
                     $error={!!errors.apContact?.contactNumber}
                   />
                   {errors.apContact?.contactNumber && (
-                    <S.ErrorMessage>
-                      {errors.apContact.contactNumber.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
               </S.Grid>
@@ -565,11 +579,7 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.buyerInfo?.firstName}
                   />
-                  {errors.buyerInfo?.firstName && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.firstName.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="buyerLastName">Buyer Last Name</S.Label>
@@ -580,11 +590,7 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.buyerInfo?.lastName}
                   />
-                  {errors.buyerInfo?.lastName && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.lastName.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="buyerEmail">Buyer E-mail</S.Label>
@@ -600,11 +606,7 @@ export default function OnboardingForm() {
                     })}
                     $error={!!errors.buyerInfo?.email}
                   />
-                  {errors.buyerInfo?.email && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.email.message}
-                    </S.ErrorMessage>
-                  )}
+                  {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="buyerNumber">Buyer Number</S.Label>
@@ -616,15 +618,11 @@ export default function OnboardingForm() {
                     $error={!!errors.buyerInfo?.buyerNumber}
                   />
                   {errors.buyerInfo?.buyerNumber && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.buyerNumber.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerCountryCode">
-                    Buyer Country Code
-                  </S.Label>
+                  <S.Label htmlFor="buyerCountryCode">Buyer Country Code</S.Label>
                   <S.Input
                     id="buyerCountryCode"
                     {...register("buyerInfo.countryCode", {
@@ -633,9 +631,7 @@ export default function OnboardingForm() {
                     $error={!!errors.buyerInfo?.countryCode}
                   />
                   {errors.buyerInfo?.countryCode && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.countryCode.message}
-                    </S.ErrorMessage>
+                    <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
               </S.Grid>
@@ -644,56 +640,31 @@ export default function OnboardingForm() {
 
           {isWholesaleTeam && currentStep === 5 && (
             <S.Section>
-              <S.SectionTitle>
-                Terms and Conditions Negotiated (For FARM Rio Wholesale Team Use
-                Only)
-              </S.SectionTitle>
+              <S.SectionTitle>Terms and Conditions Negotiated (For FARM Rio Wholesale Team Use Only)</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="wholesaleWarehouse">
-                    Warehouse (Shipped From)
-                  </S.Label>
-                  <S.Input
-                    id="wholesaleWarehouse"
-                    {...register("wholesaleTerms.warehouse")}
-                  />
+                  <S.Label htmlFor="wholesaleWarehouse">Warehouse (Shipped From)</S.Label>
+                  <S.Input id="wholesaleWarehouse" {...register("wholesaleTerms.warehouse")} />
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="wholesaleInvoicingCompany">
-                    Invoicing Company
-                  </S.Label>
-                  <S.Input
-                    id="wholesaleInvoicingCompany"
-                    {...register("wholesaleTerms.invoicingCompany")}
-                  />
+                  <S.Label htmlFor="wholesaleInvoicingCompany">Invoicing Company</S.Label>
+                  <S.Input id="wholesaleInvoicingCompany" {...register("wholesaleTerms.invoicingCompany")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="wholesaleCurrency">Currency</S.Label>
-                  <S.Input
-                    id="wholesaleCurrency"
-                    {...register("wholesaleTerms.currency")}
-                  />
+                  <S.Input id="wholesaleCurrency" {...register("wholesaleTerms.currency")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="wholesaleTerms">Terms</S.Label>
-                  <S.Input
-                    id="wholesaleTerms"
-                    {...register("wholesaleTerms.terms")}
-                  />
+                  <S.Input id="wholesaleTerms" {...register("wholesaleTerms.terms")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="wholesaleDiscount">Discount</S.Label>
-                  <S.Input
-                    id="wholesaleDiscount"
-                    {...register("wholesaleTerms.discount")}
-                  />
+                  <S.Input id="wholesaleDiscount" {...register("wholesaleTerms.discount")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="wholesaleCredit">Credit</S.Label>
-                  <S.Input
-                    id="wholesaleCredit"
-                    {...register("wholesaleTerms.credit")}
-                  />
+                  <S.Input id="wholesaleCredit" {...register("wholesaleTerms.credit")} />
                 </S.InputGroup>
               </S.Grid>
             </S.Section>
@@ -701,56 +672,31 @@ export default function OnboardingForm() {
 
           {isCreditTeam && currentStep === 5 && (
             <S.Section>
-              <S.SectionTitle>
-                Terms and Conditions Approved (For FARM Rio Credit Team Use
-                Only)
-              </S.SectionTitle>
+              <S.SectionTitle>Terms and Conditions Approved (For FARM Rio Credit Team Use Only)</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="creditWarehouse">
-                    Warehouse (Shipped From)
-                  </S.Label>
-                  <S.Input
-                    id="creditWarehouse"
-                    {...register("creditTerms.warehouse")}
-                  />
+                  <S.Label htmlFor="creditWarehouse">Warehouse (Shipped From)</S.Label>
+                  <S.Input id="creditWarehouse" {...register("creditTerms.warehouse")} />
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="creditInvoicingCompany">
-                    Invoicing Company
-                  </S.Label>
-                  <S.Input
-                    id="creditInvoicingCompany"
-                    {...register("creditTerms.invoicingCompany")}
-                  />
+                  <S.Label htmlFor="creditInvoicingCompany">Invoicing Company</S.Label>
+                  <S.Input id="creditInvoicingCompany" {...register("creditTerms.invoicingCompany")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="creditCurrency">Currency</S.Label>
-                  <S.Input
-                    id="creditCurrency"
-                    {...register("creditTerms.currency")}
-                  />
+                  <S.Input id="creditCurrency" {...register("creditTerms.currency")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="creditTerms">Terms</S.Label>
-                  <S.Input
-                    id="creditTerms"
-                    {...register("creditTerms.terms")}
-                  />
+                  <S.Input id="creditTerms" {...register("creditTerms.terms")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="creditDiscount">Discount</S.Label>
-                  <S.Input
-                    id="creditDiscount"
-                    {...register("creditTerms.discount")}
-                  />
+                  <S.Input id="creditDiscount" {...register("creditTerms.discount")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="creditCredit">Credit</S.Label>
-                  <S.Input
-                    id="creditCredit"
-                    {...register("creditTerms.credit")}
-                  />
+                  <S.Input id="creditCredit" {...register("creditTerms.credit")} />
                 </S.InputGroup>
               </S.Grid>
             </S.Section>
@@ -783,7 +729,7 @@ export default function OnboardingForm() {
               Ok!
             </S.ModalTitle>
             <S.ModalMessage>
-            Your account has been successfully created! You will be redirected to the login page            
+              Your account has been successfully created! You will be redirected to the login page
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {
@@ -797,5 +743,5 @@ export default function OnboardingForm() {
         </S.ModalOverlay>
       )}
     </S.ContainerMain>
-  );
+  )
 }

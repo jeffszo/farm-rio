@@ -1,5 +1,4 @@
-import styled from "styled-components";
-
+import styled from "styled-components"
 
 export const ContainerMain = styled.div`
   display: flex;
@@ -7,7 +6,7 @@ export const ContainerMain = styled.div`
   align-items: center;
   height: 100vh; 
   margin-top: 9rem;
-` 
+`
 
 export const FormContainer = styled.div`
   width: 85%; /* Ou um valor fixo como 800px */
@@ -23,18 +22,18 @@ export const FormContainer = styled.div`
   }
 
 
-`;
+`
 
 export const FormHeader = styled.div`
   margin-bottom: 2rem;
-`;
+`
 
 export const FormTitle = styled.h1`
   font-size: 1.5rem;
   font-weight: 700;
   color: #18181b;
   margin-bottom: 0.5rem;
-`;
+`
 
 export const FormSubtitle = styled.p`
   font-size: 0.875rem;
@@ -44,28 +43,28 @@ export const FormSubtitle = styled.p`
     font-size: 1rem;
   }
   
-`;
+`
 
 export const Section = styled.section`
   margin-bottom: 2rem;
-`;
+`
 
 export const SectionTitle = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
   color: #18181b;
   margin-bottom: 1rem;
-`;
+`
 
 export const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
-`;
+`
 
 export const InputGroup = styled.div`
   margin-bottom: 1rem;
-`;
+`
 
 export const Label = styled.label`
   display: block;
@@ -73,7 +72,7 @@ export const Label = styled.label`
   font-weight: 500;
   color: #18181b;
   margin-bottom: 0.5rem;
-`;
+`
 
 export const Input = styled.input<{ error?: boolean }>`
   width: 100%;
@@ -96,14 +95,14 @@ export const Input = styled.input<{ error?: boolean }>`
     background-color: #f4f4f5;
     color: #a1a1aa;
   }
-`;
+`
 
 export const ErrorMessage = styled.span`
   display: block;
   color: #ef4444;
   font-size: 0.75rem;
   margin-top: 0.25rem;
-`;
+`
 
 export const Button = styled.button<{ variant?: "primary" | "secondary" }>`
   display: flex;
@@ -152,13 +151,13 @@ export const Button = styled.button<{ variant?: "primary" | "secondary" }>`
     opacity: 0.5;
     cursor: not-allowed;
   }
-`;
+`
 
 export const ButtonGroup = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 2rem;
-`;
+`
 
 export const ProgressBar = styled.div`
   width: 100%;
@@ -167,24 +166,24 @@ export const ProgressBar = styled.div`
   border-radius: 0.125rem;
   margin-bottom: 2rem;
   overflow: hidden;
-`;
+`
 
 export const ProgressFill = styled.div<{ progress: number }>`
   width: ${(props) => props.progress}%;
   height: 100%;
   background-color: #18181b;
   transition: width 0.3s ease;
-`;
+`
 
 export const FileInputContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-`;
+`
 
 export const HiddenInput = styled.input`
   display: none;
-`;
+`
 
 export const UploadButton = styled.label`
 display: flex;
@@ -200,14 +199,13 @@ display: flex;
   font-size: 14px;
   color: #666;
 
-`;
+`
 
 export const FileNameText = styled.p`
   font-size: 14px;
   color: #333;
   margin-top: 4px;
 `
-
 
 export const ReviewContainer = styled.div`
   position: absolute;
@@ -225,20 +223,20 @@ export const ReviewContainer = styled.div`
   @media (max-width: 868px) {
     width: 90%;
   }
-`;
+`
 
 export const ReviewHeader = styled.div`
   margin-bottom: 2rem;
-`;
+`
 
 export const ReviewTitle = styled.h1`
   font-size: 1.5rem;
   font-weight: 700;
   color: #18181b;
   margin-bottom: 0.5rem;
-`;
+`
 
-export const ReviewSubtitle = styled.p`
+export const ReviewSubtitle = styled.div`
 
   font-size: 0.875rem;
   color: #71717a;
@@ -252,6 +250,63 @@ export const ReviewSubtitle = styled.p`
     font-size: 1rem;
     font-weight: 500;
   }
-`;
+`
 
-;
+export const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`
+
+export const ModalContent = styled.div`
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+export const ModalTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+`
+
+export const ModalMessage = styled.p`
+  font-size: 1rem;
+  color: #4b5563;
+  margin-bottom: 24px;
+  text-align: center;
+`
+
+export const ModalButton = styled.button`
+  background-color: #18181b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #27272a;
+  }
+
+  
+`
+

@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-// import { useRouter } from "next/navigation";
-import { Users, ChevronLeft, ChevronRight } from "lucide-react";
-import * as S from "./styles";
-import { useMediaQuery } from "react-responsive";
+import { Users, ChevronLeft, ChevronRight } from "lucide-react"
+import * as S from "./styles"
+import { useMediaQuery } from "react-responsive"
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
 
 interface Customer {
-  id: string;
-  customer_name: string;
-  status: string;
-  created_at: string;
+  id: string
+  customer_name: string
+  status: string
+  created_at: string
 }
 
 interface Props {
-  customers: Customer[];
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-  setCurrentPage: (page: number) => void;
-  onViewDetails: (id: string) => void;
+  customers: Customer[]
+  totalCount: number
+  currentPage: number
+  totalPages: number
+  setCurrentPage: (page: number) => void
+  onViewDetails: (id: string) => void
 }
 
 export default function PendingCustomersTable({
@@ -29,14 +30,30 @@ export default function PendingCustomersTable({
   setCurrentPage,
   onViewDetails,
 }: Props) {
-  // const router = useRouter();
-  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isMobile = useMediaQuery({ maxWidth: 768 })
+
+  // 🔹 Função para exportar os clientes aprovados para um arquivo Excel
+  const exportToExcel = () => {
+    if (customers.length === 0) {
+      alert("Nenhum cliente aprovado para exportar!")
+      return
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(customers)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers")
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+    saveAs(data, "approved_customers.xlsx")
+  }
 
   return (
     <S.Container>
       <S.TitleWrapper>
         <Users size={24} />
         <S.Title>Pending customers</S.Title>
+        <S.ExportButton onClick={exportToExcel}>Exportar Excel</S.ExportButton>
       </S.TitleWrapper>
 
       {/* 🔹 Exibe a quantidade total de clientes pendentes */}
@@ -81,7 +98,7 @@ export default function PendingCustomersTable({
                   <S.MobileListItemTitle>{customer.customer_name}</S.MobileListItemTitle>
                   <S.MobileListItemContent>Status: {customer.status}</S.MobileListItemContent>
                   <S.MobileListItemContent>
-                    Data: {new Date(customer.created_at).toLocaleString()}
+                    Date: {new Date(customer.created_at).toLocaleString()}
                   </S.MobileListItemContent>
                   <S.Button
                     onClick={() => onViewDetails(customer.id)}
@@ -119,5 +136,5 @@ export default function PendingCustomersTable({
         </>
       )}
     </S.Container>
-  );
+  )
 }

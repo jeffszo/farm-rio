@@ -178,3 +178,26 @@ export const MobileListItemContent = styled.p`
   margin-bottom: 0.5rem;
 `
 
+
+export const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`
+
+
+export const ExportButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  font-size: 1rem;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`

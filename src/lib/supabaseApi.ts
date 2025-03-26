@@ -86,39 +86,31 @@ export class SupabaseAPI implements AuthAPI {
     }
   }
 
-  async submitForm(
-    formData: {
-      customerInfo: { legalName: string; taxId: string; resaleCertNumber: string }
-      billingAddress: object
-      shippingAddress: object
-      apContact: { firstName: string; lastName: string; email: string }
-      buyerInfo: { firstName: string; lastName: string; email: string }
-    },
-    userId: string,
-  ) {
+  async submitForm(formData: unknown, userId: string) {
     const { data, error } = await supabase
       .from("customer_forms")
       .insert([
         {
           user_id: userId,
-          customer_name: formData.customerInfo.legalName,
-          sales_tax_id: formData.customerInfo.taxId,
-          resale_certificate: formData.customerInfo.resaleCertNumber,
-          billing_address: JSON.stringify(formData.billingAddress),
-          shipping_address: JSON.stringify(formData.shippingAddress),
-          ap_contact_name: `${formData.apContact.firstName} ${formData.apContact.lastName}`,
-          ap_contact_email: formData.apContact.email,
-          buyer_name: `${formData.buyerInfo.firstName} ${formData.buyerInfo.lastName}`,
-          buyer_email: formData.buyerInfo.email,
+          customer_name: formData.customer_name,  // 👈 Agora acessa diretamente
+          sales_tax_id: formData.sales_tax_id,
+          resale_certificate: formData.resale_certificate ?? null,
+          billing_address: formData.billing_address,
+          shipping_address: formData.shipping_address,
+          ap_contact_name: formData.ap_contact_name,
+          ap_contact_email: formData.ap_contact_email,
+          buyer_name: formData.buyer_name,
+          buyer_email: formData.buyer_email,
           status: "pending",
         },
       ])
       .select()
-      .single()
-
-    if (error) throw new Error(`Erro ao enviar formulário: ${error.message}`)
-    return data
+      .single();
+  
+    if (error) throw new Error(`Erro ao enviar formulário: ${error.message}`);
+    return data;
   }
+  
 
   async getFormStatus(userId: string) {
     const { data, error } = await supabase
@@ -314,14 +306,7 @@ export class SupabaseAPI implements AuthAPI {
     }
   }
 
-  async validateWholesaleCustomer(customerId: string, approved: boolean, terms: unknown) {
-    // ✅ Verifica se todos os checkboxes foram marcados antes de aprovar
-    if (approved) {
-      const allTermsAccepted = Object.values(terms).every((term) => term === true);
-      if (!allTermsAccepted) {
-        throw new Error("⚠️ Todos os termos devem ser aceitos para aprovar!");
-      }
-    }
+  async validateWholesaleCustomer(customerId: string, approved: boolean) {
   
     // ✅ Atualiza o status na tabela `customer_forms`
     const updateData = {
@@ -351,14 +336,14 @@ export class SupabaseAPI implements AuthAPI {
   }
 
 
-  async validateCreditCustomer(customerId: string, approved: boolean, terms: unknown) {
+  async validateCreditCustomer(customerId: string, approved: boolean) {
     // ✅ Verifica se todos os checkboxes foram marcados antes de aprovar
-    if (approved) {
-      const allTermsAccepted = Object.values(terms).every((term) => term === true);
-      if (!allTermsAccepted) {
-        throw new Error("⚠️ Todos os termos devem ser aceitos para aprovar!");
-      }
-    }
+    // if (approved) {
+    //   const allTermsAccepted = Object.values(terms).every((term) => term === true);
+    //   if (!allTermsAccepted) {
+    //     throw new Error("⚠️ Todos os termos devem ser aceitos para aprovar!");
+    //   }
+    // }
   
     // ✅ Atualiza o status na tabela `customer_forms`
     const updateData = {
