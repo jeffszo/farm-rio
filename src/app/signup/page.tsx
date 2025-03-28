@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FaCheckCircle } from "react-icons/fa"
 import * as S from "./styles"
-import { api } from "../../lib/supabaseApi"
+import { api } from "../../lib/supabase/index";
 import { useRouter } from "next/navigation"
 
 interface SignUpFormData {

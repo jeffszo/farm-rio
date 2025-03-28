@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { api } from "../../../../lib/supabaseApi"
+import { api } from "../../../../lib/supabase/index";
 import * as S from "./styles"
 import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent } from "lucide-react"
 
@@ -338,7 +338,7 @@ export default function ValidationDetailsPage() {
             <S.ModalContent>
               <S.ModalTitle>{modalContent.title}</S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
-              <S.ModalButton onClick={closeModal}>Close</S.ModalButton>
+              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}

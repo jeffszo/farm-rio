@@ -1,10 +1,12 @@
 "use client"
 
-import { Users, ChevronLeft, ChevronRight } from "lucide-react"
+import { Users, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import * as S from "./styles"
 import { useMediaQuery } from "react-responsive"
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
+import { usePathname } from "next/navigation"
+import { api } from "../../lib/supabase/index";
 
 interface Customer {
   id: string
@@ -22,6 +24,7 @@ interface Props {
   onViewDetails: (id: string) => void
 }
 
+
 export default function PendingCustomersTable({
   customers,
   totalCount,
@@ -31,29 +34,47 @@ export default function PendingCustomersTable({
   onViewDetails,
 }: Props) {
   const isMobile = useMediaQuery({ maxWidth: 768 })
+  const pathname = usePathname()
+  const isCSCValidationsRoute = pathname?.includes("/validations/csc")
 
   // 🔹 Função para exportar os clientes aprovados para um arquivo Excel
-  const exportToExcel = () => {
-    if (customers.length === 0) {
+  const exportToExcel = async () => {
+    // 🔹 Busca os clientes aprovados no banco de dados
+    const customers = await api.getApprovedCustomers()
+
+    // 🔹 Filtra apenas os clientes aprovados pelo CSC (caso o banco tenha inconsistências)
+    const approvedCustomers = customers.filter((customer) => customer.status === "approved by the CSC team")
+
+    if (approvedCustomers.length === 0) {
       alert("Nenhum cliente aprovado para exportar!")
       return
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(customers)
+    // 🔹 Gera a planilha Excel
+    const worksheet = XLSX.utils.json_to_sheet(approvedCustomers)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers")
 
+    // 🔹 Converte para Blob e salva o arquivo
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
     const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
     saveAs(data, "approved_customers.xlsx")
   }
-
+  
   return (
     <S.Container>
       <S.TitleWrapper>
-        <Users size={24} />
-        <S.Title>Pending customers</S.Title>
-        <S.ExportButton onClick={exportToExcel}>Exportar Excel</S.ExportButton>
+        <S.TitleContainer>
+          <Users size={24} />
+          <S.Title>Pending customers</S.Title>
+        </S.TitleContainer>
+
+        {isCSCValidationsRoute && (
+          <S.ExportButton onClick={exportToExcel}>
+            <Download size={16} />
+            Exportar Excel
+          </S.ExportButton>
+        )}
       </S.TitleWrapper>
 
       {/* 🔹 Exibe a quantidade total de clientes pendentes */}
@@ -138,3 +159,4 @@ export default function PendingCustomersTable({
     </S.Container>
   )
 }
+

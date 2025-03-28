@@ -2,41 +2,71 @@ import styled from "styled-components"
 
 export const Container = styled.div`
   max-width: 1400px;
-  /* width: 150%; */
   margin: 0 auto;
-  padding: 1rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
   width: 100%;
-  
+  position: relative;
 `
 
 export const TitleWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  width: 100%;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  position: relative;
 
   @media (max-width: 768px) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
   }
+`
 
+export const TitleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 `
 
 export const Title = styled.h3`
   font-size: 1.2rem;
   font-weight: bold;
   color: #1a202c;
+  margin-left: 0.5rem;
+`
+
+export const ExportButton = styled.button`
+  background-color: #6e6e6e;
+  color: white;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: absolute;
+  right: 0;
+
+  &:hover {
+    background-color: #555555;
+  }
+`
+
+export const TotalCount = styled.p`
+  opacity: 0.8;
+  font-size: 0.9rem;
+  margin-top: 1rem;
   text-align: center;
-
-
 `
 
 export const Message = styled.p`
@@ -69,9 +99,6 @@ export const TableHeader = styled.th`
   &:last-child {
     border-top-right-radius: 0.5rem;
   }
-
-  
- 
 `
 
 export const TableRow = styled.tr`
@@ -144,7 +171,6 @@ export const MobileList = styled.ul`
   list-style: none;
   padding: 0;
   width: 100%;
-
 `
 
 export const MobileListItem = styled.li`
@@ -153,7 +179,6 @@ export const MobileListItem = styled.li`
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   padding: 1rem;
   margin-bottom: 1rem;
-
 
   @media (max-width: 768px) {
     margin: 2rem 0;
@@ -167,17 +192,11 @@ export const MobileListItemTitle = styled.h3`
   margin-bottom: 0.5rem;
 `
 
-export const TotalCount = styled.p`
-  opacity: 0.8;
-  font-size: 0.9rem;
-`;
-
 export const MobileListItemContent = styled.p`
   font-size: 0.9rem;
   color: #4a5568;
   margin-bottom: 0.5rem;
 `
-
 
 export const Header = styled.div`
   display: flex;
@@ -186,18 +205,3 @@ export const Header = styled.div`
   margin-bottom: 20px;
 `
 
-
-export const ExportButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  font-size: 1rem;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`

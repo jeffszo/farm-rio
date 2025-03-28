@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { api } from "../../../../lib/supabaseApi"
+import { api } from "../../../../lib/supabase/index"
 import * as S from "./styles"
 import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent } from "lucide-react"
 
@@ -21,6 +21,7 @@ interface CustomerForm {
   created_at: string
 }
 
+// Updated interface to match the actual structure used in the component
 interface ValidationTerms {
   invoicing_company: string
   warehouse: string
@@ -28,6 +29,7 @@ interface ValidationTerms {
   payment_terms: string
   credit_limit: number
   discount: number
+  [key: string]: string | number // Allow dynamic access to properties
 }
 
 const INVOICING_COMPANIES = [
@@ -99,36 +101,33 @@ export default function ValidationDetailsPage() {
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.invoicing_company) {
-        setWarehouses([]);
-        return;
+        setWarehouses([])
+        return
       }
-  
+
       try {
-        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company);
-        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name));
+        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company)
+        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name))
       } catch (err) {
-        console.error("Erro ao buscar warehouses:", err);
-        setWarehouses([]);
+        console.error("Erro ao buscar warehouses:", err)
+        setWarehouses([])
       }
-    };
-  
-    fetchWarehouses();
-  }, [terms.invoicing_company]);
-  
-  
-  
+    }
+
+    fetchWarehouses()
+  }, [terms.invoicing_company])
 
   const handleTermChange = (field: keyof ValidationTerms, value: string | number) => {
     if (field === "credit_limit" || field === "discount") {
-      const numericValue = value === "" ? 0 : Number(value);
-  
-      if (isNaN(numericValue)) return;
-  
-      setTerms((prev) => ({ ...prev, [field]: numericValue }));
+      const numericValue = value === "" ? 0 : Number(value)
+
+      if (isNaN(numericValue)) return
+
+      setTerms((prev) => ({ ...prev, [field]: numericValue }))
     } else {
-      setTerms((prev) => ({ ...prev, [field]: value }));
+      setTerms((prev) => ({ ...prev, [field]: value }))
     }
-  };
+  }
 
   const handleApproval = async (approved: boolean) => {
     if (!user) return
@@ -199,10 +198,17 @@ export default function ValidationDetailsPage() {
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
             </S.FormRow>
             <S.FormRow>
-              <strong>Resale Certificate:</strong> {customerForm.resale_certificate}
+              <strong>Resale Certificate:</strong>{" "}
+              {customerForm.resale_certificate ? (
+                <a href={customerForm.resale_certificate} target="_blank" rel="noopener noreferrer">
+                  View PDF
+                </a>
+              ) : (
+                "Não enviado"
+              )}
             </S.FormRow>
           </S.FormSection>
-                  <S.FormSection>
+          <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
@@ -291,10 +297,10 @@ export default function ValidationDetailsPage() {
               <S.Select value={terms.payment_terms} onChange={(e) => handleTermChange("payment_terms", e.target.value)}>
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
-  <option key={`${term}-${index}`} value={term}>
-    {term}
-  </option>
-))}
+                  <option key={`${term}-${index}`} value={term}>
+                    {term}
+                  </option>
+                ))}
               </S.Select>
             </S.TermsSection>
 

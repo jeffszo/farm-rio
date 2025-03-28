@@ -195,7 +195,7 @@ export const ModalDescription = styled.p`
 `
 
 export const ModalButton = styled.button`
-  background-color: #c1121f;
+  background-color:rgb(18, 193, 68);
   color: white;
   font-size: 1rem;
   font-weight: 500;

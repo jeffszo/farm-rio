@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "../../../lib/supabaseApi";
+import { api } from "../../../lib/supabase/index";
 import PendingCustomersTable from "../../../components/PendingCustomersTable";
 import TableSkeleton from "@/components/TableSkeleton";
+
 
 export default function WholesaleValidationsPage() {
   const [customers, setCustomers] = useState([]);

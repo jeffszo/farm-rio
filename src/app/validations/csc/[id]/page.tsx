@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { api } from "@/lib/supabaseApi";
+import { api } from "../../../../lib/supabase/index";
 import * as S from "./styles";
 import { User, MapPin, Mail } from "lucide-react";
 

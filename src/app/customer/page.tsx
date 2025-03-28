@@ -4,32 +4,31 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as S from "./styles"
-import { api } from "../../lib/supabaseApi"
+import { api } from "../../lib/supabase/index";
 import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
-import { ChevronRight, ChevronLeft, Upload, Clock4 } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Upload, Clock4 } from "lucide-react"
 import { FaCheckCircle } from "react-icons/fa"
 
 export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const selectedFile = event.target.files[0]
-
+    const selectedFile = event.target.files?.[0]
+    if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        alert("Apenas arquivos PDF são permitidos.")
+        alert("Por favor, envie um arquivo PDF.")
         return
       }
-
       setFile(selectedFile)
     }
   }
 
   const {
     register,
-    handleSubmit,
+    handleSubmit: hookFormSubmit,
     formState: { errors },
     trigger,
   } = useForm<IFormInputs>()
@@ -74,6 +73,7 @@ export default function OnboardingForm() {
   const onSubmit = async (formData: any) => {
     try {
       setApiError(null)
+      setIsUploading(true)
 
       const user = await api.getCurrentUser()
       if (!user || !user.id) {
@@ -81,20 +81,36 @@ export default function OnboardingForm() {
         setApiError("Sua sessão expirou. Faça login novamente.")
         return
       }
-      console.log("Dados recebidos no formulário:", formData) // 
+
+      console.log("Dados recebidos no formulário:", formData)
+
+      // Upload the PDF file to Supabase if it exists
+      let fileUrl = null
+      if (file) {
+        try {
+          // Upload to the resalecertificates bucket
+          fileUrl = await api.uploadResaleCertificate(file, user.id)
+          console.log("Arquivo enviado com sucesso:", fileUrl)
+        } catch (error) {
+          console.error("Erro ao enviar o arquivo:", error)
+          setApiError("Erro ao enviar o arquivo. Tente novamente.")
+          setIsUploading(false)
+          return
+        }
+      }
 
       // Flatten the nested structure while preserving essential field names
       const flattenedFormData = {
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
-        resale_certificate: formData.customerInfo?.resaleCertNumber || null,
-      
-        billing_address: Object.values(formData.billingAddress || {}).join(', '),
-        shipping_address: Object.values(formData.shippingAddress || {}).join(', '),
-      
+        resale_certificate: fileUrl, // Use the URL from the uploaded file
+
+        billing_address: Object.values(formData.billingAddress || {}).join(", "),
+        shipping_address: Object.values(formData.shippingAddress || {}).join(", "),
+
         ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
         ap_contact_email: formData.apContact?.email || null,
-      
+
         buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
       }
@@ -109,22 +125,6 @@ export default function OnboardingForm() {
           // Add other mappings as needed
         })
       }
-
-      // Process other sections similarly
-      // You may need to adjust these mappings based on your database schema
-      /*if (formData.billingAddress) {
-        Object.values(formData.billingAddress).forEach((value) => {
-          flattenedFormData.billing_info = flattenedFormData.billing_info || []
-          flattenedFormData.billing_info.push(value)
-        })
-      }
-
-      if (formData.shippingAddress) {
-        Object.values(formData.shippingAddress).forEach((value) => {
-          flattenedFormData.shipping_info = flattenedFormData.shipping_info || []
-          flattenedFormData.shipping_info.push(value)
-        })
-      }*/
 
       if (formData.apContact) {
         Object.values(formData.apContact).forEach((value) => {
@@ -148,6 +148,8 @@ export default function OnboardingForm() {
     } catch (error: any) {
       console.error("Erro ao enviar o formulário:", error.message)
       setApiError(error.message || "Erro ao enviar o formulário. Tente novamente.")
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -254,7 +256,7 @@ export default function OnboardingForm() {
           <S.ProgressFill progress={(currentStep / totalSteps) * 100} />
         </S.ProgressBar>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={hookFormSubmit(onSubmit)}>
           {currentStep === 1 && (
             <S.Section>
               <S.SectionTitle>Customer Information</S.SectionTitle>
@@ -713,8 +715,8 @@ export default function OnboardingForm() {
                 Next <ChevronRight size={16} />
               </S.Button>
             ) : (
-              <S.Button type="submit" variant="primary">
-                Submit
+              <S.Button type="submit" variant="primary" disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Submit"}
               </S.Button>
             )}
           </S.ButtonGroup>
@@ -729,7 +731,7 @@ export default function OnboardingForm() {
               Ok!
             </S.ModalTitle>
             <S.ModalMessage>
-              Your account has been successfully created! You will be redirected to the login page
+            Your form has been submitted successfully!
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {
@@ -745,3 +747,4 @@ export default function OnboardingForm() {
     </S.ContainerMain>
   )
 }
+
