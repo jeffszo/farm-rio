@@ -108,14 +108,14 @@ export async function getPendingCSCValidations(page = 1, itemsPerPage = 10) {
 export async function getInvoicingCompanies() {
   const { data, error } = await supabase
     .from("warehouses")
-    .select("DISTINCT invoicing_company"); // Aplicando DISTINCT corretamente
+    .select("DISTINCT invoicing_company") as { data: { invoicing_company: string }[] | null, error: any }; // Aplicando DISTINCT corretamente
 
   if (error) {
     console.error("Error fetching invoicing companies:", error);
     throw new Error("Failed to fetch invoicing companies");
   }
 
-  return (data ?? []).map((item: { invoicing_company: string }) => item.invoicing_company);
+  return (data ?? []).map((item) => item.invoicing_company);
 }
 
 

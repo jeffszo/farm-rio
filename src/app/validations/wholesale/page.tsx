@@ -50,7 +50,7 @@ export default function WholesaleValidationsPage() {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   if (loading) return <TableSkeleton />;
-  if (error) return <p>Error: {error}</p>;
+  if (error) return <p>Error: {error.replace(/'/g, "&#39;")}</p>;
 
   return (
     <PendingCustomersTable
