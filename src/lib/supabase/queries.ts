@@ -105,17 +105,20 @@ export async function getPendingCSCValidations(page = 1, itemsPerPage = 10) {
   return { data, error: null, count }
 }
 
-export async function getInvoicingCompanies() {
+export async function getInvoicingCompanies(): Promise<string[]> {
   const { data, error } = await supabase
     .from("warehouses")
-    .select("DISTINCT invoicing_company") as { data: { invoicing_company: string }[] | null, error: any }; // Aplicando DISTINCT corretamente
+    .select("invoicing_company");
 
   if (error) {
     console.error("Error fetching invoicing companies:", error);
     throw new Error("Failed to fetch invoicing companies");
   }
 
-  return (data ?? []).map((item) => item.invoicing_company);
+  // Removendo duplicatas no JavaScript
+  const uniqueCompanies = Array.from(new Set((data ?? []).map((item) => item.invoicing_company)));
+
+  return uniqueCompanies;
 }
 
 

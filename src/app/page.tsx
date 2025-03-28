@@ -13,8 +13,9 @@ export default function Home() {
           <FormTitle>Login</FormTitle>
           <LoginForm />
           <Link href="/signup">
-            <FormLink>Don't have an account? Sign up</FormLink>
-          </Link>
+  <FormLink>Don&apos;t have an account? Sign up</FormLink>
+</Link>
+
         </FormContainer>
       </Main>
     </Container>
