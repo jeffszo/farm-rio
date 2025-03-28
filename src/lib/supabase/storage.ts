@@ -6,7 +6,7 @@ export async function uploadResaleCertificate(file: File, customerId: string) {
   const filePath = `resalecertificates/${fileName}`
 
   // ✅ Upload para o Supabase Storage
-  const { data, error } = await supabase.storage.from("resalecertificates").upload(filePath, file, { upsert: true })
+  const { error } = await supabase.storage.from("resalecertificates").upload(filePath, file, { upsert: true })
 
   if (error) {
     throw new Error(`Erro ao fazer upload do arquivo: ${error.message}`)

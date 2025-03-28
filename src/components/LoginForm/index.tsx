@@ -1,7 +1,6 @@
 import { useForm, type SubmitHandler } from "react-hook-form"
 import * as S from './styles'
 import type { LoginFormData } from "../../types/auth";
-import { api } from "../../lib/supabaseApi";
 import { useRouter } from "next/navigation";
 
 
