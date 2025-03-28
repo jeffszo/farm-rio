@@ -1,28 +1,52 @@
 import { supabase } from "./client"
 
 export async function submitForm(formData: unknown, userId: string) {
-  const { data, error } = await supabase
-    .from("customer_forms")
-    .insert([
-      {
-        user_id: userId,
-        customer_name: formData.customer_name,
-        sales_tax_id: formData.sales_tax_id,
-        resale_certificate: formData.resale_certificate ?? null,
-        billing_address: formData.billing_address,
-        shipping_address: formData.shipping_address,
-        ap_contact_name: formData.ap_contact_name,
-        ap_contact_email: formData.ap_contact_email,
-        buyer_name: formData.buyer_name,
-        buyer_email: formData.buyer_email,
-        status: "pending",
-      },
-    ])
-    .select()
-    .single()
 
-  if (error) throw new Error(`Erro ao enviar formulário: ${error.message}`)
-  return data
+  interface FormData {
+    customer_name: string
+    sales_tax_id: string
+    resale_certificate?: string | null
+    billing_address: string
+    shipping_address: string
+    ap_contact_name: string
+    ap_contact_email: string
+    buyer_name: string
+    buyer_email: string
+  }
+  
+
+
+  if (typeof formData === 'object' && formData !== null) {
+    // Agora formData pode ser tratado como um objeto com propriedades
+    const { customer_name, sales_tax_id, resale_certificate, billing_address, shipping_address, ap_contact_name, ap_contact_email, buyer_name, buyer_email } = formData as FormData;
+  
+    // Insira os dados no banco
+    const { data, error } = await supabase
+      .from("customer_forms")
+      .insert([
+        {
+          user_id: userId,
+          customer_name,
+          sales_tax_id,
+          resale_certificate: resale_certificate ?? null,
+          billing_address,
+          shipping_address,
+          ap_contact_name,
+          ap_contact_email,
+          buyer_name,
+          buyer_email,
+          status: "pending",
+        },
+      ])
+      .select()
+      .single()
+  
+    if (error) throw new Error(`Erro ao enviar formulário: ${error.message}`)
+    return data
+  } else {
+    throw new Error("formData não possui o formato esperado.")
+  }
+  
 }
 
 export async function getFormStatus(userId: string) {
