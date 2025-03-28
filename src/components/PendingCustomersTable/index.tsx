@@ -4,7 +4,8 @@ import { Users, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import * as S from "./styles"
 import { useMediaQuery } from "react-responsive"
 import * as XLSX from "xlsx"
-import { saveAs } from "file-saver"
+// @ts-ignore
+import { saveAs } from 'file-saver'
 import { usePathname } from "next/navigation"
 import { api } from "../../lib/supabase/index";
 
