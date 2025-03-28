@@ -7,7 +7,16 @@ import PendingCustomersTable from "../../../components/PendingCustomersTable";
 import TableSkeleton from "@/components/TableSkeleton";
 
 export default function CreditValidationsPage() {
-  const [customers, setCustomers] = useState([]);
+  interface Customer {
+    id: string;
+    name: string;
+    email: string;
+    customer_name: string;  
+    status: string;
+    created_at: string;
+  }
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +28,15 @@ export default function CreditValidationsPage() {
     const fetchPendingCustomers = async () => {
       try {
         setLoading(true);
-        // 🔥 Busca apenas clientes que foram aprovados pelo Time de Atacado e aguardam o Time de Crédito
         const { data, error, count } = await api.getPendingCreditValidations(
           currentPage,
           itemsPerPage
         );
+        
         if (error) throw new Error(error.message);
 
-        setCustomers(data);
+        // Agora setamos o estado com os dados retornados da API
+        setCustomers(data as Customer[]);
         setTotalCount(count || 0);
       } catch (err) {
         console.error("Error fetching customers:", err);

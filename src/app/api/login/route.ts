@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     // 🔍 1️⃣ Verifica se o usuário está na tabela `team_users`
-    const { data: teamUser, error: teamError } = await supabase
+    const { data: teamUser } = await supabase
       .from("team_users")
       .select("id, email, team_role, password")
       .eq("email", email)

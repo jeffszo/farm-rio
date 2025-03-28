@@ -24,14 +24,17 @@ export async function validateCustomer(customerId: string, teamRole: string, app
     .single()
 
   if (approved) {
-    const allTermsAccepted = Object.values(terms).every((term) => term === true)
+    if (typeof terms !== 'object' || terms === null) {
+      throw new Error("Os termos fornecidos são inválidos.");
+    }
+    const allTermsAccepted = Object.values(terms as Record<string, boolean>).every((term) => term === true);
     if (!allTermsAccepted) {
       throw new Error("Todos os termos devem ser aceitos para aprovar!")
     }
   }
 
   // ✅ Atualiza o cliente com validação do time atual
-  const updateData: any = {
+  const updateData: { status: string; validated_by_atacado?: boolean } = {
     status: approved ? "aguardando crédito" : "reprovado",
   }
 
@@ -68,7 +71,7 @@ export async function validateCustomer(customerId: string, teamRole: string, app
   }
 }
 
-export async function validateWholesaleCustomer(customerId: string, approved: boolean, terms: any) {
+export async function validateWholesaleCustomer(customerId: string, approved: boolean, terms: { invoicing_company: string; warehouse: string; currency: string; payment_terms?: string | string[]; credit_limit: number; discount: number; }) {
   // ✅ Atualiza o status na tabela `customer_forms`
   const updateData = {
     status: approved ? "approved by the wholesale team" : "rejected by wholesale team",
@@ -85,24 +88,35 @@ export async function validateWholesaleCustomer(customerId: string, approved: bo
   const { error: validationError } = await supabase
     .from("validations")
     .upsert(
-      {
-        customer_id: customerId, // 🔥 Relaciona com o cliente
-        atacado_status: approved ? "aprovado" : "reprovado",
-        atacado_invoicing_company: terms.invoicing_company,
-        atacado_warehouse: terms.warehouse,
-        atacado_currency: terms.currency,
-        atacado_terms: terms.payment_terms,
-        atacado_credit: terms.credit_limit,
-        atacado_discount: terms.discount,
-      },
-      { onConflict: ["customer_id"] } // 🔥 Se já existir, atualiza; senão, insere
+      [
+        {
+          customer_id: customerId, // 🔥 Relaciona com o cliente
+          atacado_status: approved ? "aprovado" : "reprovado",
+          atacado_invoicing_company: terms.invoicing_company,
+          atacado_warehouse: terms.warehouse,
+          atacado_currency: terms.currency,
+          atacado_terms: Array.isArray(terms.payment_terms) ? terms.payment_terms.join(", ") : terms.payment_terms,
+          atacado_credit: terms.credit_limit,
+          atacado_discount: terms.discount,
+        }
+      ],
+      { onConflict: "customer_id" } // 🔥 Se já existir, atualiza; senão, insere
     );
 
   if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
 }
 
 
-export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: any) {
+interface CreditTerms {
+  invoicing_company: string;
+  warehouse: string;
+  currency: string;
+  credit_limit: number;
+  discount: number;
+  payment_terms?: string; // Ensure this matches the expected type
+}
+
+export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
   // ✅ Atualiza o status na tabela `customer_forms`
   const updateData = {
     status: approved ? "approved by the credit team" : "rejected by credit team",
@@ -119,16 +133,18 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   const { error: validationError } = await supabase
     .from("validations")
     .upsert(
-      {
-        customer_id: customerId, // 🔥 Relaciona com o cliente
-        credito_status: approved ? "aprovado" : "reprovado",
-        credito_invoicing_company: creditTerms.invoicing_company,
-        credito_warehouse: creditTerms.warehouse,
-        credito_currency: creditTerms.currency,
-        credito_credit: creditTerms.credit_limit,
-        credito_discount: creditTerms.discount,
-      },
-      { onConflict: ["customer_id"] } // 🔥 Se já existir, atualiza; senão, insere
+      [
+        {
+          customer_id: customerId, // 🔥 Relaciona com o cliente
+          credito_status: approved ? "aprovado" : "reprovado",
+          credito_invoicing_company: creditTerms.invoicing_company,
+          credito_warehouse: creditTerms.warehouse,
+          credito_currency: creditTerms.currency,
+          credito_credit: creditTerms.credit_limit,
+          credito_discount: creditTerms.discount,
+        }
+      ],
+      { onConflict: "customer_id" } // 🔥 Se já existir, atualiza; senão, insere
     );
 
   if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);

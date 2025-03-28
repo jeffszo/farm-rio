@@ -1,6 +1,6 @@
 import { supabase } from "./client"
 
-export async function submitForm(formData: any, userId: string) {
+export async function submitForm(formData: unknown, userId: string) {
   const { data, error } = await supabase
     .from("customer_forms")
     .insert([

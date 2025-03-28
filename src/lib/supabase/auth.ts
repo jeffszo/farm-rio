@@ -12,7 +12,7 @@ export async function signUp(name: string, email: string, password: string): Pro
   if (!data.user) throw new Error("Erro inesperado: Usuário não retornado.")
 
   // ✅ Insere o usuário na tabela correta (`users` e não `profiles`)
-  const { data: userData, error: profileError } = await supabase
+  const { error: profileError } = await supabase
     .from("users")
     .insert([
       {

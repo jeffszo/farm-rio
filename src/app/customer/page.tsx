@@ -4,7 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as S from "./styles"
-import { api } from "../../lib/supabase/index";
+import { api } from "../../lib/supabase/index"
 import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
 import { ChevronRight, ChevronLeft, Upload, Clock4 } from "lucide-react"
@@ -35,13 +35,14 @@ export default function OnboardingForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
   const [formStatus, setFormStatus] = useState<string | null>(null)
-  const [user, setUser] = useState<any | null>(null)
+  const [user, setUser] = useState<{ id: string; userType?: string } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
   const router = useRouter()
 
-  const [isWholesaleTeam, setIsWholesaleTeam] = useState(false)
-  const [isCreditTeam, setIsCreditTeam] = useState(false)
+  // These state setters are used in a future implementation for team-specific views
+  const [isWholesaleTeam] = useState(false)
+  const [isCreditTeam] = useState(false)
 
   // ✅ Buscar o usuário e o status do formulário corretamente
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function OnboardingForm() {
     fetchUserAndStatus()
   }, [])
 
-  const onSubmit = async (formData: any) => {
+  const onSubmit = async (formData: IFormInputs) => {
     try {
       setApiError(null)
       setIsUploading(true)
@@ -100,7 +101,19 @@ export default function OnboardingForm() {
       }
 
       // Flatten the nested structure while preserving essential field names
-      const flattenedFormData = {
+      const flattenedFormData: {
+        customer_name: string | null;
+        sales_tax_id: string | null;
+        resale_certificate: string | null;
+        billing_address: string;
+        shipping_address: string;
+        ap_contact_name: string;
+        ap_contact_email: string | null;
+        buyer_name: string;
+        buyer_email: string | null;
+        contact_info?: string[]; // Added contact_info property
+        buyer_info?: string[]; // Added buyer_info property
+      } = {
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
         resale_certificate: fileUrl, // Use the URL from the uploaded file
@@ -145,9 +158,9 @@ export default function OnboardingForm() {
       setIsModalOpen(true) // Open modal instead of alert
 
       // Router redirect is now handled in the modal close button
-    } catch (error: any) {
-      console.error("Erro ao enviar o formulário:", error.message)
-      setApiError(error.message || "Erro ao enviar o formulário. Tente novamente.")
+    } catch (error: unknown) {
+      console.error("Erro ao enviar o formulário:", error instanceof Error ? error.message : String(error))
+      setApiError(error instanceof Error ? error.message : "Erro ao enviar o formulário. Tente novamente.")
     } finally {
       setIsUploading(false)
     }
@@ -203,7 +216,7 @@ export default function OnboardingForm() {
   // ✅ Criado `nextStep` corretamente
   const nextStep = async () => {
     // Only validate the current step fields
-    let fieldsToValidate = []
+    let fieldsToValidate: Array<"customerInfo" | "billingAddress" | "shippingAddress" | "apContact" | "buyerInfo" | "wholesaleTerms" | "creditTerms" | "customerInfo.legalName" | "customerInfo.taxId" | "customerInfo.dunNumber" | "billingAddress.street" | "billingAddress.zipCode" | "billingAddress.city" | "billingAddress.state" | "billingAddress.county" | "billingAddress.country" | "shippingAddress.street" | "shippingAddress.zipCode" | "shippingAddress.city" | "shippingAddress.state" | "shippingAddress.county" | "shippingAddress.country" | "apContact.firstName" | "apContact.lastName" | "apContact.email" | "apContact.countryCode" | "apContact.contactNumber" | "buyerInfo.firstName" | "buyerInfo.lastName" | "buyerInfo.email" | "buyerInfo.buyerNumber" | "buyerInfo.countryCode"> = [];
 
     if (currentStep === 1) {
       fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
@@ -268,7 +281,7 @@ export default function OnboardingForm() {
                     {...register("customerInfo.legalName", {
                       required: "Legal name is required",
                     })}
-                    $error={!!errors.customerInfo?.legalName}
+                    error={!!errors.customerInfo?.legalName}
                   />
                   {errors.customerInfo?.legalName && (
                     <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>
@@ -285,7 +298,7 @@ export default function OnboardingForm() {
                     {...register("customerInfo.taxId", {
                       required: "Tax ID is required",
                     })}
-                    $error={!!errors.customerInfo?.taxId}
+                    error={!!errors.customerInfo?.taxId}
                   />
                   {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -304,15 +317,17 @@ export default function OnboardingForm() {
                     type="number"
                     {...register("customerInfo.dunNumber", {
                       required: "D-U-N-S number is required",
-                      valueAsNumber: true, // Converte automaticamente para número
-                      validate: (value) => (isNaN(value) ? "D-U-N-S number must be a valid number" : true),
+                      valueAsNumber: true, // Isso converte automaticamente para número
+                      validate: (value) =>
+                        isNaN(Number(value)) || value === "" ? "D-U-N-S number must be a valid number" : true, // Validando se é um número
                     })}
-                    $error={!!errors.customerInfo?.dunNumber}
+                    error={!!errors.customerInfo?.dunNumber}
                   />
                   {errors.customerInfo?.dunNumber && (
                     <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
+
               </S.Grid>
             </S.Section>
           )}
@@ -330,7 +345,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.street", {
                         required: "Street is required",
                       })}
-                      $error={!!errors.billingAddress?.street}
+                      error={!!errors.billingAddress?.street}
                     />
                     {errors.billingAddress?.street && (
                       <S.ErrorMessage>{errors.billingAddress.street.message}</S.ErrorMessage>
@@ -343,7 +358,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.zipCode", {
                         required: "ZIP code is required",
                       })}
-                      $error={!!errors.billingAddress?.zipCode}
+                      error={!!errors.billingAddress?.zipCode}
                     />
                     {errors.billingAddress?.zipCode && (
                       <S.ErrorMessage>{errors.billingAddress.zipCode.message}</S.ErrorMessage>
@@ -356,7 +371,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.city", {
                         required: "City is required",
                       })}
-                      $error={!!errors.billingAddress?.city}
+                      error={!!errors.billingAddress?.city}
                     />
                     {errors.billingAddress?.city && (
                       <S.ErrorMessage>{errors.billingAddress.city.message}</S.ErrorMessage>
@@ -369,7 +384,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.state", {
                         required: "State is required",
                       })}
-                      $error={!!errors.billingAddress?.state}
+                      error={!!errors.billingAddress?.state}
                     />
                     {errors.billingAddress?.state && (
                       <S.ErrorMessage>{errors.billingAddress.state.message}</S.ErrorMessage>
@@ -382,7 +397,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.county", {
                         required: "County is required",
                       })}
-                      $error={!!errors.billingAddress?.county}
+                      error={!!errors.billingAddress?.county}
                     />
                     {errors.billingAddress?.county && (
                       <S.ErrorMessage>{errors.billingAddress.county.message}</S.ErrorMessage>
@@ -395,7 +410,7 @@ export default function OnboardingForm() {
                       {...register("billingAddress.country", {
                         required: "Country is required",
                       })}
-                      $error={!!errors.billingAddress?.country}
+                      error={!!errors.billingAddress?.country}
                     />
                     {errors.billingAddress?.country && (
                       <S.ErrorMessage>{errors.billingAddress.country.message}</S.ErrorMessage>
@@ -412,7 +427,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.street", {
                         required: "Street is required",
                       })}
-                      $error={!!errors.shippingAddress?.street}
+                      error={!!errors.shippingAddress?.street}
                     />
                     {errors.shippingAddress?.street && (
                       <S.ErrorMessage>{errors.shippingAddress.street.message}</S.ErrorMessage>
@@ -425,7 +440,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.zipCode", {
                         required: "ZIP code is required",
                       })}
-                      $error={!!errors.shippingAddress?.zipCode}
+                      error={!!errors.shippingAddress?.zipCode}
                     />
                     {errors.shippingAddress?.zipCode && (
                       <S.ErrorMessage>{errors.shippingAddress.zipCode.message}</S.ErrorMessage>
@@ -438,7 +453,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.city", {
                         required: "City is required",
                       })}
-                      $error={!!errors.shippingAddress?.city}
+                      error={!!errors.shippingAddress?.city}
                     />
                     {errors.shippingAddress?.city && (
                       <S.ErrorMessage>{errors.shippingAddress.city.message}</S.ErrorMessage>
@@ -451,7 +466,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.state", {
                         required: "State is required",
                       })}
-                      $error={!!errors.shippingAddress?.state}
+                      error={!!errors.shippingAddress?.state}
                     />
                     {errors.shippingAddress?.state && (
                       <S.ErrorMessage>{errors.shippingAddress.state.message}</S.ErrorMessage>
@@ -464,7 +479,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.county", {
                         required: "County is required",
                       })}
-                      $error={!!errors.shippingAddress?.county}
+                      error={!!errors.shippingAddress?.county}
                     />
                     {errors.shippingAddress?.county && (
                       <S.ErrorMessage>{errors.shippingAddress.county.message}</S.ErrorMessage>
@@ -477,7 +492,7 @@ export default function OnboardingForm() {
                       {...register("shippingAddress.country", {
                         required: "Country is required",
                       })}
-                      $error={!!errors.shippingAddress?.country}
+                      error={!!errors.shippingAddress?.country}
                     />
                     {errors.shippingAddress?.country && (
                       <S.ErrorMessage>{errors.shippingAddress.country.message}</S.ErrorMessage>
@@ -507,7 +522,7 @@ export default function OnboardingForm() {
                     {...register("apContact.firstName", {
                       required: "First name is required",
                     })}
-                    $error={!!errors.apContact?.firstName}
+                    error={!!errors.apContact?.firstName}
                   />
                   {errors.apContact?.firstName && <S.ErrorMessage>{errors.apContact.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -518,7 +533,7 @@ export default function OnboardingForm() {
                     {...register("apContact.lastName", {
                       required: "Last name is required",
                     })}
-                    $error={!!errors.apContact?.lastName}
+                    error={!!errors.apContact?.lastName}
                   />
                   {errors.apContact?.lastName && <S.ErrorMessage>{errors.apContact.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -534,7 +549,7 @@ export default function OnboardingForm() {
                         message: "Invalid email address",
                       },
                     })}
-                    $error={!!errors.apContact?.email}
+                    error={!!errors.apContact?.email}
                   />
                   {errors.apContact?.email && <S.ErrorMessage>{errors.apContact.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -545,7 +560,7 @@ export default function OnboardingForm() {
                     {...register("apContact.countryCode", {
                       required: "Country code is required",
                     })}
-                    $error={!!errors.apContact?.countryCode}
+                    error={!!errors.apContact?.countryCode}
                   />
                   {errors.apContact?.countryCode && (
                     <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>
@@ -558,7 +573,7 @@ export default function OnboardingForm() {
                     {...register("apContact.contactNumber", {
                       required: "Contact number is required",
                     })}
-                    $error={!!errors.apContact?.contactNumber}
+                    error={!!errors.apContact?.contactNumber}
                   />
                   {errors.apContact?.contactNumber && (
                     <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>
@@ -579,7 +594,7 @@ export default function OnboardingForm() {
                     {...register("buyerInfo.firstName", {
                       required: "First name is required",
                     })}
-                    $error={!!errors.buyerInfo?.firstName}
+                    error={!!errors.buyerInfo?.firstName}
                   />
                   {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -590,7 +605,7 @@ export default function OnboardingForm() {
                     {...register("buyerInfo.lastName", {
                       required: "Last name is required",
                     })}
-                    $error={!!errors.buyerInfo?.lastName}
+                    error={!!errors.buyerInfo?.lastName}
                   />
                   {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -606,7 +621,7 @@ export default function OnboardingForm() {
                         message: "Invalid email address",
                       },
                     })}
-                    $error={!!errors.buyerInfo?.email}
+                    error={!!errors.buyerInfo?.email}
                   />
                   {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -617,7 +632,7 @@ export default function OnboardingForm() {
                     {...register("buyerInfo.buyerNumber", {
                       required: "Buyer number is required",
                     })}
-                    $error={!!errors.buyerInfo?.buyerNumber}
+                    error={!!errors.buyerInfo?.buyerNumber}
                   />
                   {errors.buyerInfo?.buyerNumber && (
                     <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
@@ -630,7 +645,7 @@ export default function OnboardingForm() {
                     {...register("buyerInfo.countryCode", {
                       required: "Country code is required",
                     })}
-                    $error={!!errors.buyerInfo?.countryCode}
+                    error={!!errors.buyerInfo?.countryCode}
                   />
                   {errors.buyerInfo?.countryCode && (
                     <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
@@ -730,9 +745,7 @@ export default function OnboardingForm() {
               <FaCheckCircle style={{ color: "#4CAF50", marginRight: "12px", fontSize: "24px" }} />
               Ok!
             </S.ModalTitle>
-            <S.ModalMessage>
-            Your form has been submitted successfully!
-            </S.ModalMessage>
+            <S.ModalMessage>Your form has been submitted successfully!</S.ModalMessage>
             <S.ModalButton
               onClick={() => {
                 setIsModalOpen(false)

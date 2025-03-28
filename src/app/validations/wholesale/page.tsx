@@ -6,9 +6,19 @@ import { api } from "../../../lib/supabase/index";
 import PendingCustomersTable from "../../../components/PendingCustomersTable";
 import TableSkeleton from "@/components/TableSkeleton";
 
-
 export default function WholesaleValidationsPage() {
-  const [customers, setCustomers] = useState([]);
+  // Definindo o tipo de Customer, com as propriedades que são esperadas
+  interface Customer {
+    id: string;
+    name: string;
+    email: string;
+    customer_name: string; 
+    status: string;
+    created_at: string;
+  }
+
+  // Usando o tipo Customer no estado
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +33,8 @@ export default function WholesaleValidationsPage() {
         const { data, error, count } = await api.getPendingValidations(currentPage, itemsPerPage);
         if (error) throw new Error(error.message);
 
-        setCustomers(data);
+        // Agora setamos o estado com os dados retornados da API
+        setCustomers(data as Customer[]);
         setTotalCount(count || 0);
       } catch (err) {
         console.error("Error fetching customers:", err);
@@ -38,7 +49,7 @@ export default function WholesaleValidationsPage() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  if (loading) return <TableSkeleton />;   
+  if (loading) return <TableSkeleton />;
   if (error) return <p>Error: {error}</p>;
 
   return (
