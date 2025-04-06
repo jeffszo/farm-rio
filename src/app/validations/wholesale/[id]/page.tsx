@@ -41,7 +41,7 @@ const INVOICING_COMPANIES = [
 
 const CURRENCIES = ["USD", "EUR", "GBP"]
 
-const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days", "100% Prior Ship"]
+const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days"]
 
 export default function ValidationDetailsPage() {
   const { id } = useParams()

@@ -8,13 +8,9 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    if (req.method !== "POST") {
-      return NextResponse.json({ success: false, message: "Método não permitido" }, { status: 405 });
-    }
-
     const { email, password } = await req.json();
 
-    // 🔍 1️⃣ Verifica se o usuário está na tabela `team_users`
+    // 1️⃣ Verifica na tabela interna `team_users`
     const { data: teamUser } = await supabase
       .from("team_users")
       .select("id, email, team_role, password")
@@ -22,15 +18,13 @@ export async function POST(req: Request) {
       .single();
 
     if (teamUser) {
-      // 🔐 Compara a senha criptografada usando `pgcrypto`
-      
       const { data: validUser, error: passwordError } = await supabase
-      .rpc('verify_team_user_password', {
-        user_email: email,
-        plain_password: password
-      })
-      .select('id')
-      .single();
+        .rpc("verify_team_user_password", {
+          user_email: email,
+          plain_password: password,
+        })
+        .select("id")
+        .single();
 
       if (!validUser || passwordError) {
         return NextResponse.json({ success: false, message: "Senha incorreta." }, { status: 401 });
@@ -42,7 +36,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 🔍 2️⃣ Se não está em `team_users`, verifica no Supabase Auth (clientes)
+    // 2️⃣ Caso não seja team, tenta autenticar como cliente via Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error || !data.user) {
