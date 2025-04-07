@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
 import * as S from "./styles";
-import { User, MapPin, Mail } from "lucide-react";
+import { User, MapPin, Mail, CircleCheck } from "lucide-react";
 
 interface CustomerForm {
   id: string;
@@ -176,7 +176,9 @@ export default function ValidationDetailsPage() {
         {showModal && (
           <S.Modal>
             <S.ModalContent>
-              <S.ModalTitle>{modalContent.title}</S.ModalTitle>
+            <S.ModalTitle>
+              <CircleCheck size={48}/>
+            </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>

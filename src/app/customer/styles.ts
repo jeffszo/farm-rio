@@ -303,9 +303,6 @@ export const ModalButton = styled.button`
   cursor: pointer;
   transition: background-color 0.2s;
   
-  &:hover {
-    background-color: #27272a;
-  }
 
   
 `

@@ -195,24 +195,15 @@ export const ModalDescription = styled.p`
 `
 
 export const ModalButton = styled.button`
-  background-color:rgb(18, 193, 68);
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    opacity: 0.9;
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.5);
-  }
+    background-color: #18181b;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 
 
   

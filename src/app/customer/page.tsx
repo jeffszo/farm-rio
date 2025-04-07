@@ -7,8 +7,8 @@ import * as S from "./styles"
 import { api } from "../../lib/supabase/index"
 import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
-import { ChevronRight, ChevronLeft, Upload, Clock4 } from "lucide-react"
-import { FaCheckCircle } from "react-icons/fa"
+import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck  } from "lucide-react"
+
 
 export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null)
@@ -198,7 +198,7 @@ export default function OnboardingForm() {
               <div>Your approval has been rejected by the credit team. Please wait.</div>
             )}
 
-            {formStatus === "approved by CSC team" && (
+            {formStatus === "approved by the CSC team" && (
               <div>
                 Your form has been <strong>approved by all teams!</strong>
               </div>
@@ -501,14 +501,14 @@ export default function OnboardingForm() {
                       <S.ErrorMessage>{errors.shippingAddress.country.message}</S.ErrorMessage>
                     )}
                   </S.InputGroup>
-                  <S.InputGroup>
+                  {/* <S.InputGroup>
                     <S.Label htmlFor="freightForwarder">Freight Forwarder (if applicable)</S.Label>
                     <S.Input id="freightForwarder" {...register("shippingAddress.freightForwarder")} />
                   </S.InputGroup>
                   <S.InputGroup>
                     <S.Label htmlFor="shippingAccountNumber">Shipping Account Number (if applicable)</S.Label>
                     <S.Input id="shippingAccountNumber" {...register("shippingAddress.shippingAccountNumber")} />
-                  </S.InputGroup>
+                  </S.InputGroup> */}
                 </div>
               </S.Grid>
             </S.Section>
@@ -747,8 +747,7 @@ export default function OnboardingForm() {
         <S.ModalOverlay>
           <S.ModalContent>
             <S.ModalTitle>
-              <FaCheckCircle style={{ color: "#4CAF50", marginRight: "12px", fontSize: "24px" }} />
-              Ok!
+            <CircleCheck  size={48}/>
             </S.ModalTitle>
             <S.ModalMessage>Your form has been submitted successfully!</S.ModalMessage>
             <S.ModalButton

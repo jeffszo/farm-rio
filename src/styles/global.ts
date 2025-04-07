@@ -32,12 +32,12 @@ const Global = createGlobalStyle`
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 40vh;
+    min-height: auto;
   }
 `;
 
 export const Container = styled.div`
-  min-height: 100vh;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   background-color: ${theme.colors.background};
@@ -49,8 +49,8 @@ export const Main = styled.main`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: ${theme.spacing[6]};
-  margin-bottom: 4rem;
+  min-height: 85vh;
+  
 `
 
 export const FormContainer = styled.div`

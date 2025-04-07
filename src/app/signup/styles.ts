@@ -161,8 +161,7 @@ export const ModalMessage = styled.p`
 `;
 
 export const ModalButton = styled.button`
-    background-color: ${theme.colors.primary};
-
+  background-color: #18181b;
   color: white;
   padding: 12px 25px;
   border: none;
@@ -170,8 +169,5 @@ export const ModalButton = styled.button`
   cursor: pointer;
   font-size: 16px;
   
-  &:hover {
-    background-color: #45a049;
-  }
 `;
 
