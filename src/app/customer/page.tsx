@@ -302,14 +302,7 @@ export default function OnboardingForm() {
                   />
                   {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
                 </S.InputGroup>
-                <S.FileInputContainer>
-                  <S.Label htmlFor="resale">Resale Certificate</S.Label>
-                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
-                  <S.UploadButton htmlFor="file-upload">
-                    <Upload size={16} />
-                    {file ? file.name : "Anexar arquivo (PDF)"}
-                  </S.UploadButton>
-                </S.FileInputContainer>
+ 
                 <S.InputGroup>
                   <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
                   <S.Input
@@ -327,6 +320,14 @@ export default function OnboardingForm() {
                     <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
+                <S.FileInputContainer>
+                  <S.Label htmlFor="resale">Resale Certificate</S.Label>
+                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
+                  <S.UploadButton htmlFor="file-upload">
+                    <Upload size={16} />
+                    {file ? file.name : "Attach file (PDF)"}
+                  </S.UploadButton>
+                </S.FileInputContainer>
 
               </S.Grid>
             </S.Section>
@@ -625,19 +626,7 @@ export default function OnboardingForm() {
                   />
                   {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="buyerNumber">Buyer Number</S.Label>
-                  <S.Input
-                    id="buyerNumber"
-                    {...register("buyerInfo.buyerNumber", {
-                      required: "Buyer number is required",
-                    })}
-                    error={!!errors.buyerInfo?.buyerNumber}
-                  />
-                  {errors.buyerInfo?.buyerNumber && (
-                    <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+
                 <S.InputGroup>
                   <S.Label htmlFor="buyerCountryCode">Buyer Country Code</S.Label>
                   <S.Input
@@ -651,6 +640,20 @@ export default function OnboardingForm() {
                     <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
+                <S.InputGroup>
+                  <S.Label htmlFor="buyerNumber">Buyer Number</S.Label>
+                  <S.Input
+                    id="buyerNumber"
+                    {...register("buyerInfo.buyerNumber", {
+                      required: "Buyer number is required",
+                    })}
+                    error={!!errors.buyerInfo?.buyerNumber}
+                  />
+                  {errors.buyerInfo?.buyerNumber && (
+                    <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
+                  )}
+                </S.InputGroup>
+
               </S.Grid>
             </S.Section>
           )}

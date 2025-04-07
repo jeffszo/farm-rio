@@ -46,7 +46,7 @@ export default function PendingCustomersTable({
     const approvedCustomers = customers.filter((customer) => customer.status === "approved by the CSC team")
 
     if (approvedCustomers.length === 0) {
-      alert("Nenhum cliente aprovado para exportar!")
+      alert("No customers approved for export!")
       return
     }
 
@@ -72,7 +72,7 @@ export default function PendingCustomersTable({
         {isCSCValidationsRoute && (
           <S.ExportButton onClick={exportToExcel}>
             <Download size={16} />
-            Exportar Excel
+            Export Excel
           </S.ExportButton>
         )}
       </S.TitleWrapper>
@@ -81,7 +81,7 @@ export default function PendingCustomersTable({
       <S.TotalCount>Total pending customers: {totalCount}</S.TotalCount>
 
       {customers.length === 0 ? (
-        <S.Message>No pending customers.</S.Message>
+        <S.Message></S.Message>
       ) : (
         <>
           {!isMobile ? (

@@ -126,7 +126,7 @@ export default function SignUp() {
               OK
             </S.ModalButton>
           </S.ModalContent>
-        </S.ModalOverlay>
+        </S.ModalOverlay> // Modal para aprovação dos teams tbm
       )}
     </S.Container>
   )
