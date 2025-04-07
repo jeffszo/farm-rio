@@ -31,7 +31,9 @@ export default function OnboardingForm() {
     handleSubmit: hookFormSubmit,
     formState: { errors },
     trigger,
-  } = useForm<IFormInputs>()
+  } = useForm<IFormInputs>({
+    mode:"onChange"
+  })
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
   const [formStatus, setFormStatus] = useState<string | null>(null)
@@ -41,8 +43,8 @@ export default function OnboardingForm() {
   const router = useRouter()
 
   // These state setters are used in a future implementation for team-specific views
-  const [isWholesaleTeam] = useState(false)
-  const [isCreditTeam] = useState(false)
+  // const [isWholesaleTeam] = useState(false)
+  // const [isCreditTeam] = useState(false)
 
   // ✅ Buscar o usuário e o status do formulário corretamente
   useEffect(() => {
@@ -658,7 +660,7 @@ export default function OnboardingForm() {
             </S.Section>
           )}
 
-          {isWholesaleTeam && currentStep === 5 && (
+          {/* {isWholesaleTeam && currentStep === 5 && (
             <S.Section>
               <S.SectionTitle>Terms and Conditions Negotiated (For FARM Rio Wholesale Team Use Only)</S.SectionTitle>
               <S.Grid>
@@ -720,7 +722,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
               </S.Grid>
             </S.Section>
-          )}
+          )} */}
 
           <S.ButtonGroup>
             {currentStep > 1 && (

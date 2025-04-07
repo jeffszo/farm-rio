@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useForm } from "react-hook-form"
-import { FaCheckCircle } from "react-icons/fa"
+import { CircleCheck } from "lucide-react"
 import * as S from "./styles"
 import { api } from "../../lib/supabase/index";
 import { useRouter } from "next/navigation"
@@ -20,7 +20,9 @@ export default function SignUp() {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<SignUpFormData>()
+  } = useForm<SignUpFormData>({
+    mode: "onChange"
+  })
   const [apiError, setApiError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
@@ -67,7 +69,7 @@ export default function SignUp() {
                   required: "Email is required",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Email inválido",
+                    message: "Invalid email",
                   },
                 })}
               />
@@ -81,7 +83,7 @@ export default function SignUp() {
                 type="password"
                 {...register("password", {
                   required: "Password is required",
-                  minLength: { value: 8, message: "A senha deve ter pelo menos 8 caracteres" },
+                  minLength: { value: 8, message: "Password must be at least 8 characters long" },
                 })}
               />
               {errors.password && <S.ErrorMessage>{errors.password.message}</S.ErrorMessage>}
@@ -94,7 +96,7 @@ export default function SignUp() {
                 type="password"
                 {...register("confirmPassword", {
                   required: "Confirm your password",
-                  validate: (value) => value === watch("password") || "As senhas não coincidem",
+                  validate: (value) => value === watch("password") || "Passwords do not match",
                 })}
               />
               {errors.confirmPassword && <S.ErrorMessage>{errors.confirmPassword.message}</S.ErrorMessage>}
@@ -111,8 +113,7 @@ export default function SignUp() {
         <S.ModalOverlay>
           <S.ModalContent>
             <S.ModalTitle>
-              <FaCheckCircle style={{ color: "#4CAF50", marginRight: "12px", fontSize: "24px" }} />
-              Ok!
+            <CircleCheck  size={48}/>
             </S.ModalTitle>
             <S.ModalMessage>
             Your account has been created successfully!        

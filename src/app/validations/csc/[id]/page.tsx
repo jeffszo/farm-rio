@@ -178,7 +178,7 @@ export default function ValidationDetailsPage() {
             <S.ModalContent>
               <S.ModalTitle>{modalContent.title}</S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
-              <S.ModalButton onClick={closeModal}>Close</S.ModalButton>
+              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}

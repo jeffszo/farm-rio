@@ -161,7 +161,8 @@ export const ModalMessage = styled.p`
 `;
 
 export const ModalButton = styled.button`
-  background-color: #4CAF50;
+    background-color: ${theme.colors.primary};
+
   color: white;
   padding: 12px 25px;
   border: none;
