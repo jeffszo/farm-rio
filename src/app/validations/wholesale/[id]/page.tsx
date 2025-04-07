@@ -157,7 +157,7 @@ export default function ValidationDetailsPage() {
 
       setModalContent({
         title: "Ok!",
-        description: approved ? "Client approved! Forwarded to the CSC team." : "Customer rejected!",
+        description: approved ? "Client approved! Forwarded to the credit team." : "Customer rejected!",
       })
       setShowModal(true)
     } catch (err) {
@@ -206,7 +206,7 @@ export default function ValidationDetailsPage() {
                   View PDF
                 </a>
               ) : (
-                "Não enviado"
+                "Not sent"
               )}
             </S.FormRow>
           </S.FormSection>
@@ -348,6 +348,7 @@ export default function ValidationDetailsPage() {
               <S.ModalTitle>{modalContent.title}</S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
+              
             </S.ModalContent>
           </S.Modal>
         )}

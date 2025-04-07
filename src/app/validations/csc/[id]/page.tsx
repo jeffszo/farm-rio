@@ -123,7 +123,14 @@ export default function ValidationDetailsPage() {
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
             </S.FormRow>
             <S.FormRow>
-              <strong>Resale Certificate:</strong> {customerForm.resale_certificate}
+              <strong>Resale Certificate:</strong>{" "}
+              {customerForm.resale_certificate ? (
+                <a href={customerForm.resale_certificate} target="_blank" rel="noopener noreferrer">
+                  View PDF
+                </a>
+              ) : (
+                "Not sent"
+              )}
             </S.FormRow>
           </S.FormSection>
           <S.FormSection>
