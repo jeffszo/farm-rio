@@ -52,19 +52,24 @@ export default function ValidationDetailsPage() {
 
   // ✅ Obtém o usuário autenticado (garante que apenas CSC acessa)
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!session) {
-        router.push("/");
-      } else {
-        const currentUser = await api.getCurrentUser();
-        setUser({ email: currentUser.email, role: currentUser.userType });
-      }
-    });
+    if (typeof window === "undefined") return; // Garante client-side
   
-    return () => {
-      listener.subscription.unsubscribe();
+    const fetchUser = async () => {
+      try {
+        const currentUser = await api.getCurrentUser();
+        if (!currentUser) {
+          router.push("/");
+          return;
+        }
+        setUser({ email: currentUser.email, role: currentUser.userType });
+      } catch (err) {
+        console.error("Erro ao obter usuário:", err);
+      }
     };
+  
+    fetchUser();
   }, [router]);
+  
   
 
   // ✅ Aprovação/Rejeição do Cliente
