@@ -83,20 +83,20 @@ export default function ValidationDetailsPage() {
   }, [id])
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await api.getCurrentUser()
-        if (!currentUser) {
-          // router.push("/login")
-          return
-        }
-        setUser({ email: currentUser.email, role: currentUser.userType })
-      } catch (err) {
-        console.error("Erro ao obter usuário:", err)
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!session) {
+        router.push("/");
+      } else {
+        const currentUser = await api.getCurrentUser();
+        setUser({ email: currentUser.email, role: currentUser.userType });
       }
-    }
-    fetchUser()
-  }, [router])
+    });
+  
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+  
 
   useEffect(() => {
     const fetchWarehouses = async () => {
