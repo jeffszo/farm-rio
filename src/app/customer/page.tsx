@@ -196,7 +196,7 @@ export default function OnboardingForm() {
               <div>Your approval has been rejected by the credit team. Please wait.</div>
             )}
 
-            {formStatus === "approved" && (
+            {formStatus === "approved by CSC team" && (
               <div>
                 Your form has been <strong>approved by all teams!</strong>
               </div>
