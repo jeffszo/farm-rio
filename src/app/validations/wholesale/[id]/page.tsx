@@ -83,23 +83,20 @@ export default function ValidationDetailsPage() {
   }, [id])
 
   useEffect(() => {
-    if (typeof window === "undefined") return; // Garante client-side
-  
+    if (typeof window === "undefined") return
+
     const fetchUser = async () => {
       try {
-        const currentUser = await api.getCurrentUser();
-        if (!currentUser) {
-          router.push("/");
-          return;
-        }
-        setUser({ email: currentUser.email, role: currentUser.userType });
+        const currentUser = await api.getCurrentUser()
+        if (!currentUser) return
+        setUser({ email: currentUser.email, role: currentUser.userType })
       } catch (err) {
-        console.error("Erro ao obter usuário:", err);
+        console.error("Erro ao obter usuário:", err)
       }
-    };
-  
-    fetchUser();
-  }, [router]);
+    }
+
+    fetchUser()
+  }, [])
   
   
 
