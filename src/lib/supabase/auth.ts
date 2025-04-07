@@ -63,19 +63,28 @@ export async function signOut(): Promise<void> {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const { data: sessionData } = await supabase.auth.getSession()
-  if (!sessionData.session) return null
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError || !sessionData.session || !sessionData.session.user) return null
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data.user) return null
+  const user = sessionData.session.user
 
-  const { data: userData } = await supabase.from("users").select("role").eq("id", data.user.id).single()
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+
+  if (userError) {
+    console.error("Erro ao buscar tipo de usuário:", userError)
+    return null
+  }
 
   return {
-    id: data.user.id,
-    name: data.user.user_metadata?.name || "Usuário",
-    email: data.user.email!,
+    id: user.id,
+    name: user.user_metadata?.name || "Usuário",
+    email: user.email!,
     userType: userData?.role || "cliente",
   }
 }
+
 

@@ -1,7 +1,7 @@
 
 
 import HeaderValidations from "../../components/HeaderValidations";
-import FooterValidations from "../../components/FooterValidations";
+// import FooterValidations from "../../components/FooterValidations";
 
  
 
@@ -14,7 +14,7 @@ export default function RootLayout({
         <>
         <HeaderValidations/>
           {children}
-        <FooterValidations/>
+        {/* <FooterValidations/> */}
         </>
   );
 }

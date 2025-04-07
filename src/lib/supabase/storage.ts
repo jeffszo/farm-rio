@@ -35,4 +35,3 @@ export async function uploadResaleCertificate(file: File, customerId: string) {
 
   return signedUrl
 }
-
