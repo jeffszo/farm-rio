@@ -153,17 +153,21 @@ export async function validateCreditCustomer(customerId: string, approved: boole
 
 
 export async function validateCSCCustomer(customerId: string, approved: boolean) {
-  const newStatus = approved ? "approved by the CSC team" : "rejected by CSC";
+  const updateData = {
+    status: approved ? "approved by the CSC team" : "rejected by the CSC team",
+  };
 
-  const { error } = await supabase
+  const { error: updateError } = await supabase
     .from("customer_forms")
-    .update({ status: newStatus })
+    .update(updateData)
     .eq("id", customerId);
 
-  if (error) {
-    console.error("Erro ao atualizar status do cliente:", error.message);
-    throw new Error("Erro ao atualizar status do cliente.");
+  if (updateError) {
+    throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
   }
+
+  // Se quiser registrar também no validations, pode manter o upsert opcionalmente.
 }
+
 
 

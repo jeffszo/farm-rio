@@ -16,7 +16,7 @@ export async function getApprovedCustomers() {
       resale_certificate, 
       billing_address, 
       shipping_address,
-      validations (
+      validations(
         customer_id,
         atacado_invoicing_company, 
         atacado_warehouse, 
@@ -72,7 +72,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .in("status", ["approved by the wholesale team", "rejected by CSC team"]) // 🔥 Busca múltiplos status
+    .in("status", ["approved by the wholesale team", "rejected by the CSC team"]) // 🔥 Busca múltiplos status
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 
@@ -84,6 +84,8 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count)
   return { data, error: null, count }
 }
+
+
 
 export async function getPendingCSCValidations(page = 1, itemsPerPage = 10) {
   const from = (page - 1) * itemsPerPage
