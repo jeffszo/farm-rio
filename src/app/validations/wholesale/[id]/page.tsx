@@ -11,6 +11,8 @@ interface CustomerForm {
   id: string
   customer_name: string
   sales_tax_id: string
+  duns_number: string;
+  dba_number: string
   resale_certificate: string
   billing_address: string
   shipping_address: string
@@ -199,6 +201,12 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
             <S.FormRow>
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
+            </S.FormRow>
+            <S.FormRow>
+              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
+            </S.FormRow>
+            <S.FormRow>
+              <strong>D-U-N-S:</strong> {customerForm.duns_number || "Not provided"}
             </S.FormRow>
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}

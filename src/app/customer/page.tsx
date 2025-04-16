@@ -106,6 +106,8 @@ export default function OnboardingForm() {
       const flattenedFormData: {
         customer_name: string | null;
         sales_tax_id: string | null;
+        duns_number: string | null; 
+        dba_number: string | null;
         resale_certificate: string | null;
         billing_address: string;
         shipping_address: string;
@@ -118,6 +120,8 @@ export default function OnboardingForm() {
       } = {
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
+        duns_number: formData.customerInfo?.dunNumber || null, 
+        dba_number: formData.customerInfo?.dba || null,
         resale_certificate: fileUrl, // Use the URL from the uploaded file
 
         billing_address: Object.values(formData.billingAddress || {}).join(", "),
@@ -289,6 +293,7 @@ export default function OnboardingForm() {
                     <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
+                
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
                   <S.Input id="dba" {...register("customerInfo.dba")} />
@@ -309,15 +314,13 @@ export default function OnboardingForm() {
                   <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
                   <S.Input
                     id="dunNumber"
-                    type="number"
+                    type="text"
                     {...register("customerInfo.dunNumber", {
-                      required: "D-U-N-S number is required",
-                      valueAsNumber: true, // Isso converte automaticamente para número
-                      validate: (value) =>
-                        isNaN(Number(value)) || value === "" ? "D-U-N-S number must be a valid number" : true, // Validando se é um número
+                      required: "DBA is required",
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
+                
                   {errors.customerInfo?.dunNumber && (
                     <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}

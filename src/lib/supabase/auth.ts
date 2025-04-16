@@ -8,7 +8,7 @@ export async function signUp(name: string, email: string, password: string): Pro
     options: { data: { name } },
   })
 
-  if (error) throw new Error(`Erro ao cadastrar usuário: ${error.message}`)
+  if (error) throw new Error(`${error.message}`)
   if (!data.user) throw new Error("Erro inesperado: Usuário não retornado.")
 
   // ✅ Insere o usuário na tabela correta (`users` e não `profiles`)

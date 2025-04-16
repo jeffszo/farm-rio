@@ -8,6 +8,8 @@ export async function getApprovedCustomers() {
       created_at, 
       status, 
       customer_name, 
+      dba_number,
+      duns_number,
       ap_contact_name, 
       ap_contact_email, 
       buyer_name, 

@@ -12,13 +12,15 @@ export async function submitForm(formData: unknown, userId: string) {
     ap_contact_email: string
     buyer_name: string
     buyer_email: string
+    dba_number?: string | null
+    duns_number?: string | null
   }
   
 
 
   if (typeof formData === 'object' && formData !== null) {
     // Agora formData pode ser tratado como um objeto com propriedades
-    const { customer_name, sales_tax_id, resale_certificate, billing_address, shipping_address, ap_contact_name, ap_contact_email, buyer_name, buyer_email } = formData as FormData;
+    const { customer_name, sales_tax_id, resale_certificate, billing_address, shipping_address, ap_contact_name, ap_contact_email, buyer_name, buyer_email, dba_number, duns_number } = formData as FormData;
   
     // Insira os dados no banco
     const { data, error } = await supabase
@@ -35,6 +37,8 @@ export async function submitForm(formData: unknown, userId: string) {
           ap_contact_email,
           buyer_name,
           buyer_email,
+          dba_number: dba_number ?? null,
+          duns_number: duns_number ?? null,
           status: "pending",
         },
       ])
