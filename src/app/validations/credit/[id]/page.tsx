@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { api } from "../../../../lib/supabase/index";
+import { api } from "@/lib/supabase/index"
 import * as S from "./styles"
-import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent, CircleCheck } from "lucide-react"
+import {
+  User,
+  MapPin,
+  Mail,
+  Building2,
+  Warehouse,
+  CreditCard,
+  Calendar,
+  DollarSign,
+  Percent,
+  CircleCheck,
+  Pencil,
+  Check,
+  X
+} from "lucide-react"
 
 interface CustomerForm {
   id: string
@@ -21,6 +35,21 @@ interface CustomerForm {
   buyer_email: string
   status: string
   created_at: string
+}
+
+interface ValidationDetails {
+  atacado_invoicing_company: string
+  atacado_warehouse: string
+  atacado_currency: string
+  atacado_terms: string
+  atacado_credit: string
+  atacado_discount: number
+  credito_invoicing_company: string
+  credito_warehouse: string
+  credito_currency: string
+  credito_terms: string
+  credito_credit: string
+  credito_discount: number
 }
 
 interface ValidationTerms {
@@ -52,6 +81,16 @@ export default function ValidationDetailsPage() {
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState({ title: "", description: "" })
   const router = useRouter()
+  const [validation, setValidation] = useState<ValidationDetails | null>(null)
+  const [newDuns, setNewDuns] = useState("")
+  const [editingDuns, setEditingDuns] = useState(false)
+  const [savingDuns, setSavingDuns] = useState(false)
+
+  useEffect(() => {
+    if (customerForm?.duns_number) {
+      setNewDuns(customerForm.duns_number)
+    }
+  }, [customerForm])
 
   const [terms, setTerms] = useState<ValidationTerms>({
     invoicing_company: "",
@@ -97,41 +136,77 @@ export default function ValidationDetailsPage() {
 
     fetchUser()
   }, [])
-  
-  
+
+  useEffect(() => {
+    const fetchValidationDetails = async () => {
+      const validationData = await api.getCustomerValidationDetails(id as string)
+      if (validationData) setValidation(validationData)
+    }
+
+    if (id) fetchValidationDetails()
+  }, [id])
 
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.invoicing_company) {
-        setWarehouses([]);
-        return;
+        setWarehouses([])
+        return
       }
-  
+
       try {
-        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company);
-        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name));
+        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company)
+        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name))
       } catch (err) {
-        console.error("Erro ao buscar warehouses:", err);
-        setWarehouses([]);
+        console.error("Erro ao buscar warehouses:", err)
+        setWarehouses([])
       }
-    };
-  
-    fetchWarehouses();
-  }, [terms.invoicing_company]);
-  
-  
+    }
+
+    fetchWarehouses()
+  }, [terms.invoicing_company])
+
+  const handleSaveDuns = async () => {
+    try {
+      setSavingDuns(true)
+      await api.updateDunsNumber(id as string, newDuns)
+
+      // Update the local state to reflect the change
+      if (customerForm) {
+        setCustomerForm({
+          ...customerForm,
+          duns_number: newDuns,
+        })
+      }
+
+      setEditingDuns(false)
+    } catch (error) {
+      console.error("Error updating DUNS number:", error)
+      // Optionally show an error message to the user
+    } finally {
+      setSavingDuns(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    // Reset to original value and exit edit mode
+    if (customerForm) {
+      setNewDuns(customerForm.duns_number || "")
+    }
+    setEditingDuns(false)
+  }
+
 
   const handleTermChange = (field: keyof ValidationTerms, value: string | number) => {
     if (field === "credit_limit" || field === "discount") {
-      const numericValue = value === "" ? 0 : Number(value);
-  
-      if (isNaN(numericValue)) return;
-  
-      setTerms((prev) => ({ ...prev, [field]: numericValue }));
+      const numericValue = value === "" ? 0 : Number(value)
+
+      if (isNaN(numericValue)) return
+
+      setTerms((prev) => ({ ...prev, [field]: numericValue }))
     } else {
-      setTerms((prev) => ({ ...prev, [field]: value }));
+      setTerms((prev) => ({ ...prev, [field]: value }))
     }
-  };
+  }
 
   const handleApproval = async (approved: boolean) => {
     if (!user) return
@@ -201,12 +276,39 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
             </S.FormRow>
-            <S.FormRow>
-              <strong>D-U-N-S:</strong> {customerForm.dba_number || "Not provided"}
+            <S.FormRow className="flex items-center">
+              <strong>D-U-N-S:</strong>{" "}
+              {editingDuns ? (
+                <S.InlineEditWrapper>
+                  <S.SmallInput
+                    type="text"
+                    value={newDuns}
+                    onChange={(e) => setNewDuns(e.target.value)}
+                    disabled={savingDuns}
+                    autoFocus
+                  />
+                  <S.ContainerCheck>
+                    <S.CheckButton onClick={handleSaveDuns} disabled={savingDuns} title="Save">
+                      <Check size={16} />
+                    </S.CheckButton>
+                    <S.CancelButton onClick={handleCancelEdit} disabled={savingDuns} title="Cancel">
+                      <X size={16} />
+                    </S.CancelButton>
+                  </S.ContainerCheck>
+                  
+                </S.InlineEditWrapper>
+              ) : (
+                <span className="flex items-center ml-1">
+                  {customerForm.duns_number || "Not provided"}
+                  <S.EditIcon onClick={() => setEditingDuns(true)}>
+                    <Pencil size={16} />
+                  </S.EditIcon>
+                </span>
+              )}
             </S.FormRow>
 
             <S.FormRow>
-              <strong>DBA:</strong> {customerForm.duns_number || "Not provided"}
+              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
@@ -230,6 +332,7 @@ export default function ValidationDetailsPage() {
               <strong>Shipping:</strong> {customerForm.shipping_address}
             </S.FormRow>
           </S.FormSection>
+
           <S.FormSection>
             <S.SectionTitle>
               <Mail size={16} /> Contacts
@@ -247,6 +350,32 @@ export default function ValidationDetailsPage() {
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
           </S.FormSection>
+
+          {validation && (
+            <S.TermsCardsContainer>
+              <S.TermsCard>
+                <h3>Wholesale Team Validation</h3>
+                <p>
+                  <strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}
+                </p>
+                <p>
+                  <strong>Warehouse:</strong> {validation.atacado_warehouse}
+                </p>
+                <p>
+                  <strong>Currency:</strong> {validation.atacado_currency}
+                </p>
+                <p>
+                  <strong>Terms:</strong> {validation.credito_terms}
+                </p>
+                <p>
+                  <strong>Credit Limit:</strong> {validation.atacado_credit}
+                </p>
+                <p>
+                  <strong>Discount:</strong> {validation.atacado_discount}%
+                </p>
+              </S.TermsCard>
+            </S.TermsCardsContainer>
+          )}
         </S.FormDetails>
 
         <S.TermsContainer>
@@ -308,10 +437,10 @@ export default function ValidationDetailsPage() {
               <S.Select value={terms.payment_terms} onChange={(e) => handleTermChange("payment_terms", e.target.value)}>
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
-  <option key={`${term}-${index}`} value={term}>
-    {term}
-  </option>
-))}
+                  <option key={`${term}-${index}`} value={term}>
+                    {term}
+                  </option>
+                ))}
               </S.Select>
             </S.TermsSection>
 
@@ -355,7 +484,7 @@ export default function ValidationDetailsPage() {
           <S.Modal>
             <S.ModalContent>
               <S.ModalTitle>
-                <CircleCheck  size={48}/>
+                <CircleCheck size={48} />
               </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
@@ -366,4 +495,3 @@ export default function ValidationDetailsPage() {
     </S.ContainerMain>
   )
 }
-

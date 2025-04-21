@@ -32,8 +32,12 @@ class SupabaseAPI implements AuthAPI {
   getInvoicingCompanies = queries.getInvoicingCompanies
   getWarehousesByCompany = queries.getWarehousesByCompany
   getApprovedCustomers = queries.getApprovedCustomers
+  getCustomerValidationDetails = queries.getCustomerValidationDetails
   // Storage methods
   uploadResaleCertificate = storage.uploadResaleCertificate
+
+  // update DUNS
+  updateDunsNumber = queries.updateDunsNumber
 }
 
 // Export the API instance

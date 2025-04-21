@@ -32,6 +32,36 @@ export default function ValidationDetailsPage() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", description: "" });
   const router = useRouter();
+  
+  interface ValidationDetails {
+    atacado_invoicing_company: string;
+    atacado_warehouse: string;
+    atacado_currency: string;
+    atacado_terms: string;
+    atacado_credit: string;
+    atacado_discount: number;
+    credito_invoicing_company: string;
+    credito_warehouse: string;
+    credito_currency: string;
+    credito_terms: string;
+    credito_credit: string;
+    credito_discount: number;
+  }
+
+  const [validation, setValidation] = useState<ValidationDetails | null>(null);
+
+
+  useEffect(() => {
+    const fetchValidationDetails = async () => {
+      const validationData = await api.getCustomerValidationDetails(id as string);
+      if (validationData) setValidation(validationData);
+    };
+  
+    if (id) fetchValidationDetails();
+  }, [id]);
+  
+  
+
 
   // ✅ Obtém os detalhes do cliente
   useEffect(() => {
@@ -171,6 +201,34 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
           </S.FormSection>
         </S.FormDetails>
+
+          {validation && (
+          <S.TermsCardsContainer>
+            <S.TermsCard>
+              <h3>Wholesale Team Validation</h3>
+              <p><strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}</p>
+              <p><strong>Warehouse:</strong> {validation.atacado_warehouse}</p>
+              <p><strong>Currency:</strong> {validation.atacado_currency}</p>
+              <p><strong>Terms:</strong> {validation.atacado_terms}</p>
+              <p><strong>Credit Limit:</strong> {validation.atacado_credit}</p>
+              <p><strong>Discount:</strong> {validation.atacado_discount}%</p>
+            </S.TermsCard>
+
+            <S.TermsCard>
+              <h3>Credit Team Validation</h3>
+              <p><strong>Invoicing Company:</strong> {validation.credito_invoicing_company}</p>
+              <p><strong>Warehouse:</strong> {validation.credito_warehouse}</p>
+              <p><strong>Currency:</strong> {validation.credito_currency}</p>
+              <p><strong>Terms:</strong> {validation.atacado_terms}</p>
+              <p><strong>Credit Limit:</strong> {validation.credito_credit}</p>
+              <p><strong>Discount:</strong> {validation.credito_discount}%</p>
+            </S.TermsCard>
+          </S.TermsCardsContainer>
+          )}
+
+
+
+
 
         {/* ✅ Botões de Aprovação/Reprovação */}
         <S.ButtonContainer>

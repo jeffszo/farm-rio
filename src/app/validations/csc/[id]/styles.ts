@@ -4,13 +4,12 @@ export const ContainerMain = styled.div`
   display: flex;
   justify-content: center; 
   align-items: center; 
-  height: 100vh;
+  height: 90vh;
 
 `
 
 export const Container = styled.div`
   max-width: 1000px;
-  margin: 12rem auto;
   padding: 1.8rem;
   display: flex;
   flex-direction: column;
@@ -213,4 +212,40 @@ export const ModalButton = styled.button`
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.2s;
+`
+
+export const TermsCardsContainer = styled.div`
+  display: flex;
+  gap: 5rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+`
+
+export const TermsCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #4a5568;
+    padding: 0.25rem 0;
+  }
 `

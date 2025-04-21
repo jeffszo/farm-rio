@@ -1,11 +1,11 @@
 import styled from "styled-components"
 
 export const ContainerMain = styled.div`
-  display: 'flex'; 
-  justify-content: 'center'; 
-  align-items: 'center'; 
-  height: 100vh;
-
+  display: flex; 
+  justify-content: center; 
+  align-items: flex-start; 
+  min-height: 100vh;
+  padding: 2rem 0;
 `
 
 export const Container = styled.div`
@@ -47,7 +47,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 
@@ -74,7 +74,7 @@ export const SectionTitle = styled.h3`
   gap: 0.25rem;
 `
 
-export const FormRow = styled.p`
+export const FormRow = styled.div`
   font-size: 0.875rem;
   color: #4a5568;
   padding: 0.25rem 0;
@@ -272,4 +272,157 @@ export const TermsSection = styled.div`
     color: #4a5568;
     margin-bottom: 0.5rem;
   }
+`
+export const TermsCardsContainer = styled.div`
+
+`
+
+export const TermsCard = styled.div`
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #4a5568;
+    padding: 0.25rem 0;
+  }
+`
+
+export const Input = styled.input`
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  margin-left: 8px;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  }
+
+  &[type="number"] {
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+  }
+`
+
+export const IconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 2px;
+  margin-left: 2px;
+  cursor: pointer;
+  color: #555;
+
+  &:hover {
+    color: #000;
+  }
+
+  &:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+  }
+`
+export const EditWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`
+
+export const InlineEditWrapper = styled.div`
+  display: inline-flex;
+  align-items: center; */
+  gap: 4px; */
+ 
+`
+
+export const SmallInput = styled.input`
+  padding: 4px 8px;
+  font-size: 14px;
+  width: 120px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+`
+
+export const CheckButton = styled.button`
+  background: none;
+  border: none;
+  color: green;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-direction: column;
+  margin-left: 4px;
+
+  
+  &:hover {
+    background-color: rgba(0, 128, 0, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+export const CancelButton = styled.button`
+  background: none;
+  border: none;
+  color: #e53e3e;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-direction: column;
+  margin-left: 8px;
+  
+  &:hover {
+    background-color: rgba(229, 62, 62, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+export const EditIcon = styled.span`
+  margin-left: 8px;
+  cursor: pointer;
+  color: #555;
+  display: inline-flex;
+  align-items: center;
+
+  &:hover {
+    color: #000;
+  }
+`
+export const ContainerCheck = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
 `

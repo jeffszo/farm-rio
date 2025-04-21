@@ -126,6 +126,34 @@ export async function getInvoicingCompanies(): Promise<string[]> {
 }
 
 
+export async function getCustomerValidationDetails(customerId: string) {
+  const { data, error } = await supabase
+    .from("validations")
+    .select("*")
+    .eq("customer_id", customerId)
+    .single();
+
+  if (error) {
+    console.error("Erro ao buscar validações:", error);
+    return null;
+  }
+
+  return data;
+}
+
+
+
+export async function updateDunsNumber(customerId: string, duns: string) {
+  const { error } = await supabase.from("customer_forms").update({ duns_number: duns }).eq("id", customerId)
+
+  if (error) {
+    console.error("Error updating D-U-N-S number:", error)
+    throw new Error(`Failed to update D-U-N-S number: ${error.message}`)
+  }
+
+  return { success: true }
+}
+
 
 
 export async function getWarehousesByCompany(invoicingCompany: string) {
