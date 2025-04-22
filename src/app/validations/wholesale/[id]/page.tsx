@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { api } from "../../../../lib/supabase/index"
 import { CircleCheck } from "lucide-react"
 import * as S from "./styles"
-import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent } from "lucide-react"
+import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent, Pencil, Check, X } from "lucide-react"
 
 interface CustomerForm {
   id: string
@@ -55,6 +55,15 @@ export default function ValidationDetailsPage() {
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState({ title: "", description: "" })
   const router = useRouter()
+  const [newDuns, setNewDuns] = useState("")
+  const [editingDuns, setEditingDuns] = useState(false)
+  const [savingDuns, setSavingDuns] = useState(false)
+
+  useEffect(() => {
+    if (customerForm?.duns_number) {
+      setNewDuns(customerForm.duns_number)
+    }
+  }, [customerForm])
 
   const [terms, setTerms] = useState<ValidationTerms>({
     invoicing_company: "",
@@ -175,6 +184,37 @@ export default function ValidationDetailsPage() {
     }
   }
 
+  const handleSaveDuns = async () => {
+    try {
+      setSavingDuns(true)
+      await api.updateDunsNumber(id as string, newDuns)
+
+      // Update the local state to reflect the change
+      if (customerForm) {
+        setCustomerForm({
+          ...customerForm,
+          duns_number: newDuns,
+        })
+      }
+
+      setEditingDuns(false)
+    } catch (error) {
+      console.error("Error updating DUNS number:", error)
+      // Optionally show an error message to the user
+    } finally {
+      setSavingDuns(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    // Reset to original value and exit edit mode
+    if (customerForm) {
+      setNewDuns(customerForm.duns_number || "")
+    }
+    setEditingDuns(false)
+  }
+
+
   const closeModal = () => {
     setShowModal(false)
     router.push("/validations/wholesale")
@@ -205,8 +245,35 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
-            <S.FormRow>
-              <strong>D-U-N-S:</strong> {customerForm.duns_number || "Not provided"}
+            <S.FormRow className="flex items-center">
+              <strong>D-U-N-S:</strong>{" "}
+              {editingDuns ? (
+                <S.InlineEditWrapper>
+                  <S.SmallInput
+                    type="text"
+                    value={newDuns}
+                    onChange={(e) => setNewDuns(e.target.value)}
+                    disabled={savingDuns}
+                    autoFocus
+                  />
+                  <S.ContainerCheck>
+                    <S.CheckButton onClick={handleSaveDuns} disabled={savingDuns} title="Save">
+                      <Check size={16} />
+                    </S.CheckButton>
+                    <S.CancelButton onClick={handleCancelEdit} disabled={savingDuns} title="Cancel">
+                      <X size={16} />
+                    </S.CancelButton>
+                  </S.ContainerCheck>
+                  
+                </S.InlineEditWrapper>
+              ) : (
+                <span className="flex items-center ml-1">
+                  {customerForm.duns_number || "Not provided"}
+                  <S.EditIcon onClick={() => setEditingDuns(true)}>
+                    <Pencil size={16} />
+                  </S.EditIcon>
+                </span>
+              )}
             </S.FormRow>
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}

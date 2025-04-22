@@ -120,35 +120,32 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   // ✅ Atualiza o status na tabela `customer_forms`
   const updateData = {
     status: approved ? "approved by the credit team" : "rejected by credit team",
-  };
+  }
 
-  const { error: updateError } = await supabase
-    .from("customer_forms")
-    .update(updateData)
-    .eq("id", customerId);
+  const { error: updateError } = await supabase.from("customer_forms").update(updateData).eq("id", customerId)
 
-  if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
+  if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`)
 
   // ✅ Atualiza ou insere os dados do crédito na tabela `validations`
-  const { error: validationError } = await supabase
-    .from("validations")
-    .upsert(
-      [
-        {
-          customer_id: customerId, // 🔥 Relaciona com o cliente
-          credito_status: approved ? "aprovado" : "reprovado",
-          credito_invoicing_company: creditTerms.invoicing_company,
-          credito_warehouse: creditTerms.warehouse,
-          credito_currency: creditTerms.currency,
-          credito_credit: creditTerms.credit_limit,
-          credito_discount: creditTerms.discount,
-        }
-      ],
-      { onConflict: "customer_id" } // 🔥 Se já existir, atualiza; senão, insere
-    );
+  const { error: validationError } = await supabase.from("validations").upsert(
+    [
+      {
+        customer_id: customerId, // 🔥 Relaciona com o cliente
+        credito_status: approved ? "aprovado" : "reprovado",
+        credito_invoicing_company: creditTerms.invoicing_company,
+        credito_warehouse: creditTerms.warehouse,
+        credito_currency: creditTerms.currency,
+        credito_terms: creditTerms.payment_terms, // 🔧 Fixed: Added payment_terms field
+        credito_credit: creditTerms.credit_limit,
+        credito_discount: creditTerms.discount,
+      },
+    ],
+    { onConflict: "customer_id" }, // 🔥 Se já existir, atualiza; senão, insere
+  )
 
-  if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
+  if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`)
 }
+
 
 
 

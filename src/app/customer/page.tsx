@@ -296,11 +296,12 @@ export default function OnboardingForm() {
                 
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
-                  <S.Input id="dba" {...register("customerInfo.dba")} />
+                  <S.Input type="number" id="dba" {...register("customerInfo.dba")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
                   <S.Input
+                    type="number"
                     id="taxId"
                     {...register("customerInfo.taxId", {
                       required: "Tax ID is required",
@@ -314,7 +315,7 @@ export default function OnboardingForm() {
                   <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
                   <S.Input
                     id="dunNumber"
-                    type="text"
+                    type="number"
                     {...register("customerInfo.dunNumber", {
                       required: "DBA is required",
                     })}
@@ -548,6 +549,7 @@ export default function OnboardingForm() {
                   <S.Input
                     id="apEmail"
                     type="email"
+                    placeholder="example@hotmail.com"
                     {...register("apContact.email", {
                       required: "Email is required",
                       pattern: {
@@ -563,6 +565,8 @@ export default function OnboardingForm() {
                   <S.Label htmlFor="apCountryCode">AP Contact Country Code</S.Label>
                   <S.Input
                     id="apCountryCode"
+                    type="number"
+                    style={{ width: "80px" }}
                     {...register("apContact.countryCode", {
                       required: "Country code is required",
                     })}
@@ -573,7 +577,7 @@ export default function OnboardingForm() {
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apContactNumber">AP Contact Number</S.Label>
+                  <S.Label htmlFor="apContactNumber">AP Contact Number:</S.Label>
                   <S.Input
                     id="apContactNumber"
                     {...register("apContact.contactNumber", {
@@ -594,7 +598,7 @@ export default function OnboardingForm() {
               <S.SectionTitle>Buyer Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerFirstName">Buyer First Name</S.Label>
+                  <S.Label htmlFor="buyerFirstName">Buyer First Name:</S.Label>
                   <S.Input
                     id="buyerFirstName"
                     {...register("buyerInfo.firstName", {
@@ -605,7 +609,7 @@ export default function OnboardingForm() {
                   {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerLastName">Buyer Last Name</S.Label>
+                  <S.Label htmlFor="buyerLastName">Buyer Last Name:</S.Label>
                   <S.Input
                     id="buyerLastName"
                     {...register("buyerInfo.lastName", {
@@ -616,10 +620,11 @@ export default function OnboardingForm() {
                   {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerEmail">Buyer E-mail</S.Label>
+                  <S.Label htmlFor="buyerEmail">Buyer E-mai:l</S.Label>
                   <S.Input
                     id="buyerEmail"
                     type="email"
+                    placeholder="example@hotmail.com"
                     {...register("buyerInfo.email", {
                       required: "Email is required",
                       pattern: {
@@ -633,9 +638,11 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerCountryCode">Buyer Country Code</S.Label>
+                  <S.Label htmlFor="buyerCountryCode">Buyer Country Code:</S.Label>
                   <S.Input
                     id="buyerCountryCode"
+                    type="number"
+                    style={{ width: "80px" }}
                     {...register("buyerInfo.countryCode", {
                       required: "Country code is required",
                     })}
@@ -646,8 +653,9 @@ export default function OnboardingForm() {
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerNumber">Buyer Number</S.Label>
+                  <S.Label htmlFor="buyerNumber">Buyer Number:</S.Label>
                   <S.Input
+                    type="number"
                     id="buyerNumber"
                     {...register("buyerInfo.buyerNumber", {
                       required: "Buyer number is required",

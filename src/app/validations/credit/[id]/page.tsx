@@ -365,7 +365,7 @@ export default function ValidationDetailsPage() {
                   <strong>Currency:</strong> {validation.atacado_currency}
                 </p>
                 <p>
-                  <strong>Terms:</strong> {validation.credito_terms}
+                  <strong>Terms:</strong> {validation.atacado_terms}
                 </p>
                 <p>
                   <strong>Credit Limit:</strong> {validation.atacado_credit}

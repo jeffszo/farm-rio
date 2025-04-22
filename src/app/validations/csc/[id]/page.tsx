@@ -219,7 +219,7 @@ export default function ValidationDetailsPage() {
               <p><strong>Invoicing Company:</strong> {validation.credito_invoicing_company}</p>
               <p><strong>Warehouse:</strong> {validation.credito_warehouse}</p>
               <p><strong>Currency:</strong> {validation.credito_currency}</p>
-              <p><strong>Terms:</strong> {validation.atacado_terms}</p>
+              <p><strong>Terms:</strong> {validation.credito_terms}</p>
               <p><strong>Credit Limit:</strong> {validation.credito_credit}</p>
               <p><strong>Discount:</strong> {validation.credito_discount}%</p>
             </S.TermsCard>
