@@ -1,8 +1,8 @@
 import { supabase } from "./client"
 
-
 export async function getApprovedCustomers() {
-  const { data, error } = await supabase
+  // Primeira consulta para obter os dados da tabela customer_forms
+  const { data: customerForms, error: customerFormsError } = await supabase
     .from("customer_forms")
     .select(`
       created_at, 
@@ -18,33 +18,50 @@ export async function getApprovedCustomers() {
       resale_certificate, 
       billing_address, 
       shipping_address,
-      validations(
-        customer_id,
-        atacado_invoicing_company, 
-        atacado_warehouse, 
-        atacado_currency, 
-        atacado_terms, 
-        atacado_credit, 
-        atacado_discount,
-        credito_invoicing_company,
-        credito_warehouse,
-        credito_currency,
-        credito_credit,
-        credito_discount
-      )
+      id
     `)
-    .eq("status", "approved by the CSC team")
+    .eq("status", "approved by the CSC team");
 
-  console.log("Clientes aprovados:", data) // 🔍 Debug aqui
-
-  if (error) {
-    console.error("Erro ao buscar clientes aprovados:", error.message)
-    return []
+  if (customerFormsError) {
+    console.error("Erro ao buscar formulários de clientes:", customerFormsError.message);
+    return [];
   }
 
-  return data || []
-}
+  // Segunda consulta para obter os dados da tabela validations
+  const { data: validations, error: validationsError } = await supabase
+    .from("validations")
+    .select(`
+      customer_id,
+      credito_invoicing_company,
+      credito_warehouse,
+      credito_currency,
+      credito_credit,
+      credito_discount
+    `);
 
+  if (validationsError) {
+    console.error("Erro ao buscar validações:", validationsError.message);
+    return [];
+  }
+
+  // Junta os dados da tabela customer_forms com os dados da tabela validations
+  const formattedData = customerForms.map((customer) => {
+    // Busca a validação correspondente ao cliente
+    const validation = validations.find((v) => v.customer_id === customer.id);
+
+    return {
+      ...customer,
+      credito_invoicing_company: validation?.credito_invoicing_company,
+      credito_warehouse: validation?.credito_warehouse,
+      credito_currency: validation?.credito_currency,
+      credito_credit: validation?.credito_credit,
+      credito_discount: validation?.credito_discount,
+    };
+  });
+
+
+  return formattedData || [];
+}
 
 
 export async function getPendingValidations(page = 1, itemsPerPage = 10) {
