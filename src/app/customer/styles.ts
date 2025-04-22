@@ -4,7 +4,7 @@ export const ContainerMain = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 75vh; 
+  height: 90vh; 
   margin-top: 9rem;
 `
 
@@ -303,7 +303,45 @@ export const ModalButton = styled.button`
   cursor: pointer;
   transition: background-color 0.2s;
   
-
   
 `
 
+export const ResponsiveGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`
+
+export const AddressSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
+export const AddressTitle = styled.h3`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #18181b;
+  margin-bottom: 0.5rem;
+`
+
+export const FieldRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+`
+
+export const CompactSection = styled.div`
+  overflow: auto;
+  max-width: 100%;
+  margin-top: 5rem;
+`

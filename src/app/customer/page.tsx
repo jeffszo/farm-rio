@@ -4,11 +4,68 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as S from "./styles"
-import { api } from "../../lib/supabase/index"
+import { api } from "@/lib/supabase/index"
 import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
-import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck  } from "lucide-react"
+import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck } from "lucide-react"
+import styled from "styled-components"
 
+const CompactSection = styled(S.Section)`
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+`
+
+const SectionTitle = styled(S.SectionTitle)`
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+`
+
+const ResponsiveGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+`
+
+const AddressSection = styled.div`
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+`
+
+const AddressTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+`
+
+const FieldRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+`
+
+const InputGroup = styled(S.InputGroup)`
+  flex: 1;
+`
+
+const Label = styled(S.Label)`
+  font-size: 0.85rem;
+`
+
+const Input = styled(S.Input)`
+  padding: 0.5rem;
+  font-size: 0.85rem;
+`
+
+const ErrorMessage = styled(S.ErrorMessage)`
+  font-size: 0.75rem;
+`
 
 export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null)
@@ -32,7 +89,7 @@ export default function OnboardingForm() {
     formState: { errors },
     trigger,
   } = useForm<IFormInputs>({
-    mode:"onChange"
+    mode: "onChange",
   })
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
@@ -104,23 +161,23 @@ export default function OnboardingForm() {
 
       // Flatten the nested structure while preserving essential field names
       const flattenedFormData: {
-        customer_name: string | null;
-        sales_tax_id: string | null;
-        duns_number: string | null; 
-        dba_number: string | null;
-        resale_certificate: string | null;
-        billing_address: string;
-        shipping_address: string;
-        ap_contact_name: string;
-        ap_contact_email: string | null;
-        buyer_name: string;
-        buyer_email: string | null;
-        contact_info?: string[]; // Added contact_info property
-        buyer_info?: string[]; // Added buyer_info property
+        customer_name: string | null
+        sales_tax_id: string | null
+        duns_number: string | null
+        dba_number: string | null
+        resale_certificate: string | null
+        billing_address: string
+        shipping_address: string
+        ap_contact_name: string
+        ap_contact_email: string | null
+        buyer_name: string
+        buyer_email: string | null
+        contact_info?: string[] // Added contact_info property
+        buyer_info?: string[] // Added buyer_info property
       } = {
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
-        duns_number: formData.customerInfo?.dunNumber || null, 
+        duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
         resale_certificate: fileUrl, // Use the URL from the uploaded file
 
@@ -222,7 +279,40 @@ export default function OnboardingForm() {
   // ✅ Criado `nextStep` corretamente
   const nextStep = async () => {
     // Only validate the current step fields
-    let fieldsToValidate: Array<"customerInfo" | "billingAddress" | "shippingAddress" | "apContact" | "buyerInfo" | "wholesaleTerms" | "creditTerms" | "customerInfo.legalName" | "customerInfo.taxId" | "customerInfo.dunNumber" | "billingAddress.street" | "billingAddress.zipCode" | "billingAddress.city" | "billingAddress.state" | "billingAddress.county" | "billingAddress.country" | "shippingAddress.street" | "shippingAddress.zipCode" | "shippingAddress.city" | "shippingAddress.state" | "shippingAddress.county" | "shippingAddress.country" | "apContact.firstName" | "apContact.lastName" | "apContact.email" | "apContact.countryCode" | "apContact.contactNumber" | "buyerInfo.firstName" | "buyerInfo.lastName" | "buyerInfo.email" | "buyerInfo.buyerNumber" | "buyerInfo.countryCode"> = [];
+    let fieldsToValidate: Array<
+      | "customerInfo"
+      | "billingAddress"
+      | "shippingAddress"
+      | "apContact"
+      | "buyerInfo"
+      | "wholesaleTerms"
+      | "creditTerms"
+      | "customerInfo.legalName"
+      | "customerInfo.taxId"
+      | "customerInfo.dunNumber"
+      | "billingAddress.street"
+      | "billingAddress.zipCode"
+      | "billingAddress.city"
+      | "billingAddress.state"
+      | "billingAddress.county"
+      | "billingAddress.country"
+      | "shippingAddress.street"
+      | "shippingAddress.zipCode"
+      | "shippingAddress.city"
+      | "shippingAddress.state"
+      | "shippingAddress.county"
+      | "shippingAddress.country"
+      | "apContact.firstName"
+      | "apContact.lastName"
+      | "apContact.email"
+      | "apContact.countryCode"
+      | "apContact.contactNumber"
+      | "buyerInfo.firstName"
+      | "buyerInfo.lastName"
+      | "buyerInfo.email"
+      | "buyerInfo.buyerNumber"
+      | "buyerInfo.countryCode"
+    > = []
 
     if (currentStep === 1) {
       fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
@@ -293,7 +383,7 @@ export default function OnboardingForm() {
                     <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
-                
+
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
                   <S.Input type="number" id="dba" {...register("customerInfo.dba")} />
@@ -310,7 +400,7 @@ export default function OnboardingForm() {
                   />
                   {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
                 </S.InputGroup>
- 
+
                 <S.InputGroup>
                   <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
                   <S.Input
@@ -321,7 +411,7 @@ export default function OnboardingForm() {
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
-                
+
                   {errors.customerInfo?.dunNumber && (
                     <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}
@@ -334,188 +424,189 @@ export default function OnboardingForm() {
                     {file ? file.name : "Attach file (PDF)"}
                   </S.UploadButton>
                 </S.FileInputContainer>
-
               </S.Grid>
             </S.Section>
           )}
 
           {currentStep === 2 && (
-            <S.Section>
-              <S.SectionTitle>Shipping and Billing Information</S.SectionTitle>
-              <S.Grid>
-                <div>
-                  <h3>Billing Address</h3>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingStreet">Street and Number</S.Label>
-                    <S.Input
-                      id="billingStreet"
-                      {...register("billingAddress.street", {
-                        required: "Street is required",
-                      })}
-                      error={!!errors.billingAddress?.street}
-                    />
-                    {errors.billingAddress?.street && (
-                      <S.ErrorMessage>{errors.billingAddress.street.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingZipCode">ZIP Code</S.Label>
-                    <S.Input
-                      id="billingZipCode"
-                      {...register("billingAddress.zipCode", {
-                        required: "ZIP code is required",
-                      })}
-                      error={!!errors.billingAddress?.zipCode}
-                    />
-                    {errors.billingAddress?.zipCode && (
-                      <S.ErrorMessage>{errors.billingAddress.zipCode.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingCity">City</S.Label>
-                    <S.Input
-                      id="billingCity"
-                      {...register("billingAddress.city", {
-                        required: "City is required",
-                      })}
-                      error={!!errors.billingAddress?.city}
-                    />
-                    {errors.billingAddress?.city && (
-                      <S.ErrorMessage>{errors.billingAddress.city.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingState">State</S.Label>
-                    <S.Input
-                      id="billingState"
-                      {...register("billingAddress.state", {
-                        required: "State is required",
-                      })}
-                      error={!!errors.billingAddress?.state}
-                    />
-                    {errors.billingAddress?.state && (
-                      <S.ErrorMessage>{errors.billingAddress.state.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingCounty">County</S.Label>
-                    <S.Input
-                      id="billingCounty"
-                      {...register("billingAddress.county", {
-                        required: "County is required",
-                      })}
-                      error={!!errors.billingAddress?.county}
-                    />
-                    {errors.billingAddress?.county && (
-                      <S.ErrorMessage>{errors.billingAddress.county.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="billingCountry">Country</S.Label>
-                    <S.Input
-                      id="billingCountry"
-                      {...register("billingAddress.country", {
-                        required: "Country is required",
-                      })}
-                      error={!!errors.billingAddress?.country}
-                    />
-                    {errors.billingAddress?.country && (
-                      <S.ErrorMessage>{errors.billingAddress.country.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                </div>
+            <CompactSection>
+              <SectionTitle>Shipping and Billing Information</SectionTitle>
+              <ResponsiveGrid>
+                <AddressSection>
+                  <AddressTitle>Billing Address</AddressTitle>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="billingStreet">Street and Number</Label>
+                      <Input
+                        id="billingStreet"
+                        {...register("billingAddress.street", {
+                          required: "Street is required",
+                        })}
+                        error={!!errors.billingAddress?.street}
+                      />
+                      {errors.billingAddress?.street && (
+                        <ErrorMessage>{errors.billingAddress.street.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="billingZipCode">ZIP Code</Label>
+                      <Input
+                        id="billingZipCode"
+                        {...register("billingAddress.zipCode", {
+                          required: "ZIP code is required",
+                        })}
+                        error={!!errors.billingAddress?.zipCode}
+                      />
+                      {errors.billingAddress?.zipCode && (
+                        <ErrorMessage>{errors.billingAddress.zipCode.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="billingCity">City</Label>
+                      <Input
+                        id="billingCity"
+                        {...register("billingAddress.city", {
+                          required: "City is required",
+                        })}
+                        error={!!errors.billingAddress?.city}
+                      />
+                      {errors.billingAddress?.city && <ErrorMessage>{errors.billingAddress.city.message}</ErrorMessage>}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="billingState">State</Label>
+                      <Input
+                        id="billingState"
+                        {...register("billingAddress.state", {
+                          required: "State is required",
+                        })}
+                        error={!!errors.billingAddress?.state}
+                      />
+                      {errors.billingAddress?.state && (
+                        <ErrorMessage>{errors.billingAddress.state.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="billingCounty">County</Label>
+                      <Input
+                        id="billingCounty"
+                        {...register("billingAddress.county", {
+                          required: "County is required",
+                        })}
+                        error={!!errors.billingAddress?.county}
+                      />
+                      {errors.billingAddress?.county && (
+                        <ErrorMessage>{errors.billingAddress.county.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="billingCountry">Country</Label>
+                      <Input
+                        id="billingCountry"
+                        {...register("billingAddress.country", {
+                          required: "Country is required",
+                        })}
+                        error={!!errors.billingAddress?.country}
+                      />
+                      {errors.billingAddress?.country && (
+                        <ErrorMessage>{errors.billingAddress.country.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                </AddressSection>
 
-                <div>
-                  <h3>Shipping Address</h3>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingStreet">Street and Number</S.Label>
-                    <S.Input
-                      id="shippingStreet"
-                      {...register("shippingAddress.street", {
-                        required: "Street is required",
-                      })}
-                      error={!!errors.shippingAddress?.street}
-                    />
-                    {errors.shippingAddress?.street && (
-                      <S.ErrorMessage>{errors.shippingAddress.street.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingZipCode">ZIP Code</S.Label>
-                    <S.Input
-                      id="shippingZipCode"
-                      {...register("shippingAddress.zipCode", {
-                        required: "ZIP code is required",
-                      })}
-                      error={!!errors.shippingAddress?.zipCode}
-                    />
-                    {errors.shippingAddress?.zipCode && (
-                      <S.ErrorMessage>{errors.shippingAddress.zipCode.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingCity">City</S.Label>
-                    <S.Input
-                      id="shippingCity"
-                      {...register("shippingAddress.city", {
-                        required: "City is required",
-                      })}
-                      error={!!errors.shippingAddress?.city}
-                    />
-                    {errors.shippingAddress?.city && (
-                      <S.ErrorMessage>{errors.shippingAddress.city.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingState">State</S.Label>
-                    <S.Input
-                      id="shippingState"
-                      {...register("shippingAddress.state", {
-                        required: "State is required",
-                      })}
-                      error={!!errors.shippingAddress?.state}
-                    />
-                    {errors.shippingAddress?.state && (
-                      <S.ErrorMessage>{errors.shippingAddress.state.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingCounty">County</S.Label>
-                    <S.Input
-                      id="shippingCounty"
-                      {...register("shippingAddress.county", {
-                        required: "County is required",
-                      })}
-                      error={!!errors.shippingAddress?.county}
-                    />
-                    {errors.shippingAddress?.county && (
-                      <S.ErrorMessage>{errors.shippingAddress.county.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingCountry">Country</S.Label>
-                    <S.Input
-                      id="shippingCountry"
-                      {...register("shippingAddress.country", {
-                        required: "Country is required",
-                      })}
-                      error={!!errors.shippingAddress?.country}
-                    />
-                    {errors.shippingAddress?.country && (
-                      <S.ErrorMessage>{errors.shippingAddress.country.message}</S.ErrorMessage>
-                    )}
-                  </S.InputGroup>
-                  {/* <S.InputGroup>
-                    <S.Label htmlFor="freightForwarder">Freight Forwarder (if applicable)</S.Label>
-                    <S.Input id="freightForwarder" {...register("shippingAddress.freightForwarder")} />
-                  </S.InputGroup>
-                  <S.InputGroup>
-                    <S.Label htmlFor="shippingAccountNumber">Shipping Account Number (if applicable)</S.Label>
-                    <S.Input id="shippingAccountNumber" {...register("shippingAddress.shippingAccountNumber")} />
-                  </S.InputGroup> */}
-                </div>
-              </S.Grid>
-            </S.Section>
+                <AddressSection>
+                  <AddressTitle>Shipping Address</AddressTitle>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="shippingStreet">Street and Number</Label>
+                      <Input
+                        id="shippingStreet"
+                        {...register("shippingAddress.street", {
+                          required: "Street is required",
+                        })}
+                        error={!!errors.shippingAddress?.street}
+                      />
+                      {errors.shippingAddress?.street && (
+                        <ErrorMessage>{errors.shippingAddress.street.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="shippingZipCode">ZIP Code</Label>
+                      <Input
+                        id="shippingZipCode"
+                        {...register("shippingAddress.zipCode", {
+                          required: "ZIP code is required",
+                        })}
+                        error={!!errors.shippingAddress?.zipCode}
+                      />
+                      {errors.shippingAddress?.zipCode && (
+                        <ErrorMessage>{errors.shippingAddress.zipCode.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="shippingCity">City</Label>
+                      <Input
+                        id="shippingCity"
+                        {...register("shippingAddress.city", {
+                          required: "City is required",
+                        })}
+                        error={!!errors.shippingAddress?.city}
+                      />
+                      {errors.shippingAddress?.city && (
+                        <ErrorMessage>{errors.shippingAddress.city.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="shippingState">State</Label>
+                      <Input
+                        id="shippingState"
+                        {...register("shippingAddress.state", {
+                          required: "State is required",
+                        })}
+                        error={!!errors.shippingAddress?.state}
+                      />
+                      {errors.shippingAddress?.state && (
+                        <ErrorMessage>{errors.shippingAddress.state.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                  <FieldRow>
+                    <InputGroup>
+                      <Label htmlFor="shippingCounty">County</Label>
+                      <Input
+                        id="shippingCounty"
+                        {...register("shippingAddress.county", {
+                          required: "County is required",
+                        })}
+                        error={!!errors.shippingAddress?.county}
+                      />
+                      {errors.shippingAddress?.county && (
+                        <ErrorMessage>{errors.shippingAddress.county.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                    <InputGroup>
+                      <Label htmlFor="shippingCountry">Country</Label>
+                      <Input
+                        id="shippingCountry"
+                        {...register("shippingAddress.country", {
+                          required: "Country is required",
+                        })}
+                        error={!!errors.shippingAddress?.country}
+                      />
+                      {errors.shippingAddress?.country && (
+                        <ErrorMessage>{errors.shippingAddress.country.message}</ErrorMessage>
+                      )}
+                    </InputGroup>
+                  </FieldRow>
+                </AddressSection>
+              </ResponsiveGrid>
+            </CompactSection>
           )}
 
           {currentStep === 3 && (
@@ -666,7 +757,6 @@ export default function OnboardingForm() {
                     <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
-
               </S.Grid>
             </S.Section>
           )}
@@ -758,7 +848,7 @@ export default function OnboardingForm() {
         <S.ModalOverlay>
           <S.ModalContent>
             <S.ModalTitle>
-            <CircleCheck  size={48}/>
+              <CircleCheck size={48} />
             </S.ModalTitle>
             <S.ModalMessage>Your form has been submitted successfully!</S.ModalMessage>
             <S.ModalButton
@@ -775,4 +865,3 @@ export default function OnboardingForm() {
     </S.ContainerMain>
   )
 }
-
