@@ -56,7 +56,7 @@ export async function submitForm(formData: unknown, userId: string) {
 export async function getFormStatus(userId: string) {
   const { data, error } = await supabase
     .from("customer_forms")
-    .select("status, feedback")
+    .select("status")
     .eq("user_id", userId)
     .single()
 

@@ -167,4 +167,26 @@ export async function validateCSCCustomer(customerId: string, approved: boolean)
 }
 
 
+// Finaliza o cliente na customer_forms e validations
+export async function finishCustomer(customerId: string) {
+  // Atualiza status na tabela customer_forms
+  const { error: customerError } = await supabase
+    .from("customer_forms")
+    .update({ status: "finalizado" })
+    .eq("id", customerId);
+
+  if (customerError) {
+    throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
+  }
+
+  // Atualiza status na tabela validations
+  const { error: validationError } = await supabase
+    .from("validations")
+    .update({ csc_status: "finalizado" })
+    .eq("customer_id", customerId);
+
+  if (validationError) {
+    throw new Error(`Erro ao atualizar validação: ${validationError.message}`);
+  }
+}
 

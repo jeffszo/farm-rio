@@ -4,15 +4,13 @@ export const ContainerMain = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 90vh; 
-  margin-top: 9rem;
+  height: 85vh;
 `
 
 export const FormContainer = styled.div`
   width: 85%; /* Ou um valor fixo como 800px */
   max-width: 1200px;
   padding: 1.5rem;
-  margin-bottom: 12rem;
   background: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -46,7 +44,7 @@ export const FormSubtitle = styled.p`
 `
 
 export const Section = styled.section`
-  margin-bottom: 2rem;
+  margin-bottom: 2Rerem;
 `
 
 export const SectionTitle = styled.h2`
@@ -63,6 +61,7 @@ export const Grid = styled.div`
 `
 
 export const InputGroup = styled.div`
+  gap: 1rem;
   margin-bottom: 1rem;
 `
 
@@ -76,7 +75,7 @@ export const Label = styled.label`
 
 export const Input = styled.input<{ error?: boolean }>`
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.5rem ;
   font-size: 0.875rem;
   border: 1px solid ${(props) => (props.error ? "red" : "#ccc")};
   border-radius: 0.25rem;
@@ -312,22 +311,33 @@ export const ResponsiveGrid = styled.div`
   gap: 1rem;
   width: 100%;
   
+  
   @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
   }
 `
 
-export const AddressSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`
 
-export const AddressTitle = styled.h3`
-  font-size: 0.875rem;
-  font-weight: 600;
+export const AddAddressButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
   color: #18181b;
-  margin-bottom: 0.5rem;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f9f9f9;
+  }
 `
 
 export const FieldRow = styled.div`
@@ -343,5 +353,99 @@ export const FieldRow = styled.div`
 export const CompactSection = styled.div`
   overflow: auto;
   max-width: 100%;
-  margin-top: 5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-height: 600px;
+  overflow-y: auto;
 `
+
+
+export const AddressSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+`
+
+export const AddressTitle = styled.h3`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #18181b;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+`
+
+export const RemoveButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: #ef4444;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #fee2e2;
+  }
+`
+
+export const AddressHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+`
+
+export const FieldRowAddress = styled.div`
+  grid-template-columns: 3fr 2fr;
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+export const InputGroupField = styled(InputGroup)`
+  flex: 1;
+`
+
+export const LabelField = styled(Label)`
+  font-size: 0.85rem;
+`
+
+export const InputField = styled(Input)`
+  padding: 0.5rem;
+  font-size: 0.85rem;
+`
+
+export const ErrorMessageField = styled(ErrorMessage)`
+  font-size: 0.75rem;
+`
+
+export const FixButton = styled.button`
+  background-color: #3182ce;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #2b6cb0;
+  }
+`;

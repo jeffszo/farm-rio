@@ -1,8 +1,9 @@
 "use client"
 
+import React from 'react';
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { api } from "@/lib/supabase/index"
+import { api } from "../../../../lib/supabase/index"
 import * as S from "./styles"
 import {
   User,
@@ -70,7 +71,7 @@ const INVOICING_COMPANIES = [
 
 const CURRENCIES = ["USD", "EUR", "GBP"]
 
-const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days", "100% Prior Ship"]
+const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days"]
 
 export default function ValidationDetailsPage() {
   const { id } = useParams()
@@ -472,10 +473,10 @@ export default function ValidationDetailsPage() {
         </S.TermsContainer>
 
         <S.ButtonContainer>
-          <S.Button onClick={() => handleApproval(false)} variant="secondary">
+          <S.Button type="button" onClick={() => handleApproval(false)} variant="secondary">
             Reject
           </S.Button>
-          <S.Button onClick={() => handleApproval(true)} variant="primary">
+          <S.Button type="button" onClick={() => handleApproval(true)} variant="primary">
             Approve
           </S.Button>
         </S.ButtonContainer>

@@ -1,5 +1,5 @@
 "use client";
-
+import React from 'react';
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
@@ -49,6 +49,28 @@ export default function ValidationDetailsPage() {
   }
 
   const [validation, setValidation] = useState<ValidationDetails | null>(null);
+
+  const handleFinish = async () => {
+    try {
+      setLoading(true);
+      await api.finishCustomer(id as string);
+      setModalContent({
+        title: "Success!",
+        description: "Customer finalized successfully!",
+      });
+      setShowModal(true);
+    } catch (err) {
+      console.error("Erro ao finalizar cliente:", err);
+      setModalContent({
+        title: "Erro!",
+        description: err instanceof Error ? err.message : "Erro desconhecido",
+      });
+      setShowModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
 
   useEffect(() => {
@@ -138,6 +160,7 @@ export default function ValidationDetailsPage() {
 
   return (
     <S.ContainerMain>
+    
       <S.Container>
         <S.Header>
           <S.Title>Customer Details</S.Title>
@@ -232,13 +255,21 @@ export default function ValidationDetailsPage() {
 
         {/* ✅ Botões de Aprovação/Reprovação */}
         <S.ButtonContainer>
-          <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Reject
-          </S.Button>
-          <S.Button onClick={() => handleApproval(true)} variant="primary">
-            Approve
-          </S.Button>
-        </S.ButtonContainer>
+  {customerForm.status === "approved by the CSC team" ? (
+    <S.Button onClick={handleFinish} variant="primary">
+      Finish
+    </S.Button>
+  ) : (
+    <>
+      <S.Button onClick={() => handleApproval(false)} variant="secondary">
+        Reject
+      </S.Button>
+      <S.Button onClick={() => handleApproval(true)} variant="primary">
+        Approve
+      </S.Button>
+    </>
+  )}
+</S.ButtonContainer>
 
         {showModal && (
           <S.Modal>

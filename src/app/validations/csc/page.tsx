@@ -1,11 +1,11 @@
 "use client";
-
+import React from 'react';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/supabase/index";
-import PendingCustomersTable from "../../../components/PendingCustomersTable";
+import { api } from "../../../lib/supabase/index";
+import PendingCustomersTable from "@/components/PendingCustomersTable";
 import TableSkeleton from "@/components/TableSkeleton";
-
+import * as S from "./styles";
 interface Customer {
   id: string;
   name: string;
@@ -15,7 +15,7 @@ interface Customer {
   created_at: string;
 }
 
-export default function CSCValidationsPage() {
+export default function Page() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -23,6 +23,8 @@ export default function CSCValidationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const router = useRouter();
+  const [filterStatus, setFilterStatus] = useState<"all" | "approvedByCredit" | "approvedByCSC">("all");
+
 
   useEffect(() => {
     const fetchPendingCustomers = async () => {
@@ -50,7 +52,11 @@ export default function CSCValidationsPage() {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <PendingCustomersTable
+  
+
+
+    
+      <PendingCustomersTable
       customers={customers}
       totalCount={totalCount}
       currentPage={currentPage}
@@ -58,5 +64,8 @@ export default function CSCValidationsPage() {
       setCurrentPage={setCurrentPage}
       onViewDetails={(id) => router.push(`/validations/csc/${id}`)}
     />
+    
+    
+
   );
 }

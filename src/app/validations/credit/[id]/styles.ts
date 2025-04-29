@@ -141,14 +141,6 @@ export const Button = styled.button<{ variant: "primary" | "secondary" }>`
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    background-color: ${({ variant }) => (variant === "primary" ? "#2d3748" : "#f7fafc")};
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.5);
-  }
 `
 
 export const Message = styled.p`
@@ -353,8 +345,8 @@ export const EditWrapper = styled.div`
 
 export const InlineEditWrapper = styled.div`
   display: inline-flex;
-  align-items: center; */
-  gap: 4px; */
+  align-items: center; 
+  gap: 4px;
  
 `
 

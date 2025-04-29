@@ -24,6 +24,7 @@ class SupabaseAPI implements AuthAPI {
   validateWholesaleCustomer = validations.validateWholesaleCustomer
   validateCreditCustomer = validations.validateCreditCustomer
   validateCSCCustomer = validations.validateCSCCustomer
+  finishCustomer = validations.finishCustomer
 
   // Query methods
   getPendingValidations = queries.getPendingValidations
@@ -33,7 +34,8 @@ class SupabaseAPI implements AuthAPI {
   getWarehousesByCompany = queries.getWarehousesByCompany
   getApprovedCustomers = queries.getApprovedCustomers
   getCustomerValidationDetails = queries.getCustomerValidationDetails
-  // Storage methods
+  
+
   uploadResaleCertificate = storage.uploadResaleCertificate
 
   // update DUNS

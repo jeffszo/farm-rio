@@ -249,3 +249,4 @@ export const TermsCard = styled.div`
     padding: 0.25rem 0;
   }
 `
+

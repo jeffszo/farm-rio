@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Global from "../styles/global";
-import Header from "./Header";
 import Footer from "./Footer";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +16,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <Global />
-      {!isValidationPage && <Header />}
+      
       <main>{children}</main>
       {!isValidationPage && <Footer />}
     </>
