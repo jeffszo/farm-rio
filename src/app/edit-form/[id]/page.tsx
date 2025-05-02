@@ -1,20 +1,41 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import * as S from "./styles"
-import type { IFormInputs } from "@/types/form"
-import { useRouter } from "next/navigation"
-import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck, Plus, Trash2 } from "lucide-react"
-import { api } from "@/lib/supabase/index"
+import { useRouter, useParams } from "next/navigation"
+import { ChevronRight, ChevronLeft, Upload, CircleCheck, Trash2, Plus } from "lucide-react"
+import type { IFormInputs } from "../../../types/form"
+import * as S from "../../customer/styles"
+import { api } from "../../../lib/supabase/index"
 
-export default function OnboardingForm() {
+export default function EditForm() {
   const [file, setFile] = useState<File | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [shippingAddress, setshippingAddress] = useState<number[]>([0])
-  const [billingAddress, setbillingAddress] = useState<number[]>([0])
+  const [shippingAddress, setShippingAddress] = useState<number[]>([0])
+  const [billingAddress, setBillingAddress] = useState<number[]>([0])
+  const [isLoading, setIsLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [formData, setFormData] = useState<any>(null)
+
+  const params = useParams()
+  const formId = params.id as string
+  const router = useRouter()
+
+  const {
+    register,
+    handleSubmit: hookFormSubmit,
+    formState: { errors },
+    trigger,
+    setValue,
+    reset,
+  } = useForm<IFormInputs>({
+    mode: "onChange",
+  })
+
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -27,52 +48,140 @@ export default function OnboardingForm() {
     }
   }
 
-  const {
-    register,
-    handleSubmit: hookFormSubmit,
-    formState: { errors },
-    trigger,
-  } = useForm<IFormInputs>({
-    mode: "onChange",
-  })
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-  const [formStatus, setFormStatus] = useState<string | null>(null)
-  const [user, setUser] = useState<{ id: string; userType?: string } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const router = useRouter()
-
-  // These state setters are used in a future implementation for team-specific views
-  // const [isWholesaleTeam] = useState(false)
-  // const [isCreditTeam] = useState(false)
-
-  // ✅ Buscar o usuário e o status do formulário corretamente
+  // Fetch the form data to edit
   useEffect(() => {
-    const fetchUserAndStatus = async () => {
+    const fetchFormData = async () => {
       try {
         setIsLoading(true)
         const currentUser = await api.getCurrentUser()
 
         if (!currentUser) {
           console.error("Usuário não autenticado.")
+          router.push("/")
           return
         }
 
-        setUser(currentUser)
+        // Fetch the form data by ID
+        const data = await api.getFormById(formId)
+        reset(data) // Reset the form with the fetched data
+        if (!data) {
+          console.error("Form not found")
+          router.push("/")
+          return
+        }
 
-        // Buscar o status do formulário
-        const formData = await api.getFormStatus(currentUser.id)
-        setFormStatus(formData?.status || null)
+        setFormData(data)
+
+        // Populate the form with existing data
+        if (data.customer_name) setValue("customerInfo.legalName", data.customer_name)
+        if (data.sales_tax_id) setValue("customerInfo.taxId", data.sales_tax_id)
+        if (data.duns_number) setValue("customerInfo.dunNumber", data.duns_number)
+        if (data.dba_number) setValue("customerInfo.dba", data.dba_number)
+
+        // Handle billing address
+        if (data.billing_address) {
+          const addressParts = data.billing_address.split(", ")
+          if (addressParts.length >= 6) {
+            setValue("billingAddress.0.street", addressParts[0] || "")
+            setValue("billingAddress.0.zipCode", addressParts[1] || "")
+            setValue("billingAddress.0.city", addressParts[2] || "")
+            setValue("billingAddress.0.state", addressParts[3] || "")
+            setValue("billingAddress.0.county", addressParts[4] || "")
+            setValue("billingAddress.0.country", addressParts[5] || "")
+          }
+        }
+
+        // Handle shipping address
+        if (data.shipping_address) {
+          const addressParts = data.shipping_address.split(", ")
+          if (addressParts.length >= 6) {
+            setValue("shippingAddress.0.street", addressParts[0] || "")
+            setValue("shippingAddress.0.zipCode", addressParts[1] || "")
+            setValue("shippingAddress.0.city", addressParts[2] || "")
+            setValue("shippingAddress.0.state", addressParts[3] || "")
+            setValue("shippingAddress.0.county", addressParts[4] || "")
+            setValue("shippingAddress.0.country", addressParts[5] || "")
+          }
+        }
+
+        // Handle AP contact info
+        if (data.ap_contact_name) {
+          const nameParts = data.ap_contact_name.split(" ")
+          setValue("apContact.firstName", nameParts[0] || "")
+          setValue("apContact.lastName", nameParts.slice(1).join(" ") || "")
+        }
+        if (data.ap_contact_email) setValue("apContact.email", data.ap_contact_email)
+
+        // Handle contact info if available
+        if (data.contact_info && Array.isArray(data.contact_info)) {
+          if (data.contact_info[3]) setValue("apContact.countryCode", data.contact_info[3])
+          if (data.contact_info[4]) setValue("apContact.contactNumber", data.contact_info[4])
+        }
+
+        // Handle buyer info
+        if (data.buyer_name) {
+          const nameParts = data.buyer_name.split(" ")
+          setValue("buyerInfo.firstName", nameParts[0] || "")
+          setValue("buyerInfo.lastName", nameParts.slice(1).join(" ") || "")
+        }
+        if (data.buyer_email) setValue("buyerInfo.email", data.buyer_email)
+
+        // Handle buyer info if available
+        if (data.buyer_info && Array.isArray(data.buyer_info)) {
+          if (data.buyer_info[3]) setValue("buyerInfo.countryCode", data.buyer_info[3])
+          if (data.buyer_info[4]) setValue("buyerInfo.buyerNumber", data.buyer_info[4])
+        }
+
+        // Handle additional addresses if needed
+        if (data.additional_shipping_addresses && Array.isArray(data.additional_shipping_addresses)) {
+          const additionalAddresses = data.additional_shipping_addresses.length
+          if (additionalAddresses > 0) {
+            const newShippingAddresses = Array.from({ length: additionalAddresses + 1 }, (_, i) => i)
+            setShippingAddress(newShippingAddresses)
+
+            data.additional_shipping_addresses.forEach((address, index) => {
+              const addressParts = address.split(", ")
+              if (addressParts.length >= 6) {
+                setValue(`shippingAddress.${index + 1}.street`, addressParts[0] || "")
+                setValue(`shippingAddress.${index + 1}.zipCode`, addressParts[1] || "")
+                setValue(`shippingAddress.${index + 1}.city`, addressParts[2] || "")
+                setValue(`shippingAddress.${index + 1}.state`, addressParts[3] || "")
+                setValue(`shippingAddress.${index + 1}.county`, addressParts[4] || "")
+                setValue(`shippingAddress.${index + 1}.country`, addressParts[5] || "")
+              }
+            })
+          }
+        }
+
+        if (data.additional_billing_addresses && Array.isArray(data.additional_billing_addresses)) {
+          const additionalAddresses = data.additional_billing_addresses.length
+          if (additionalAddresses > 0) {
+            const newBillingAddresses = Array.from({ length: additionalAddresses + 1 }, (_, i) => i)
+            setBillingAddress(newBillingAddresses)
+
+            data.additional_billing_addresses.forEach((address, index) => {
+              const addressParts = address.split(", ")
+              if (addressParts.length >= 6) {
+                setValue(`billingAddress.${index + 1}.street`, addressParts[0] || "")
+                setValue(`billingAddress.${index + 1}.zipCode`, addressParts[1] || "")
+                setValue(`billingAddress.${index + 1}.city`, addressParts[2] || "")
+                setValue(`billingAddress.${index + 1}.state`, addressParts[3] || "")
+                setValue(`billingAddress.${index + 1}.county`, addressParts[4] || "")
+                setValue(`billingAddress.${index + 1}.country`, addressParts[5] || "")
+              }
+            })
+          }
+        }
       } catch (error) {
-        console.error("Erro ao buscar status do formulário:", error)
+        console.error("Error fetching form data:", error)
+        setApiError("Failed to load your data. Please try again.")
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchUserAndStatus()
-  }, [])
+    fetchFormData()
+  }, [formId, router, setValue, reset])
 
   const onSubmit = async (formData: IFormInputs) => {
     try {
@@ -86,13 +195,12 @@ export default function OnboardingForm() {
         return
       }
 
-      console.log("Dados recebidos no formulário:", formData)
+      console.log("Dados atualizados no formulário:", formData)
 
       // Upload the PDF file to Supabase if it exists
       let fileUrl = null
       if (file) {
         try {
-          // Upload to the resalecertificates bucket
           fileUrl = await api.uploadResaleCertificate(file, user.id)
           console.log("Arquivo enviado com sucesso:", fileUrl)
         } catch (error) {
@@ -116,8 +224,8 @@ export default function OnboardingForm() {
         ap_contact_email: string | null
         buyer_name: string
         buyer_email: string | null
-        contact_info?: string[] // Added contact_info property
-        buyer_info?: string[] // Added buyer_info property
+        contact_info?: string[]
+        buyer_info?: string[]
         additional_shipping_addresses?: string[]
         additional_billing_addresses?: string[]
       } = {
@@ -125,10 +233,10 @@ export default function OnboardingForm() {
         sales_tax_id: formData.customerInfo?.taxId || null,
         duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
-        resale_certificate: fileUrl, // Use the URL from the uploaded file
+        resale_certificate: fileUrl || null, // Use the URL from the uploaded file or keep existing
 
-        billing_address: Object.values(formData.billingAddress || {}).join(", "),
-        shipping_address: Object.values(formData.shippingAddress || {}).join(", "),
+        billing_address: Object.values(formData.billingAddress?.[0] || {}).join(", "),
+        shipping_address: Object.values(formData.shippingAddress?.[0] || {}).join(", "),
 
         ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
         ap_contact_email: formData.apContact?.email || null,
@@ -137,130 +245,46 @@ export default function OnboardingForm() {
         buyer_email: formData.buyerInfo?.email || null,
       }
 
-      console.log("Dados formatados para envio:", flattenedFormData)
-
-      // Process customerInfo
-      if (formData.customerInfo) {
-        Object.values(formData.customerInfo).forEach((value, index) => {
-          // Map to expected database fields
-          if (index === 0) flattenedFormData.customer_name = value // Assuming first value is legal name
-          // Add other mappings as needed
-        })
-      }
-
+      // Process contact info
       if (formData.apContact) {
-        Object.values(formData.apContact).forEach((value) => {
-          flattenedFormData.contact_info = flattenedFormData.contact_info || []
-          flattenedFormData.contact_info.push(value)
-        })
+        flattenedFormData.contact_info = Object.values(formData.apContact)
       }
 
+      // Process buyer info
       if (formData.buyerInfo) {
-        Object.values(formData.buyerInfo).forEach((value) => {
-          flattenedFormData.buyer_info = flattenedFormData.buyer_info || []
-          flattenedFormData.buyer_info.push(value)
-        })
+        flattenedFormData.buyer_info = Object.values(formData.buyerInfo)
       }
-
-      console.log("Sending flattened form data:", flattenedFormData)
 
       // Process multiple shipping addresses
-      if (formData.shippingAddress && formData.shippingAddress.length > 0) {
-        // Use the first shipping address as the primary one
-        flattenedFormData.shipping_address = Object.values(formData.shippingAddress[0] || {}).join(", ")
-
-        // Store additional addresses in a separate array if needed
-        if (formData.shippingAddress.length > 1) {
-          flattenedFormData.additional_shipping_addresses = formData.shippingAddress
-            .slice(1)
-            .map((addr) => Object.values(addr || {}).join(", "))
-        }
-      } else {
-        // Fallback to the original shipping address if no multiple addresses
-        flattenedFormData.shipping_address = Object.values(formData.shippingAddress || {}).join(", ")
+      if (formData.shippingAddress && formData.shippingAddress.length > 1) {
+        flattenedFormData.additional_shipping_addresses = formData.shippingAddress
+          .slice(1)
+          .map((addr) => Object.values(addr || {}).join(", "))
       }
 
       // Process multiple billing addresses
-      if (formData.billingAddress && formData.billingAddress.length > 0) {
-        // Use the first billing address as the primary one
-        flattenedFormData.billing_address = Object.values(formData.billingAddress[0] || {}).join(", ")
-
-        // Store additional addresses in a separate array if needed
-        if (formData.billingAddress.length > 1) {
-          flattenedFormData.additional_billing_addresses = formData.billingAddress
-            .slice(1)
-            .map((addr) => Object.values(addr || {}).join(", "))
-        }
-      } else {
-        // Fallback to the original billing address if no multiple addresses
-        flattenedFormData.billing_address = Object.values(formData.billingAddress || {}).join(", ")
+      if (formData.billingAddress && formData.billingAddress.length > 1) {
+        flattenedFormData.additional_billing_addresses = formData.billingAddress
+          .slice(1)
+          .map((addr) => Object.values(addr || {}).join(", "))
       }
 
-      await api.submitForm(flattenedFormData, user.id)
-      setIsModalOpen(true) // Open modal instead of alert
+      // Update the form with the new data
+      await api.updateForm(flattenedFormData, formId)
 
-      // Router redirect is now handled in the modal close button
+      // Reset the form status to pending for review
+      await api.updateFormStatus(formId, "pending")
+
+      setIsModalOpen(true)
     } catch (error: unknown) {
-      console.error("Erro ao enviar o formulário:", error instanceof Error ? error.message : String(error))
-      setApiError(error instanceof Error ? error.message : "Erro ao enviar o formulário. Tente novamente.")
+      console.error("Erro ao atualizar o formulário:", error instanceof Error ? error.message : String(error))
+      setApiError(error instanceof Error ? error.message : "Erro ao atualizar o formulário. Tente novamente.")
     } finally {
       setIsUploading(false)
     }
   }
 
-  // 🔥 **Evita erro de hidratação: só renderiza depois do carregamento**
-  if (isLoading) {
-    return <p>Loading...</p>
-  }
-
-  // 🔥 **Se o usuário já enviou o formulário, mostra apenas o status**
-  if (user?.userType === "cliente" && formStatus) {
-    return (
-      <S.ReviewContainer>
-        <S.ReviewHeader>
-          <S.ReviewTitle>Request status</S.ReviewTitle>
-          <S.ReviewSubtitle>
-            {formStatus === "pending" && (
-              <div>
-                <Clock4 /> Your submission is under review{" "}
-              </div>
-            )}
-
-            {formStatus === "approved by the wholesale team" && (
-              <div>Your form has already been approved by the wholesale team</div>
-            )}
-
-            {formStatus === "approved by the credit team" && (
-              <div>Your form has already been approved by the wholesale and credit team.</div>
-            )}
-
-            {formStatus === "rejected by the CSC team" && (
-              <div style={{ textAlign: "center", marginTop: "2rem", display: "flex", flexDirection: "column" }}>
-                <p>Your registration was rejected by our team. Please correct the data and submit again. </p>
-                <S.FixButton onClick={() => router.push(`/edit-form/${user.id}`)}>Correct your data</S.FixButton>
-              </div>
-            )}
-
-            {formStatus === "approved by the CSC team" && (
-              <div>
-                Your form has been <strong>approved by all teams!</strong>
-              </div>
-            )}
-
-            {formStatus === "rejected" && (
-              <div>
-                Your form has been <strong>rejected</strong>.
-              </div>
-            )}
-          </S.ReviewSubtitle>
-        </S.ReviewHeader>
-      </S.ReviewContainer>
-    )
-  }
-
-  // ✅ Criado `nextStep` corretamente
   const nextStep = async () => {
-    // Only validate the current step fields
     let fieldsToValidate: Array<
       | "customerInfo"
       | "billingAddress"
@@ -337,35 +361,38 @@ export default function OnboardingForm() {
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
   }
 
-  // ✅ Criado `prevStep` corretamente
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
   const addShippingAddress = () => {
-    setshippingAddress((prev) => [...prev, prev.length])
+    setShippingAddress((prev) => [...prev, prev.length])
   }
 
   const addBillingAddress = () => {
-    setbillingAddress((prev) => [...prev, prev.length])
+    setBillingAddress((prev) => [...prev, prev.length])
   }
 
   const removeShippingAddress = (indexToRemove: number) => {
     if (shippingAddress.length <= 1) return // Não remover o último endereço
-    setshippingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
+    setShippingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
   }
 
   const removeBillingAddress = (indexToRemove: number) => {
     if (billingAddress.length <= 1) return // Não remover o último endereço
-    setbillingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
+    setBillingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
+  }
+
+  if (isLoading) {
+    return <p>Loading...</p>
   }
 
   return (
     <S.ContainerMain>
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Customer Onboarding</S.FormTitle>
-          <S.FormSubtitle>Please fill out the form below to complete the onboarding process.</S.FormSubtitle>
+          <S.FormTitle>Edit Customer Information</S.FormTitle>
+          <S.FormSubtitle>Please update your information and submit for review.</S.FormSubtitle>
         </S.FormHeader>
 
         {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
@@ -430,8 +457,13 @@ export default function OnboardingForm() {
                   <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
                   <S.UploadButton htmlFor="file-upload">
                     <Upload size={16} />
-                    {file ? file.name : "Attach file (PDF)"}
+                    {file ? file.name : formData?.resale_certificate ? "Replace current file" : "Attach file (PDF)"}
                   </S.UploadButton>
+                  {formData?.resale_certificate && !file && (
+                    <div style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#71717a" }}>
+                      Current file: {formData.resale_certificate.split("/").pop()}
+                    </div>
+                  )}
                 </S.FileInputContainer>
               </S.Grid>
             </S.Section>
@@ -845,7 +877,7 @@ export default function OnboardingForm() {
               </S.Button>
             ) : (
               <S.Button type="submit" variant="primary" disabled={isUploading}>
-                {isUploading ? "Uploading..." : "Submit"}
+                {isUploading ? "Uploading..." : "Update Information"}
               </S.Button>
             )}
           </S.ButtonGroup>
@@ -858,7 +890,7 @@ export default function OnboardingForm() {
             <S.ModalTitle>
               <CircleCheck size={48} />
             </S.ModalTitle>
-            <S.ModalMessage>Your form has been submitted successfully!</S.ModalMessage>
+            <S.ModalMessage>Your information has been updated successfully!</S.ModalMessage>
             <S.ModalButton
               onClick={() => {
                 setIsModalOpen(false)
