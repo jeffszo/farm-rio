@@ -86,18 +86,18 @@ export async function validateWholesaleCustomer(
   }
 ) {
   const updateData = {
-    status: approved ? "approved by the team wholesale" : "rejected by the team wholesale",
-    atacado_status: approved ? "aprovado" : "reprovado", // ✅ novo campo de status específico
+    status: approved ? "approved by the wholesale team" : "rejected by the team wholesale",
+    wholesale_status: approved ? "aprovado" : "reprovado", // ✅ novo campo de status específico
 
     // ✅ Termos preenchidos
-    atacado_invoicing_company: terms.wholesale_invoicing_company,
-    atacado_warehouse: terms.wholesale_warehouse,
-    atacado_currency: terms.wholesale_currency,
-    atacado_terms: Array.isArray(terms.wholesale_terms)
+    wholesale_invoicing_company: terms.wholesale_invoicing_company,
+    wholesale_warehouse: terms.wholesale_warehouse,
+    wholesale_currency: terms.wholesale_currency,
+    wholesale_terms: Array.isArray(terms.wholesale_terms)
       ? terms.wholesale_terms.join(", ")
       : terms.wholesale_terms ?? null,
-    atacado_credit: terms.wholesale_credit,
-    atacado_discount: terms.wholesale_discount,
+    wholesale_credit: terms.wholesale_credit,
+    wholesale_discount: terms.wholesale_discount,
   };
 
   const { error } = await supabase

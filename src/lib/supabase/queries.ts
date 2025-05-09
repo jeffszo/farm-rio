@@ -91,7 +91,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .in("status", ["approved by the team wholesale", "rejected by the CSC team"]) // 🔥 Busca múltiplos status
+    .in("status", ["approved by the wholesale team", "rejected by the CSC team"]) // 🔥 Busca múltiplos status
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 
@@ -145,18 +145,19 @@ export async function getInvoicingCompanies(): Promise<string[]> {
 
 export async function getCustomerValidationDetails(customerId: string) {
   const { data, error } = await supabase
-    .from("validations")
+    .from("customer_forms")
     .select("*")
-    .eq("customer_id", customerId)
+    .eq("id", customerId) // agora é .eq("id", ...)
     .single();
 
   if (error) {
-    console.error("Erro ao buscar validações:", error);
+    console.error("Erro ao buscar dados do cliente:", error);
     return null;
   }
 
   return data;
 }
+
 
 
 

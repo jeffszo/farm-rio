@@ -35,27 +35,22 @@ export default function ValidationDetailsPage() {
   const router = useRouter()
 
   interface ValidationDetails {
-    atacado_invoicing_company: string
-    atacado_warehouse: string
-    atacado_currency: string
-    atacado_terms: string
-    atacado_credit: string
-    atacado_discount: number
-    credito_invoicing_company: string
-    credito_warehouse: string
-    credito_currency: string
-    credito_terms: string
-    credito_credit: string
-    credito_discount: number
+    wholesale_invoicing_company: string
+    wholesale_warehouse: string
+    wholesale_currency: string
+    wholesale_terms: string
+    wholesale_credit: string
+    wholesale_discount: number
+    credit_invoicing_company: string
+    credit_warehouse: string
+    credit_currency: string
+    credit_terms: string
+    credit_credit: string
+    credit_discount: number
   }
 
   const [validation, setValidation] = useState<ValidationDetails | null>(null)
 
-  // if (!approved && !feedback.trim()) {
-  //   throw new Error("Please provide feedback when rejecting the client.");
-  // }
-
-  // await api.validateCSCCustomer(id as string, approved, feedback);
 
   const handleFinish = async () => {
     try {
@@ -240,44 +235,44 @@ export default function ValidationDetailsPage() {
             <S.TermsCard>
               <h3>Wholesale Team Validation</h3>
               <p>
-                <strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}
+                <strong>Invoicing Company:</strong> {validation.wholesale_invoicing_company}
               </p>
               <p>
-                <strong>Warehouse:</strong> {validation.atacado_warehouse}
+                <strong>Warehouse:</strong> {validation.wholesale_warehouse}
               </p>
               <p>
-                <strong>Currency:</strong> {validation.atacado_currency}
+                <strong>Currency:</strong> {validation.wholesale_currency}
               </p>
               <p>
-                <strong>Terms:</strong> {validation.atacado_terms}
+                <strong>Terms:</strong> {validation.wholesale_terms}
               </p>
               <p>
-                <strong>Credit Limit:</strong> {validation.atacado_credit}
+                <strong>Credit Limit:</strong> {validation.wholesale_credit}
               </p>
               <p>
-                <strong>Discount:</strong> {validation.atacado_discount}%
+                <strong>Discount:</strong> {validation.wholesale_discount}%
               </p>
             </S.TermsCard>
 
             <S.TermsCard>
               <h3>Credit Team Validation</h3>
               <p>
-                <strong>Invoicing Company:</strong> {validation.credito_invoicing_company}
+                <strong>Invoicing Company:</strong> {validation.credit_invoicing_company}
               </p>
               <p>
-                <strong>Warehouse:</strong> {validation.credito_warehouse}
+                <strong>Warehouse:</strong> {validation.credit_warehouse}
               </p>
               <p>
-                <strong>Currency:</strong> {validation.credito_currency}
+                <strong>Currency:</strong> {validation.credit_currency}
               </p>
               <p>
-                <strong>Terms:</strong> {validation.credito_terms}
+                <strong>Terms:</strong> {validation.credit_terms}
               </p>
               <p>
-                <strong>Credit Limit:</strong> {validation.credito_credit}
+                <strong>Credit Limit:</strong> {validation.credit_credit}
               </p>
               <p>
-                <strong>Discount:</strong> {validation.credito_discount}%
+                <strong>Discount:</strong> {validation.credit_discount}%
               </p>
             </S.TermsCard>
           </S.TermsCardsContainer>
