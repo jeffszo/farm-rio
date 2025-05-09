@@ -1,8 +1,7 @@
 import { supabase } from "./client"
 
 export async function getApprovedCustomers() {
-  // Primeira consulta para obter os dados da tabela customer_forms
-  const { data: customerForms, error: customerFormsError } = await supabase
+  const { data, error } = await supabase
     .from("customer_forms")
     .select(`
       created_at, 
@@ -18,50 +17,23 @@ export async function getApprovedCustomers() {
       resale_certificate, 
       billing_address, 
       shipping_address,
-      id
+      id,
+      credit_invoicing_company,
+      credit_warehouse,
+      credit_currency,
+      credit_credit,
+      credit_discount
     `)
     .eq("status", "approved by the CSC team");
 
-  if (customerFormsError) {
-    console.error("Erro ao buscar formulários de clientes:", customerFormsError.message);
+  if (error) {
+    console.error("Erro ao buscar formulários de clientes:", error.message);
     return [];
   }
 
-  // Segunda consulta para obter os dados da tabela validations
-  const { data: validations, error: validationsError } = await supabase
-    .from("validations")
-    .select(`
-      customer_id,
-      credito_invoicing_company,
-      credito_warehouse,
-      credito_currency,
-      credito_credit,
-      credito_discount
-    `);
-
-  if (validationsError) {
-    console.error("Erro ao buscar validações:", validationsError.message);
-    return [];
-  }
-
-  // Junta os dados da tabela customer_forms com os dados da tabela validations
-  const formattedData = customerForms.map((customer) => {
-    // Busca a validação correspondente ao cliente
-    const validation = validations.find((v) => v.customer_id === customer.id);
-
-    return {
-      ...customer,
-      credito_invoicing_company: validation?.credito_invoicing_company,
-      credito_warehouse: validation?.credito_warehouse,
-      credito_currency: validation?.credito_currency,
-      credito_credit: validation?.credito_credit,
-      credito_discount: validation?.credito_discount,
-    };
-  });
-
-
-  return formattedData || [];
+  return data || [];
 }
+
 
 
 export async function getPendingValidations(page = 1, itemsPerPage = 10) {
@@ -187,3 +159,71 @@ export async function getWarehousesByCompany(invoicingCompany: string) {
   return data ?? []
 }
 
+
+
+export async function getCustomerFormById(id: string) {
+  try {
+    const { data, error } = await supabase.from("customer_forms").select("*").eq("id", id).single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching customer form:", error)
+    throw error
+  }
+}
+
+export async function updateForm(formData: { [key: string]: string }, id: string) {
+  try {
+    // No need to set status here as it's already in the formData
+
+    // Log the data being sent to help with debugging
+    console.log("Updating form with data:", JSON.stringify(formData, null, 2))
+
+    const { data, error } = await supabase.from("customer_forms").update(formData).eq("id", id).select()
+
+    if (error) {
+      console.error("Supabase update error:", error)
+      throw new Error(error.message || "Failed to update form")
+    }
+
+    console.log("Form updated successfully:", data)
+    return data
+  } catch (error) {
+    console.error("Error updating form:", error)
+    if (error instanceof Error) {
+      throw error
+    } else {
+      throw new Error("Unknown error occurred while updating form")
+    }
+  }
+}
+
+export async function resetFormStatus(id: string) {
+  try {
+    console.log("Resetting form status for ID:", id)
+
+    const { data, error } = await supabase
+      .from("customer_forms")
+      .update({
+        status: "pending",
+      })
+      .eq("id", id)
+      .select()
+
+    if (error) {
+      console.error("Supabase reset status error:", error)
+      throw new Error(error.message || "Failed to reset form status")
+    }
+
+    console.log("Form status reset successfully:", data)
+    return data
+  } catch (error) {
+    console.error("Error resetting form status:", error)
+    if (error instanceof Error) {
+      throw error
+    } else {
+      throw new Error("Unknown error occurred while resetting form status")
+    }
+  }
+}

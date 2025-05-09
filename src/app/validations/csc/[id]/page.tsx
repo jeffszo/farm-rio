@@ -140,7 +140,7 @@ export default function ValidationDetailsPage() {
 
       setModalContent({
         title: "Ok!",
-        description: approved ? "Client approved by the CSC team!" : "Customer rejected and returned to Credit team!",
+        description: approved ? "Client approved by the CSC team!" : "Customer rejected!",
       })
       setShowModal(true)
     } catch (err) {
