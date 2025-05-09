@@ -173,31 +173,20 @@ export async function getCustomerFormById(id: string) {
   }
 }
 
-export async function updateForm(formData: { [key: string]: string }, id: string) {
-  try {
-    // No need to set status here as it's already in the formData
+export async function updateForm(formData: string, formId: string) {
+  const { error } = await supabase
+    .from("customer_forms")
+    .update(formData)
+    .eq("id", formId);
 
-    // Log the data being sent to help with debugging
-    console.log("Updating form with data:", JSON.stringify(formData, null, 2))
-
-    const { data, error } = await supabase.from("customer_forms").update(formData).eq("id", id).select()
-
-    if (error) {
-      console.error("Supabase update error:", error)
-      throw new Error(error.message || "Failed to update form")
-    }
-
-    console.log("Form updated successfully:", data)
-    return data
-  } catch (error) {
-    console.error("Error updating form:", error)
-    if (error instanceof Error) {
-      throw error
-    } else {
-      throw new Error("Unknown error occurred while updating form")
-    }
+  if (error) {
+    console.error("Erro ao atualizar formulário:", error);
+    throw new Error(error.message);
   }
+
+  return true;
 }
+
 
 export async function resetFormStatus(id: string) {
   try {
@@ -207,6 +196,7 @@ export async function resetFormStatus(id: string) {
       .from("customer_forms")
       .update({
         status: "pending",
+        updated_at: new Date().toISOString(), // Add timestamp
       })
       .eq("id", id)
       .select()

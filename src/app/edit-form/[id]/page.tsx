@@ -1,6 +1,6 @@
 "use client"
 import  React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter, useParams } from "next/navigation"
 import * as S from "../../customer/styles"
@@ -19,6 +19,7 @@ export default function EditFormPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
   const router = useRouter()
+  const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null)
 
   const {
     register,
@@ -28,6 +29,23 @@ export default function EditFormPage() {
   } = useForm<IFormInputs>({
     mode: "onChange",
   })
+
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      try {
+        const formData = await api.getCustomerFormById(id as string)
+        if (formData?.resale_certificate) {
+          setExistingFileUrl(formData.resale_certificate)
+        }
+      } catch (error) {
+        console.error("Error fetching existing form data:", error)
+      }
+    }
+
+    if (id) {
+      fetchExistingData()
+    }
+  }, [id])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -46,14 +64,15 @@ export default function EditFormPage() {
       setIsUploading(true)
 
       // Upload the PDF file to Supabase if selected
-      let fileUrl: string | null = null
+      let fileUrl: string | null = existingFileUrl // Start with existing URL
       if (file) {
         try {
+          console.log("Starting file upload process...")
           fileUrl = await api.uploadResaleCertificate(file, id as string)
           console.log("File uploaded successfully:", fileUrl)
         } catch (error) {
-          console.error("Error uploading file:", error)
-          setApiError("Error uploading file. Please try again.")
+          console.error("Detailed file upload error:", error)
+          setApiError(error instanceof Error ? error.message : "Error uploading file. Please try again.")
           setIsUploading(false)
           return
         }
@@ -61,6 +80,7 @@ export default function EditFormPage() {
 
       // Flatten the nested structure while preserving essential field names
       const flattenedFormData: {
+        id: string // Make sure to include the ID
         customer_name: string | null
         sales_tax_id: string | null
         duns_number: string | null
@@ -74,7 +94,9 @@ export default function EditFormPage() {
         buyer_email: string | null
         additional_shipping_addresses?: string[]
         additional_billing_addresses?: string[]
+        status: string
       } = {
+        id: id as string, // Include the ID in the data
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
         duns_number: formData.customerInfo?.dunNumber || null,
@@ -86,6 +108,7 @@ export default function EditFormPage() {
         ap_contact_email: formData.apContact?.email || null,
         buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
+        status: "pending",
       }
 
       // Process multiple shipping addresses
@@ -102,21 +125,40 @@ export default function EditFormPage() {
           .map((index) => Object.values(formData.billingAddress?.[index] || {}).join(", "))
       }
 
-      // Update the form with the edited data
-      await api.updateForm(
-        Object.fromEntries(
-          Object.entries(flattenedFormData).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value ?? ""])
-        ),
-        id as string
-      )
+      // If there's an existing file URL and no new file was uploaded, keep the existing URL
+      if (!fileUrl && existingFileUrl) {
+        flattenedFormData.resale_certificate = existingFileUrl
+      }
 
-      // Reset form status to pending for review
-      await api.resetFormStatus(id as string)
+      console.log("Sending data to update:", flattenedFormData)
+
+      // Update the form with the edited data
+      const sanitizedFormData = Object.fromEntries(
+        Object.entries(flattenedFormData).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value ?? ""])
+      )
+      const updateResult = await api.updateForm(sanitizedFormData, id as string)
+
+      if (!updateResult) {
+        throw new Error("Failed to update form data")
+      }
+
+      // Verify the update was successful by fetching the updated record
+      const updatedRecord = await api.getCustomerFormById(id as string)
+      console.log("Updated record from database:", updatedRecord)
 
       setIsModalOpen(true)
     } catch (error: unknown) {
-      console.error("Error updating form:", error instanceof Error ? error.message : String(error))
-      setApiError(error instanceof Error ? error.message : "Error updating form. Please try again.")
+      console.error("Error updating form:", error)
+      let errorMessage = "Error updating form. Please try again."
+
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === "object" && error !== null) {
+        // Try to extract more meaningful error information
+        errorMessage = JSON.stringify(error)
+      }
+
+      setApiError(errorMessage)
     } finally {
       setIsUploading(false)
     }
