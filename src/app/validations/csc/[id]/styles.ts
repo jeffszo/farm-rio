@@ -249,4 +249,22 @@ export const TermsCard = styled.div`
     padding: 0.25rem 0;
   }
 `
+export const FeedbackGroup = styled.div`
+  margin-top: 2rem;
+`;
 
+export const Textarea = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e0;
+  resize: vertical;
+`;
+
+export const Label = styled.label`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+`;

@@ -1,7 +1,6 @@
 "use client"
 
-import React from 'react';
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { api } from "../../../../lib/supabase/index"
 import * as S from "./styles"
@@ -36,24 +35,30 @@ interface CustomerForm {
   buyer_email: string
   status: string
   created_at: string
+  credit_invoicing_company?: string
+  credit_warehouse?: string
+  credit_currency?: string
+  credit_terms?: string
+  credit_credit?: number
+  credit_discount?: number
 }
 
 interface ValidationDetails {
-  atacado_invoicing_company: string
-  atacado_warehouse: string
-  atacado_currency: string
-  atacado_terms: string
-  atacado_credit: string
-  atacado_discount: number
-  credito_invoicing_company: string
-  credito_warehouse: string
-  credito_currency: string
-  credito_terms: string
-  credito_credit: string
-  credito_discount: number
+  wholesale_invoicing_company: string
+  wholesale_warehouse: string
+  wholesale_currency: string
+  wholesale_terms: string
+  wholesale_credit: string
+  wholesale_discount: number
+  credit_invoicing_company: string
+  credit_warehouse: string
+  credit_currency: string
+  credit_terms: string
+  credit_credit: string
+  credit_discount: number
 }
 
-interface ValidationTerms {
+interface CreditTerms {
   invoicing_company: string
   warehouse: string
   currency: string
@@ -93,7 +98,7 @@ export default function ValidationDetailsPage() {
     }
   }, [customerForm])
 
-  const [terms, setTerms] = useState<ValidationTerms>({
+  const [terms, setTerms] = useState<CreditTerms>({
     invoicing_company: "",
     warehouse: "",
     currency: "",
@@ -196,14 +201,13 @@ export default function ValidationDetailsPage() {
     setEditingDuns(false)
   }
 
-
-  const handleTermChange = (field: keyof ValidationTerms, value: string | number) => {
+  const handleTermChange = (field: keyof CreditTerms, value: string | number) => {
     if (field === "credit_limit" || field === "discount") {
       const numericValue = value === "" ? 0 : Number(value)
 
       if (isNaN(numericValue)) return
 
-      setTerms((prev) => ({ ...prev, [field]: numericValue }))
+      setTerms((prev) => ({ ...prev, [field]: value }))
     } else {
       setTerms((prev) => ({ ...prev, [field]: value }))
     }
@@ -216,12 +220,7 @@ export default function ValidationDetailsPage() {
       setLoading(true)
 
       if (approved) {
-        const requiredFields: (keyof ValidationTerms)[] = [
-          "invoicing_company",
-          "warehouse",
-          "currency",
-          "payment_terms",
-        ]
+        const requiredFields: (keyof CreditTerms)[] = ["invoicing_company", "warehouse", "currency", "payment_terms"]
         const missingFields = requiredFields.filter((field) => !terms[field])
         if (missingFields.length > 0) {
           throw new Error(`⚠️ Please fill in all required fields: ${missingFields.join(", ")}`)
@@ -231,7 +230,14 @@ export default function ValidationDetailsPage() {
         }
       }
 
-      await api.validateCreditCustomer(id as string, approved, terms)
+      await api.validateCreditCustomer(id as string, approved, {
+        credit_invoicing_company: terms.invoicing_company,
+        credit_warehouse: terms.warehouse,
+        credit_currency: terms.currency,
+        credit_terms: terms.payment_terms,
+        credit_credit: terms.credit_limit,
+        credit_discount: terms.discount,
+      })
 
       setModalContent({
         title: "Ok!",
@@ -296,7 +302,6 @@ export default function ValidationDetailsPage() {
                       <X size={16} />
                     </S.CancelButton>
                   </S.ContainerCheck>
-                  
                 </S.InlineEditWrapper>
               ) : (
                 <span className="flex items-center ml-1">
@@ -357,22 +362,22 @@ export default function ValidationDetailsPage() {
               <S.TermsCard>
                 <h3>Wholesale Team Validation</h3>
                 <p>
-                  <strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}
+                  <strong>Invoicing Company:</strong> {validation.wholesale_invoicing_company}
                 </p>
                 <p>
-                  <strong>Warehouse:</strong> {validation.atacado_warehouse}
+                  <strong>Warehouse:</strong> {validation.wholesale_warehouse}
                 </p>
                 <p>
-                  <strong>Currency:</strong> {validation.atacado_currency}
+                  <strong>Currency:</strong> {validation.wholesale_currency}
                 </p>
                 <p>
-                  <strong>Terms:</strong> {validation.atacado_terms}
+                  <strong>Terms:</strong> {validation.wholesale_terms}
                 </p>
                 <p>
-                  <strong>Credit Limit:</strong> {validation.atacado_credit}
+                  <strong>Credit Limit:</strong> {validation.wholesale_credit}
                 </p>
                 <p>
-                  <strong>Discount:</strong> {validation.atacado_discount}%
+                  <strong>Discount:</strong> {validation.wholesale_discount}%
                 </p>
               </S.TermsCard>
             </S.TermsCardsContainer>

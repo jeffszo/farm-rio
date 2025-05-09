@@ -91,7 +91,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .in("status", ["approved by the wholesale team"]) // 🔥 Busca múltiplos status
+    .in("status", ["approved by the team wholesale", "rejected by the CSC team"]) // 🔥 Busca múltiplos status
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 
@@ -186,50 +186,3 @@ export async function getWarehousesByCompany(invoicingCompany: string) {
   return data ?? []
 }
 
-// Add these methods to your existing api object
-
-// Get form by ID\
-
-export async function getFormById(formId: string)
-{
-  try {
-    console.log("🔍 Buscando formulário com ID:", formId);
-    const { data, error } = await supabase.from("customer_forms").select("*").eq("id", formId).single()
-
-    if (error) throw error
-    return data;
-  } catch (error) {
-    console.error("Error fetching form by ID:", error)
-    throw error
-  }
-}
-
-
-// Update form data
-export async function updateForm(formData: unknown, formId: string)
-{
-  try {
-    const { error } = await supabase.from("customer_forms").update(formData).eq("id", formId)
-
-    if (error) throw error
-    return true;
-  } catch (error) {
-    console.error("Error updating form:", error)
-    throw error
-  }
-}
-
-
-// Update form status
-export async function updateFormStatus(formId: string, status: string)
-{
-  try {
-    const { error } = await supabase.from("customer_forms").update({ status }).eq("id", formId)
-
-    if (error) throw error
-    return true;
-  } catch (error) {
-    console.error("Error updating form status:", error)
-    throw error
-  }
-}

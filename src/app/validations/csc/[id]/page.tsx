@@ -7,102 +7,104 @@ import * as S from "./styles";
 import { User, MapPin, Mail, CircleCheck } from "lucide-react";
 
 interface CustomerForm {
-  id: string;
-  customer_name: string;
-  sales_tax_id: string;
-  duns_number: string;
-  dba_number:string;
-  resale_certificate: string;
-  billing_address: string;
-  shipping_address: string;
-  ap_contact_name: string;
-  ap_contact_email: string;
-  buyer_name: string;
-  buyer_email: string;
-  status: string;
-  created_at: string;
+  id: string
+  customer_name: string
+  sales_tax_id: string
+  duns_number: string
+  dba_number: string
+  resale_certificate: string
+  billing_address: string
+  shipping_address: string
+  ap_contact_name: string
+  ap_contact_email: string
+  buyer_name: string
+  buyer_email: string
+  status: string
+  created_at: string
 }
 
 export default function ValidationDetailsPage() {
-  const { id } = useParams();
-  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState({ title: "", description: "" });
-  const router = useRouter();
-  
+  const { id } = useParams()
+  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalContent, setModalContent] = useState({ title: "", description: "" })
+  const [feedback, setFeedback] = useState("")
+  const router = useRouter()
+
   interface ValidationDetails {
-    atacado_invoicing_company: string;
-    atacado_warehouse: string;
-    atacado_currency: string;
-    atacado_terms: string;
-    atacado_credit: string;
-    atacado_discount: number;
-    credito_invoicing_company: string;
-    credito_warehouse: string;
-    credito_currency: string;
-    credito_terms: string;
-    credito_credit: string;
-    credito_discount: number;
+    atacado_invoicing_company: string
+    atacado_warehouse: string
+    atacado_currency: string
+    atacado_terms: string
+    atacado_credit: string
+    atacado_discount: number
+    credito_invoicing_company: string
+    credito_warehouse: string
+    credito_currency: string
+    credito_terms: string
+    credito_credit: string
+    credito_discount: number
   }
 
-  const [validation, setValidation] = useState<ValidationDetails | null>(null);
+  const [validation, setValidation] = useState<ValidationDetails | null>(null)
+
+  // if (!approved && !feedback.trim()) {
+  //   throw new Error("Please provide feedback when rejecting the client.");
+  // }
+
+  // await api.validateCSCCustomer(id as string, approved, feedback);
 
   const handleFinish = async () => {
     try {
-      setLoading(true);
-      await api.finishCustomer(id as string);
+      setLoading(true)
+      await api.finishCustomer(id as string)
       setModalContent({
         title: "Success!",
         description: "Customer finalized successfully!",
-      });
-      setShowModal(true);
+      })
+      setShowModal(true)
     } catch (err) {
-      console.error("Erro ao finalizar cliente:", err);
+      console.error("Erro ao finalizar cliente:", err)
       setModalContent({
         title: "Erro!",
         description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-      setShowModal(true);
+      })
+      setShowModal(true)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-  
-
+  }
 
   useEffect(() => {
     const fetchValidationDetails = async () => {
-      const validationData = await api.getCustomerValidationDetails(id as string);
-      if (validationData) setValidation(validationData);
-    };
-  
-    if (id) fetchValidationDetails();
-  }, [id]);
-  
-  
+      const validationData = await api.getCustomerValidationDetails(id as string)
+      if (validationData) setValidation(validationData)
+    }
 
+    if (id) fetchValidationDetails()
+  }, [id])
 
   // ✅ Obtém os detalhes do cliente
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
-        setLoading(true);
-        const data = await api.getCustomerFormById(id as string);
-        if (!data) throw new Error("Formulário não encontrado.");
-        setCustomerForm(data);
+        setLoading(true)
+        const data = await api.getCustomerFormById(id as string)
+        if (!data) throw new Error("Formulário não encontrado.")
+        setCustomerForm(data)
       } catch (err) {
-        console.error("Erro ao buscar detalhes do cliente:", err);
-        setError(err instanceof Error ? err.message : "Erro desconhecido");
+        console.error("Erro ao buscar detalhes do cliente:", err)
+        setError(err instanceof Error ? err.message : "Erro desconhecido")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    if (id) fetchCustomerDetails();
-  }, [id]);
+    if (id) fetchCustomerDetails()
+  }, [id])
 
   // ✅ Obtém o usuário autenticado (garante que apenas CSC acessa)
   useEffect(() => {
@@ -120,47 +122,55 @@ export default function ValidationDetailsPage() {
 
     fetchUser()
   }, [])
-  
-  
 
   // ✅ Aprovação/Rejeição do Cliente
   const handleApproval = async (approved: boolean) => {
-    if (!user) return;
+    if (!user) return
 
     try {
-      setLoading(true);
+      setLoading(true)
 
-      await api.validateCSCCustomer(id as string, approved);
+      // Check if feedback is provided when rejecting
+      if (!approved && !feedback.trim()) {
+        setModalContent({
+          title: "Error!",
+          description: "Feedback is required when rejecting a customer.",
+        })
+        setShowModal(true)
+        return
+      }
+
+      // Pass the feedback to the API function
+      await api.validateCSCCustomer(id as string, approved, feedback)
 
       setModalContent({
         title: "Ok!",
         description: approved ? "Client approved by the CSC team!" : "Customer rejected and returned to Credit team!",
-      });
-      setShowModal(true);
+      })
+      setShowModal(true)
     } catch (err) {
-      console.error("Erro ao validar cliente:", err);
+      console.error("Erro ao validar cliente:", err)
       setModalContent({
         title: "Erro!",
         description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-      setShowModal(true);
+      })
+      setShowModal(true)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const closeModal = () => {
-    setShowModal(false);
-    router.push("/validations/csc");
-  };
+    setShowModal(false)
+    router.push("/validations/csc")
+  }
 
-  if (loading) return <S.Message>Loading...</S.Message>;
-  if (error) return <S.Message>Erro: {error}</S.Message>;
-  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>;
+  if (loading) return <S.Message>Loading...</S.Message>
+  if (error) return <S.Message>Erro: {error}</S.Message>
+  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>
 
   return (
     <S.ContainerMain>
-    
       <S.Container>
         <S.Header>
           <S.Title>Customer Details</S.Title>
@@ -225,58 +235,91 @@ export default function ValidationDetailsPage() {
           </S.FormSection>
         </S.FormDetails>
 
-          {validation && (
+        {validation && (
           <S.TermsCardsContainer>
             <S.TermsCard>
               <h3>Wholesale Team Validation</h3>
-              <p><strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}</p>
-              <p><strong>Warehouse:</strong> {validation.atacado_warehouse}</p>
-              <p><strong>Currency:</strong> {validation.atacado_currency}</p>
-              <p><strong>Terms:</strong> {validation.atacado_terms}</p>
-              <p><strong>Credit Limit:</strong> {validation.atacado_credit}</p>
-              <p><strong>Discount:</strong> {validation.atacado_discount}%</p>
+              <p>
+                <strong>Invoicing Company:</strong> {validation.atacado_invoicing_company}
+              </p>
+              <p>
+                <strong>Warehouse:</strong> {validation.atacado_warehouse}
+              </p>
+              <p>
+                <strong>Currency:</strong> {validation.atacado_currency}
+              </p>
+              <p>
+                <strong>Terms:</strong> {validation.atacado_terms}
+              </p>
+              <p>
+                <strong>Credit Limit:</strong> {validation.atacado_credit}
+              </p>
+              <p>
+                <strong>Discount:</strong> {validation.atacado_discount}%
+              </p>
             </S.TermsCard>
 
             <S.TermsCard>
               <h3>Credit Team Validation</h3>
-              <p><strong>Invoicing Company:</strong> {validation.credito_invoicing_company}</p>
-              <p><strong>Warehouse:</strong> {validation.credito_warehouse}</p>
-              <p><strong>Currency:</strong> {validation.credito_currency}</p>
-              <p><strong>Terms:</strong> {validation.credito_terms}</p>
-              <p><strong>Credit Limit:</strong> {validation.credito_credit}</p>
-              <p><strong>Discount:</strong> {validation.credito_discount}%</p>
+              <p>
+                <strong>Invoicing Company:</strong> {validation.credito_invoicing_company}
+              </p>
+              <p>
+                <strong>Warehouse:</strong> {validation.credito_warehouse}
+              </p>
+              <p>
+                <strong>Currency:</strong> {validation.credito_currency}
+              </p>
+              <p>
+                <strong>Terms:</strong> {validation.credito_terms}
+              </p>
+              <p>
+                <strong>Credit Limit:</strong> {validation.credito_credit}
+              </p>
+              <p>
+                <strong>Discount:</strong> {validation.credito_discount}%
+              </p>
             </S.TermsCard>
           </S.TermsCardsContainer>
-          )}
+        )}
 
+      {customerForm.status === "approved by the credit team" && (
+        <S.FeedbackGroup>
+          <S.Label htmlFor="feedback">Feedback (required if rejected)</S.Label>
+          <S.Textarea
+            id="feedback"
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="Explain the reason for rejection..."
+          />
+        </S.FeedbackGroup>
+      )}
 
-
-
-
+      
         {/* ✅ Botões de Aprovação/Reprovação */}
         <S.ButtonContainer>
-  {customerForm.status === "approved by the CSC team" ? (
-    <S.Button onClick={handleFinish} variant="primary">
-      Finish
-    </S.Button>
-  ) : (
-    <>
-      <S.Button onClick={() => handleApproval(false)} variant="secondary">
-        Reject
-      </S.Button>
-      <S.Button onClick={() => handleApproval(true)} variant="primary">
-        Approve
-      </S.Button>
-    </>
-  )}
-</S.ButtonContainer>
+          {customerForm.status === "approved by the CSC team" ? (
+            <S.Button onClick={handleFinish} variant="primary">
+              Finish
+            </S.Button>
+          ) : (
+            <>
+              <S.Button onClick={() => handleApproval(false)} variant="secondary">
+                Reject
+              </S.Button>
+              <S.Button onClick={() => handleApproval(true)} variant="primary">
+                Approve
+              </S.Button>
+            </>
+          )}
+        </S.ButtonContainer>
 
         {showModal && (
           <S.Modal>
             <S.ModalContent>
-            <S.ModalTitle>
-              <CircleCheck size={48}/>
-            </S.ModalTitle>
+              <S.ModalTitle>
+                <CircleCheck size={48} />
+              </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
@@ -284,5 +327,5 @@ export default function ValidationDetailsPage() {
         )}
       </S.Container>
     </S.ContainerMain>
-  );
+  )
 }

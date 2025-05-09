@@ -1,13 +1,17 @@
 "use client"
-
-import type React from "react"
+import React from "react"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import * as S from "./styles"
-import type { IFormInputs } from "@/types/form"
+import type { IFormInputs } from "../../types/form"
 import { useRouter } from "next/navigation"
 import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck, Plus, Trash2 } from "lucide-react"
-import { api } from "@/lib/supabase/index"
+import { api } from "../../lib/supabase/index"
+
+interface FormStatusData {
+  status: string
+  csc_feedback: string
+}
 
 export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null)
@@ -15,6 +19,14 @@ export default function OnboardingForm() {
   const [isUploading, setIsUploading] = useState(false)
   const [shippingAddress, setshippingAddress] = useState<number[]>([0])
   const [billingAddress, setbillingAddress] = useState<number[]>([0])
+  const [feedback, setFeedback] = useState("")
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
+  const [formStatus, setFormStatus] = useState<string | null>(null)
+  const [user, setUser] = useState<{ id: string; userType?: string } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -35,13 +47,6 @@ export default function OnboardingForm() {
   } = useForm<IFormInputs>({
     mode: "onChange",
   })
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-  const [formStatus, setFormStatus] = useState<string | null>(null)
-  const [user, setUser] = useState<{ id: string; userType?: string } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const router = useRouter()
 
   // These state setters are used in a future implementation for team-specific views
   // const [isWholesaleTeam] = useState(false)
@@ -52,25 +57,31 @@ export default function OnboardingForm() {
     const fetchUserAndStatus = async () => {
       try {
         setIsLoading(true)
+  
         const currentUser = await api.getCurrentUser()
-
         if (!currentUser) {
           console.error("Usuário não autenticado.")
           return
         }
-
+  
         setUser(currentUser)
-
-        // Buscar o status do formulário
-        const formData = await api.getFormStatus(currentUser.id)
-        setFormStatus(formData?.status || null)
+  
+        const formData: FormStatusData | null = await api.getFormStatus(currentUser.id)
+  
+        if (formData) {
+          setFormStatus(formData.status || null)
+          setFeedback(formData.csc_feedback || "")
+          console.log("Form status:", formData.status)
+          console.log("CSC feedback:", formData.csc_feedback)
+        }
+  
       } catch (error) {
         console.error("Erro ao buscar status do formulário:", error)
       } finally {
         setIsLoading(false)
       }
     }
-
+  
     fetchUserAndStatus()
   }, [])
 
@@ -89,7 +100,7 @@ export default function OnboardingForm() {
       console.log("Dados recebidos no formulário:", formData)
 
       // Upload the PDF file to Supabase if it exists
-      let fileUrl = null
+      let fileUrl: string | null = null
       if (file) {
         try {
           // Upload to the resalecertificates bucket
@@ -165,7 +176,7 @@ export default function OnboardingForm() {
       console.log("Sending flattened form data:", flattenedFormData)
 
       // Process multiple shipping addresses
-      if (formData.shippingAddress && formData.shippingAddress.length > 0) {
+      if (Array.isArray(formData.shippingAddress) && formData.shippingAddress.length > 0) {
         // Use the first shipping address as the primary one
         flattenedFormData.shipping_address = Object.values(formData.shippingAddress[0] || {}).join(", ")
 
@@ -181,7 +192,7 @@ export default function OnboardingForm() {
       }
 
       // Process multiple billing addresses
-      if (formData.billingAddress && formData.billingAddress.length > 0) {
+      if (Array.isArray(formData.billingAddress) && formData.billingAddress.length > 0) {
         // Use the first billing address as the primary one
         flattenedFormData.billing_address = Object.values(formData.billingAddress[0] || {}).join(", ")
 
@@ -235,8 +246,33 @@ export default function OnboardingForm() {
             )}
 
             {formStatus === "rejected by the CSC team" && (
-              <div style={{ textAlign: "center", marginTop: "2rem", display: "flex", flexDirection: "column" }}>
-                <p>Your registration was rejected by our team. Please correct the data and submit again. </p>
+              <div
+                style={{
+                  textAlign: "center",
+                  marginTop: "2rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                <p>Your registration was rejected by our team. Please correct the data and submit again.</p>
+
+                {feedback ? (
+                  <div
+                    style={{ background: "#fff5f5", padding: "1rem", borderRadius: "8px", border: "1px solid #feb2b2" }}
+                  >
+                    <strong>Feedback from CSC team:</strong>
+                    <p>{feedback}</p>
+                  </div>
+                ) : (
+                  <div
+                    style={{ background: "#fff5f5", padding: "1rem", borderRadius: "8px", border: "1px solid #feb2b2" }}
+                  >
+                    <strong>Feedback from CSC team:</strong>
+                    <p>No specific feedback provided. Please contact support for more details.</p>
+                  </div>
+                )}
+
                 <S.FixButton onClick={() => router.push(`/edit-form/${user.id}`)}>Correct your data</S.FixButton>
               </div>
             )}
@@ -252,6 +288,17 @@ export default function OnboardingForm() {
                 Your form has been <strong>rejected</strong>.
               </div>
             )}
+            {/* Add a default case if none of the statuses match */}
+            {formStatus !== "pending" &&
+              formStatus !== "approved by the wholesale team" &&
+              formStatus !== "approved by the credit team" &&
+              formStatus !== "rejected by the CSC team" &&
+              formStatus !== "approved by the CSC team" &&
+              formStatus !== "rejected" && (
+                <div>
+                  <strong>Status:</strong> {formStatus}
+                </div>
+              )}
           </S.ReviewSubtitle>
         </S.ReviewHeader>
       </S.ReviewContainer>
@@ -261,40 +308,7 @@ export default function OnboardingForm() {
   // ✅ Criado `nextStep` corretamente
   const nextStep = async () => {
     // Only validate the current step fields
-    let fieldsToValidate: Array<
-      | "customerInfo"
-      | "billingAddress"
-      | "shippingAddress"
-      | "apContact"
-      | "buyerInfo"
-      | "wholesaleTerms"
-      | "creditTerms"
-      | "customerInfo.legalName"
-      | "customerInfo.taxId"
-      | "customerInfo.dunNumber"
-      | "billingAddress.street"
-      | "billingAddress.zipCode"
-      | "billingAddress.city"
-      | "billingAddress.state"
-      | "billingAddress.county"
-      | "billingAddress.country"
-      | "shippingAddress.street"
-      | "shippingAddress.zipCode"
-      | "shippingAddress.city"
-      | "shippingAddress.state"
-      | "shippingAddress.county"
-      | "shippingAddress.country"
-      | "apContact.firstName"
-      | "apContact.lastName"
-      | "apContact.email"
-      | "apContact.countryCode"
-      | "apContact.contactNumber"
-      | "buyerInfo.firstName"
-      | "buyerInfo.lastName"
-      | "buyerInfo.email"
-      | "buyerInfo.buyerNumber"
-      | "buyerInfo.countryCode"
-    > = []
+    let fieldsToValidate: string[] = []
 
     if (currentStep === 1) {
       fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
@@ -332,6 +346,8 @@ export default function OnboardingForm() {
       ]
     }
 
+    // @ts-expect-error - We need to ignore the type error here because the React Hook Form types
+    // don't fully support dynamic field names with array indices
     const isValid = await trigger(fieldsToValidate)
     if (!isValid) return
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
@@ -427,7 +443,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
                 <S.FileInputContainer>
                   <S.Label htmlFor="resale">Resale Certificate</S.Label>
-                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
+                  <S.HiddenInput required id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
                   <S.UploadButton htmlFor="file-upload">
                     <Upload size={16} />
                     {file ? file.name : "Attach file (PDF)"}
@@ -473,10 +489,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.street`, {
                               required: "Street is required",
                             })}
-                            error={!!errors.billingAddress?.street}
+                            error={!!errors.billingAddress?.[index]?.street}
                           />
-                          {errors.billingAddress?.street && (
-                            <S.ErrorMessage>{errors.billingAddress.street.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.street && (
+                            <S.ErrorMessage>{errors.billingAddress[index].street.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
@@ -486,10 +502,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.zipCode`, {
                               required: "ZIP code is required",
                             })}
-                            error={!!errors.billingAddress?.zipCode}
+                            error={!!errors.billingAddress?.[index]?.zipCode}
                           />
-                          {errors.billingAddress?.zipCode && (
-                            <S.ErrorMessage>{errors.billingAddress.zipCode.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.zipCode && (
+                            <S.ErrorMessage>{errors.billingAddress[index].zipCode.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
@@ -501,10 +517,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.city`, {
                               required: "City is required",
                             })}
-                            error={!!errors.billingAddress?.city}
+                            error={!!errors.billingAddress?.[index]?.city}
                           />
-                          {errors.billingAddress?.city && (
-                            <S.ErrorMessage>{errors.billingAddress.city.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.city && (
+                            <S.ErrorMessage>{errors.billingAddress[index].city.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
@@ -514,10 +530,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.state`, {
                               required: "State is required",
                             })}
-                            error={!!errors.billingAddress?.state}
+                            error={!!errors.billingAddress?.[index]?.state}
                           />
-                          {errors.billingAddress?.state && (
-                            <S.ErrorMessage>{errors.billingAddress.state.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.state && (
+                            <S.ErrorMessage>{errors.billingAddress[index].state.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
@@ -529,10 +545,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.county`, {
                               required: "County is required",
                             })}
-                            error={!!errors.billingAddress?.county}
+                            error={!!errors.billingAddress?.[index]?.county}
                           />
-                          {errors.billingAddress?.county && (
-                            <S.ErrorMessage>{errors.billingAddress.county.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.county && (
+                            <S.ErrorMessage>{errors.billingAddress[index].county.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
@@ -542,10 +558,10 @@ export default function OnboardingForm() {
                             {...register(`billingAddress.${index}.country`, {
                               required: "Country is required",
                             })}
-                            error={!!errors.billingAddress?.country}
+                            error={!!errors.billingAddress?.[index]?.country}
                           />
-                          {errors.billingAddress?.country && (
-                            <S.ErrorMessage>{errors.billingAddress.country.message}</S.ErrorMessage>
+                          {errors.billingAddress?.[index]?.country && (
+                            <S.ErrorMessage>{errors.billingAddress[index].country.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
@@ -589,10 +605,10 @@ export default function OnboardingForm() {
                             {...register(`shippingAddress.${index}.street`, {
                               required: "Street is required",
                             })}
-                            error={!!errors.shippingAddress?.street}
+                            error={!!errors.shippingAddress?.[index]?.street}
                           />
-                          {errors.shippingAddress?.street && (
-                            <S.ErrorMessage>{errors.shippingAddress.street.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.street && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].street.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
@@ -602,10 +618,10 @@ export default function OnboardingForm() {
                             {...register(`shippingAddress.${index}.zipCode`, {
                               required: "ZIP code is required",
                             })}
-                            error={!!errors.shippingAddress?.zipCode}
+                            error={!!errors.shippingAddress?.[index]?.zipCode}
                           />
-                          {errors.shippingAddress?.zipCode && (
-                            <S.ErrorMessage>{errors.shippingAddress.zipCode.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.zipCode && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].zipCode.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
@@ -617,10 +633,10 @@ export default function OnboardingForm() {
                             {...register(`shippingAddress.${index}.city`, {
                               required: "City is required",
                             })}
-                            error={!!errors.shippingAddress?.city}
+                            error={!!errors.shippingAddress?.[index]?.city}
                           />
-                          {errors.shippingAddress?.city && (
-                            <S.ErrorMessage>{errors.shippingAddress.city.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.city && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].city.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
@@ -630,10 +646,10 @@ export default function OnboardingForm() {
                             {...register(`shippingAddress.${index}.state`, {
                               required: "State is required",
                             })}
-                            error={!!errors.shippingAddress?.state}
+                            error={!!errors.shippingAddress?.[index]?.state}
                           />
-                          {errors.shippingAddress?.state && (
-                            <S.ErrorMessage>{errors.shippingAddress.state.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.state && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].state.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
@@ -642,26 +658,26 @@ export default function OnboardingForm() {
                           <S.Label htmlFor={`shippingCounty${index}`}>County</S.Label>
                           <S.Input
                             id={`shippingCounty${index}`}
-                            {...register(`shippingAddress.${index}.county`, {
+                            {...register(`shippingAddress.${index}.county` as `shippingAddress.${number}.county`, {
                               required: "County is required",
                             })}
-                            error={!!errors.shippingAddress?.county}
+                            error={!!errors.shippingAddress?.[index]?.county}
                           />
-                          {errors.shippingAddress?.county && (
-                            <S.ErrorMessage>{errors.shippingAddress.county.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.county && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].county.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
                           <S.Label htmlFor={`shippingCountry${index}`}>Country</S.Label>
                           <S.Input
                             id={`shippingCountry${index}`}
-                            {...register(`shippingAddress.${index}.country`, {
+                            {...register(`shippingAddress.${index}.country` as `shippingAddress.${number}.country`, {
                               required: "Country is required",
                             })}
-                            error={!!errors.shippingAddress?.country}
+                            error={!!errors.shippingAddress?.[index]?.country}
                           />
-                          {errors.shippingAddress?.country && (
-                            <S.ErrorMessage>{errors.shippingAddress.country.message}</S.ErrorMessage>
+                          {errors.shippingAddress?.[index]?.country && (
+                            <S.ErrorMessage>{errors.shippingAddress[index].country.message}</S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>

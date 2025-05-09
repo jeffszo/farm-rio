@@ -1,21 +1,26 @@
 import { supabase } from "./client"
 
-export async function validateCustomer(customerId: string, teamRole: string, approved: boolean, terms: unknown) {
-  // Obtém o usuário autenticado
+export async function validateCustomer(
+  customerId: string,
+  teamRole: "atacado" | "credito" | "csc",
+  approved: boolean,
+  terms: Record<string, boolean> | null = null
+) {
+  // 1. Autenticação
   const { data: userSession, error: sessionError } = await supabase.auth.getUser()
   if (sessionError || !userSession?.user) {
     throw new Error("Usuário não autenticado.")
   }
 
   const userId = userSession.user.id
-  const userEmail = userSession.user.email // Pegue o e-mail do usuário atual
+  const userEmail = userSession.user.email
 
-  // Verifica se o usuário é o autorizado para validar clientes do time de Atacado
-  if (userEmail !== "wholesale@farm.com") {
+  // 2. Autorização
+  if (teamRole === "atacado" && userEmail !== "wholesale@farm.com") {
     throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.")
   }
 
-  // 🚨 Verifica se o usuário está cadastrado na tabela `team_users`
+  // 3. Verificação de equipe
   const { data: teamUser, error: teamError } = await supabase
     .from("team_users")
     .select("id")
@@ -23,148 +28,144 @@ export async function validateCustomer(customerId: string, teamRole: string, app
     .eq("team_role", teamRole)
     .single()
 
-  if (approved) {
-    if (typeof terms !== 'object' || terms === null) {
-      throw new Error("Os termos fornecidos são inválidos.");
-    }
-    const allTermsAccepted = Object.values(terms as Record<string, boolean>).every((term) => term === true);
-    if (!allTermsAccepted) {
-      throw new Error("Todos os termos devem ser aceitos para aprovar!")
-    }
-  }
-
-  // ✅ Atualiza o cliente com validação do time atual
-  const updateData: { status: string; validated_by_atacado?: boolean } = {
-    status: approved ? "aguardando crédito" : "reprovado",
-  }
-
-  if (teamRole === "atacado") {
-    updateData.validated_by_atacado = approved // 🔥 Campo específico do time
-  }
-
   if (teamError || !teamUser) {
     throw new Error("Usuário não encontrado na equipe de validação.")
   }
 
-  // 🚨 Agora garantimos que `validated_by` seja um ID válido
-  const validatedById = teamUser.id
+  // 4. Verificação dos termos (se aprovando)
+  if (approved && terms) {
+    const allTermsAccepted = Object.values(terms).every((term) => term === true)
+    if (!allTermsAccepted) {
+      throw new Error("Todos os termos devem ser aceitos para aprovação.")
+    }
+  }
 
-  // Insere o registro na tabela `validations`
-  const { error } = await supabase.from("validations").insert([
-    {
-      term_id: customerId,
-      validated_by: validatedById, // Agora sempre será um ID válido
-      team_role: teamRole,
-      status: approved ? "aprovado" : "reprovado",
-      comments: approved ? null : "Revisão necessária",
-      created_at: new Date(),
-    },
-  ])
+  // 5. Atualização do cliente na tabela customer_forms
+  const updateFields: Record<string, string | boolean> = {
+    status: approved ? getNextStatus(teamRole) : "reprovado",
+  }
 
-  if (error) throw new Error(`Erro ao validar cliente: ${error.message}`)
+  // Marca o time como tendo validado
+  if (teamRole === "atacado") updateFields.validated_by_atacado = approved
+  if (teamRole === "credito") updateFields.validated_by_credito = approved
+  if (teamRole === "csc") updateFields.validated_by_csc = approved
 
-  // Atualiza o status do cliente
-  if (approved) {
-    await supabase.from("customer_forms").update({ status: "aguardando crédito" }).eq("id", customerId)
-  } else {
-    await supabase.from("customer_forms").update({ status: "reprovado" }).eq("id", customerId)
+  const { error: updateError } = await supabase
+    .from("customer_forms")
+    .update(updateFields)
+    .eq("id", customerId)
+
+  if (updateError) throw new Error(`Erro ao validar cliente: ${updateError.message}`)
+}
+
+// Função auxiliar para status com base no time
+function getNextStatus(teamRole: string): string {
+  switch (teamRole) {
+    case "atacado":
+      return "approved by the wholesale team"
+    case "credito":
+      return "approved by the credit team"
+    case "csc":
+      return "approved by the CSC team"
+    default:
+      return "pending"
   }
 }
 
-export async function validateWholesaleCustomer(customerId: string, approved: boolean, terms: { invoicing_company: string; warehouse: string; currency: string; payment_terms?: string | string[]; credit_limit: number; discount: number; }) {
-  // ✅ Atualiza o status na tabela `customer_forms`
+
+export async function validateWholesaleCustomer(
+  customerId: string,
+  approved: boolean,
+  terms: {
+    wholesale_invoicing_company: string;
+    wholesale_warehouse: string;
+    wholesale_currency: string;
+    wholesale_terms?: string | string[];
+    wholesale_credit: number;
+    wholesale_discount: number;
+  }
+) {
   const updateData = {
-    status: approved ? "approved by the wholesale team" : "rejected by wholesale team",
+    status: approved ? "approved by the team wholesale" : "rejected by the team wholesale",
+    atacado_status: approved ? "aprovado" : "reprovado", // ✅ novo campo de status específico
+
+    // ✅ Termos preenchidos
+    atacado_invoicing_company: terms.wholesale_invoicing_company,
+    atacado_warehouse: terms.wholesale_warehouse,
+    atacado_currency: terms.wholesale_currency,
+    atacado_terms: Array.isArray(terms.wholesale_terms)
+      ? terms.wholesale_terms.join(", ")
+      : terms.wholesale_terms ?? null,
+    atacado_credit: terms.wholesale_credit,
+    atacado_discount: terms.wholesale_discount,
   };
 
-  const { error: updateError } = await supabase
+  const { error } = await supabase
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
 
-  if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
-
-  // ✅ Atualiza ou insere os termos na tabela `validations`
-  const { error: validationError } = await supabase
-    .from("validations")
-    .upsert(
-      [
-        {
-          customer_id: customerId, // 🔥 Relaciona com o cliente
-          atacado_status: approved ? "aprovado" : "reprovado",
-          atacado_invoicing_company: terms.invoicing_company,
-          atacado_warehouse: terms.warehouse,
-          atacado_currency: terms.currency,
-          atacado_terms: Array.isArray(terms.payment_terms) ? terms.payment_terms.join(", ") : terms.payment_terms,
-          atacado_credit: terms.credit_limit,
-          atacado_discount: terms.discount,
-        }
-      ],
-      { onConflict: "customer_id" } // 🔥 Se já existir, atualiza; senão, insere
-    );
-
-  if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`);
+  if (error) {
+    throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
+  }
 }
+
 
 
 interface CreditTerms {
-  invoicing_company: string;
-  warehouse: string;
-  currency: string;
-  credit_limit: number;
-  discount: number;
-  payment_terms?: string; // Ensure this matches the expected type
+  credit_invoicing_company: string;
+  credit_warehouse: string;
+  credit_currency: string;
+  credit_credit: number;
+  credit_discount: number;
+  credit_terms?: string; // Ensure this matches the expected type
 }
 
 export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
-  // ✅ Atualiza o status na tabela `customer_forms`
   const updateData = {
     status: approved ? "approved by the credit team" : "rejected by credit team",
-  }
-
-  const { error: updateError } = await supabase.from("customer_forms").update(updateData).eq("id", customerId)
-
-  if (updateError) throw new Error(`Erro ao atualizar cliente: ${updateError.message}`)
-
-  // ✅ Atualiza ou insere os dados do crédito na tabela `validations`
-  const { error: validationError } = await supabase.from("validations").upsert(
-    [
-      {
-        customer_id: customerId, // 🔥 Relaciona com o cliente
-        credito_status: approved ? "aprovado" : "reprovado",
-        credito_invoicing_company: creditTerms.invoicing_company,
-        credito_warehouse: creditTerms.warehouse,
-        credito_currency: creditTerms.currency,
-        credito_terms: creditTerms.payment_terms, // 🔧 Fixed: Added payment_terms field
-        credito_credit: creditTerms.credit_limit,
-        credito_discount: creditTerms.discount,
-      },
-    ],
-    { onConflict: "customer_id" }, // 🔥 Se já existir, atualiza; senão, insere
-  )
-
-  if (validationError) throw new Error(`Erro ao registrar validação: ${validationError.message}`)
-}
-
-
-
-
-export async function validateCSCCustomer(customerId: string, approved: boolean) {
-  const updateData = {
-    status: approved ? "approved by the CSC team" : "rejected by the CSC team",
+    credit_status: approved ? "aprovado" : "reprovado", // novo campo específico
+    credit_invoicing_company: creditTerms.credit_invoicing_company,
+    credit_warehouse: creditTerms.credit_warehouse,
+    credit_currency: creditTerms.credit_currency,
+    credit_terms: creditTerms.credit_terms ?? null,
+    credit_credit: creditTerms.credit_credit,
+    credit_discount: creditTerms.credit_discount,
   };
 
-  const { error: updateError } = await supabase
+  const { error } = await supabase
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
 
-  if (updateError) {
-    throw new Error(`Erro ao atualizar cliente: ${updateError.message}`);
+  if (error) {
+    throw new Error(`Erro ao validar cliente pelo time de crédito: ${error.message}`);
   }
-
-  // Se quiser registrar também no validations, pode manter o upsert opcionalmente.
 }
+
+
+
+
+
+export async function validateCSCCustomer(customerId: string, approved: boolean, feedback: string) {
+  const updateData = {
+    status: approved ? "approved by the CSC team" : "rejected by the CSC team",
+    csc_status: approved ? "aprovado" : "reprovado",     
+    csc_feedback: feedback || null,                      
+  };
+
+  const { error } = await supabase
+    .from("customer_forms")
+    .update(updateData)
+    .eq("id", customerId);
+
+  if (error) {
+    throw new Error(`Erro ao validar cliente pelo CSC: ${error.message}`);
+  }
+}
+
+
+
 
 
 // Finaliza o cliente na customer_forms e validations
@@ -172,21 +173,12 @@ export async function finishCustomer(customerId: string) {
   // Atualiza status na tabela customer_forms
   const { error: customerError } = await supabase
     .from("customer_forms")
-    .update({ status: "finalizado" })
+    .update({ status: "finished" })
     .eq("id", customerId);
 
   if (customerError) {
     throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
   }
 
-  // Atualiza status na tabela validations
-  const { error: validationError } = await supabase
-    .from("validations")
-    .update({ csc_status: "finalizado" })
-    .eq("customer_id", customerId);
-
-  if (validationError) {
-    throw new Error(`Erro ao atualizar validação: ${validationError.message}`);
-  }
 }
 

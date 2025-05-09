@@ -73,11 +73,13 @@ export const Label = styled.label`
   margin-bottom: 0.5rem;
 `
 
-export const Input = styled.input<{ error?: boolean }>`
+export const Input = styled.input.withConfig({
+  shouldForwardProp: (prop) => prop !== 'error',
+})<{ error?: boolean }>`
   width: 100%;
-  padding: 0.5rem ;
+  padding: 0.5rem;
   font-size: 0.875rem;
-  border: 1px solid ${(props) => (props.error ? "red" : "#ccc")};
+  border: 1px solid ${(props) => (props.error ? 'red' : '#ccc')};
   border-radius: 0.25rem;
   background-color: #ffffff;
   color: #18181b;
@@ -94,7 +96,8 @@ export const Input = styled.input<{ error?: boolean }>`
     background-color: #f4f4f5;
     color: #a1a1aa;
   }
-`
+`;
+
 
 export const ErrorMessage = styled.span`
   display: block;
@@ -181,7 +184,11 @@ export const FileInputContainer = styled.div`
 `
 
 export const HiddenInput = styled.input`
-  display: none;
+    opacity: 0;
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    z-index: -1;
 `
 
 export const UploadButton = styled.label`

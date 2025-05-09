@@ -1,18 +1,30 @@
 "use client"
 
-import React from 'react';
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { api } from "../../../../lib/supabase/index"
 import { CircleCheck } from "lucide-react"
 import * as S from "./styles"
-import { User, MapPin, Mail, Building2, Warehouse, CreditCard, Calendar, DollarSign, Percent, Pencil, Check, X } from "lucide-react"
+import {
+  User,
+  MapPin,
+  Mail,
+  Building2,
+  Warehouse,
+  CreditCard,
+  Calendar,
+  DollarSign,
+  Percent,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react"
 
 interface CustomerForm {
   id: string
   customer_name: string
   sales_tax_id: string
-  duns_number: string;
+  duns_number: string
   dba_number: string
   resale_certificate: string
   billing_address: string
@@ -23,17 +35,21 @@ interface CustomerForm {
   buyer_email: string
   status: string
   created_at: string
+  atacado_invoicing_company?: string
+  atacado_warehouse?: string
+  atacado_currency?: string
+  atacado_terms?: string
+  atacado_credit?: number
+  atacado_discount?: number
 }
 
-// Updated interface to match the actual structure used in the component
-interface ValidationTerms {
-  invoicing_company: string
-  warehouse: string
-  currency: string
-  payment_terms: string
-  credit_limit: number
-  discount: number
-  [key: string]: string | number // Allow dynamic access to properties
+type WholesaleTerms = {
+  wholesale_invoicing_company: string
+  wholesale_warehouse: string
+  wholesale_currency: string
+  wholesale_terms: string
+  wholesale_credit: number
+  wholesale_discount: number
 }
 
 const INVOICING_COMPANIES = [
@@ -66,13 +82,13 @@ export default function ValidationDetailsPage() {
     }
   }, [customerForm])
 
-  const [terms, setTerms] = useState<ValidationTerms>({
-    invoicing_company: "",
-    warehouse: "",
-    currency: "",
-    payment_terms: "",
-    credit_limit: 0,
-    discount: 0,
+  const [terms, setTerms] = useState<WholesaleTerms>({
+    wholesale_invoicing_company: "",
+    wholesale_warehouse: "",
+    wholesale_currency: "",
+    wholesale_terms: "",
+    wholesale_credit: 0,
+    wholesale_discount: 0,
   })
 
   const [warehouses, setWarehouses] = useState<string[]>([])
@@ -110,18 +126,16 @@ export default function ValidationDetailsPage() {
 
     fetchUser()
   }, [])
-  
-  
 
   useEffect(() => {
     const fetchWarehouses = async () => {
-      if (!terms.invoicing_company) {
+      if (!terms.wholesale_invoicing_company) {
         setWarehouses([])
         return
       }
 
       try {
-        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company)
+        const warehouses = await api.getWarehousesByCompany(terms.wholesale_invoicing_company)
         setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name))
       } catch (err) {
         console.error("Erro ao buscar warehouses:", err)
@@ -130,10 +144,10 @@ export default function ValidationDetailsPage() {
     }
 
     fetchWarehouses()
-  }, [terms.invoicing_company])
+  }, [terms.wholesale_invoicing_company])
 
-  const handleTermChange = (field: keyof ValidationTerms, value: string | number) => {
-    if (field === "credit_limit" || field === "discount") {
+  const handleTermChange = (field: keyof WholesaleTerms, value: string | number) => {
+    if (field === "wholesale_credit" || field === "wholesale_discount") {
       const numericValue = value === "" ? 0 : Number(value)
 
       if (isNaN(numericValue)) return
@@ -151,22 +165,37 @@ export default function ValidationDetailsPage() {
       setLoading(true)
 
       if (approved) {
-        const requiredFields: (keyof ValidationTerms)[] = [
-          "invoicing_company",
-          "warehouse",
-          "currency",
-          "payment_terms",
+        const requiredFields: (keyof WholesaleTerms)[] = [
+          "wholesale_invoicing_company",
+          "wholesale_warehouse",
+          "wholesale_currency",
+          "wholesale_terms",
         ]
         const missingFields = requiredFields.filter((field) => !terms[field])
         if (missingFields.length > 0) {
           throw new Error(`⚠️ Please fill in all required fields: ${missingFields.join(", ")}`)
         }
-        if (terms.credit_limit < 0 || terms.discount < 0) {
+        if (terms.wholesale_credit < 0 || terms.wholesale_discount < 0) {
           throw new Error("⚠️ Credit limit and discount must be non-negative!")
         }
       }
 
-      await api.validateWholesaleCustomer(id as string, approved, terms)
+      await api.validateWholesaleCustomer(id as string, approved, {
+        wholesale_invoicing_company: terms.wholesale_invoicing_company,
+        wholesale_warehouse: terms.wholesale_warehouse,
+        wholesale_currency: terms.wholesale_currency,
+        wholesale_terms: terms.wholesale_terms,
+        wholesale_credit: terms.wholesale_credit,
+        wholesale_discount: terms.wholesale_discount,
+      })
+
+      // Update the local state to reflect the new status
+      if (customerForm) {
+        setCustomerForm({
+          ...customerForm,
+          status: approved ? "approved" : "rejected",
+        })
+      }
 
       setModalContent({
         title: "Ok!",
@@ -214,7 +243,6 @@ export default function ValidationDetailsPage() {
     }
     setEditingDuns(false)
   }
-
 
   const closeModal = () => {
     setShowModal(false)
@@ -265,7 +293,6 @@ export default function ValidationDetailsPage() {
                       <X size={16} />
                     </S.CancelButton>
                   </S.ContainerCheck>
-                  
                 </S.InlineEditWrapper>
               ) : (
                 <span className="flex items-center ml-1">
@@ -325,8 +352,8 @@ export default function ValidationDetailsPage() {
                 <Building2 size={16} /> Invoicing Company
               </label>
               <S.Select
-                value={terms.invoicing_company}
-                onChange={(e) => handleTermChange("invoicing_company", e.target.value)}
+                value={terms.wholesale_invoicing_company}
+                onChange={(e) => handleTermChange("wholesale_invoicing_company", e.target.value)}
               >
                 <option value="">Select company</option>
                 {INVOICING_COMPANIES.map((company) => (
@@ -342,9 +369,9 @@ export default function ValidationDetailsPage() {
                 <Warehouse size={16} /> Warehouse
               </label>
               <S.Select
-                value={terms.warehouse}
-                onChange={(e) => handleTermChange("warehouse", e.target.value)}
-                disabled={!terms.invoicing_company}
+                value={terms.wholesale_warehouse}
+                onChange={(e) => handleTermChange("wholesale_warehouse", e.target.value)}
+                disabled={!terms.wholesale_invoicing_company}
               >
                 <option value="">Select warehouse</option>
                 {warehouses.map((warehouse) => (
@@ -359,7 +386,10 @@ export default function ValidationDetailsPage() {
               <label>
                 <CreditCard size={16} /> Currency
               </label>
-              <S.Select value={terms.currency} onChange={(e) => handleTermChange("currency", e.target.value)}>
+              <S.Select
+                value={terms.wholesale_currency}
+                onChange={(e) => handleTermChange("wholesale_currency", e.target.value)}
+              >
                 <option value="">Select currency</option>
                 {CURRENCIES.map((currency) => (
                   <option key={currency} value={currency}>
@@ -373,7 +403,10 @@ export default function ValidationDetailsPage() {
               <label>
                 <Calendar size={16} /> Payment Terms
               </label>
-              <S.Select value={terms.payment_terms} onChange={(e) => handleTermChange("payment_terms", e.target.value)}>
+              <S.Select
+                value={terms.wholesale_terms}
+                onChange={(e) => handleTermChange("wholesale_terms", e.target.value)}
+              >
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
                   <option key={`${term}-${index}`} value={term}>
@@ -388,8 +421,8 @@ export default function ValidationDetailsPage() {
                 <DollarSign size={16} /> Credit Limit
               </label>
               <S.NumericInput
-                value={terms.credit_limit}
-                onChange={(e) => handleTermChange("credit_limit", Number.parseFloat(e.target.value))}
+                value={terms.wholesale_credit}
+                onChange={(e) => handleTermChange("wholesale_credit", e.target.value)}
                 min="0"
                 step="0.01"
               />
@@ -400,8 +433,8 @@ export default function ValidationDetailsPage() {
                 <Percent size={16} /> Discount
               </label>
               <S.NumericInput
-                value={terms.discount}
-                onChange={(e) => handleTermChange("discount", Number.parseFloat(e.target.value))}
+                value={terms.wholesale_discount}
+                onChange={(e) => handleTermChange("wholesale_discount", e.target.value)}
                 min="0"
                 max="100"
                 step="0.1"
@@ -422,12 +455,11 @@ export default function ValidationDetailsPage() {
         {showModal && (
           <S.Modal>
             <S.ModalContent>
-              <S.ModalTitle> 
-                <CircleCheck  size={48}/>
+              <S.ModalTitle>
+                <CircleCheck size={48} />
               </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
-              
             </S.ModalContent>
           </S.Modal>
         )}
@@ -435,4 +467,3 @@ export default function ValidationDetailsPage() {
     </S.ContainerMain>
   )
 }
-
