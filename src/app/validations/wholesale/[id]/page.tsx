@@ -98,7 +98,10 @@ export default function ValidationDetailsPage() {
       try {
         setLoading(true)
         const data = await api.getCustomerFormById(id as string)
+        console.log("ID recebido:", id)
+        console.log("Dados do formulário:", data)
         if (!data) throw new Error("Formulário não encontrado.")
+        
         setCustomerForm(data)
       } catch (err) {
         console.error("Erro ao buscar detalhes do cliente:", err)

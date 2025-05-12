@@ -72,7 +72,7 @@ export async function getFormStatus(userId: string): Promise<FormStatusData | nu
     .from("customer_forms")
     .select("status, csc_feedback")
     .eq("user_id", userId)
-    .maybeSingle()
+    .single()
 
   if (error) {
     console.error("Erro ao buscar status do formulário:", error.message)
@@ -88,8 +88,8 @@ export async function getCustomerFormById(userId: string) {
   const { data, error } = await supabase
     .from("customer_forms")
     .select("*")
-    .eq("user_id", userId)
-    .maybeSingle()
+    .eq("id", userId)
+    .single()
 
   if (error) {
     console.error("Erro ao buscar formulário:", error)

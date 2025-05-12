@@ -109,7 +109,7 @@ export default function EditFormPage() {
         ap_contact_email: formData.apContact?.email || null,
         buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
-        status: "pending",
+        status: "data corrected by the client",
       }
 
       // Process multiple shipping addresses

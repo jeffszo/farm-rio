@@ -63,7 +63,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .in("status", ["approved by the wholesale team", "rejected by the CSC team"]) // 🔥 Busca múltiplos status
+    .in("status", ["approved by the wholesale team"]) // 🔥 Busca múltiplos status
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 
@@ -85,7 +85,7 @@ export async function getPendingCSCValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .filter('status', 'in', '("approved by the credit team","approved by the CSC team")')
+    .in("status", ["approved by the credit team", "approved by the CSC team", "data corrected by the client"]) 
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 

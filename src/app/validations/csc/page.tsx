@@ -3,9 +3,9 @@ import React from 'react';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../lib/supabase/index";
-import PendingCustomersTable from "@/components/PendingCustomersTable";
-import TableSkeleton from "@/components/TableSkeleton";
-import * as S from "./styles";
+import PendingCustomersTable from "../../../components/PendingCustomersTable";
+import TableSkeleton from "../../../components/TableSkeleton";
+
 interface Customer {
   id: string;
   name: string;
@@ -23,7 +23,7 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const router = useRouter();
-  const [filterStatus, setFilterStatus] = useState<"all" | "approvedByCredit" | "approvedByCSC">("all");
+  // const [filterStatus, setFilterStatus] = useState<"all" | "approvedByCredit" | "approvedByCSC">("all");
 
 
   useEffect(() => {
