@@ -84,14 +84,19 @@ export async function getFormStatus(userId: string): Promise<FormStatusData | nu
 
 
 
-export async function getCustomerFormById(customerId: string) {
-  const { data, error } = await supabase.from("customer_forms").select("*").eq("id", customerId).single()
+export async function getCustomerFormById(userId: string) {
+  const { data, error } = await supabase
+    .from("customer_forms")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle()
 
   if (error) {
-    console.error("Erro ao buscar formulário do cliente:", error.message)
+    console.error("Erro ao buscar formulário:", error)
     return null
   }
 
   return data
 }
+
 

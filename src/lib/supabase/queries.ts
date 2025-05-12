@@ -161,30 +161,30 @@ export async function getWarehousesByCompany(invoicingCompany: string) {
 
 
 
-export async function getCustomerFormById(id: string) {
-  try {
-    const { data, error } = await supabase.from("customer_forms").select("*").eq("id", id).single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error("Error fetching customer form:", error)
-    throw error
-  }
-}
 
 export async function updateForm(formData: string, formId: string) {
-  const { error } = await supabase
-    .from("customer_forms")
-    .update(formData)
-    .eq("id", formId);
+  try {
+    // Parse the formData string into an object
+    const parsedData = JSON.parse(formData)
 
-  if (error) {
-    console.error("Erro ao atualizar formulário:", error);
-    throw new Error(error.message);
+    // Perform the update using the correct column (id, not user_id)
+    const { data, error } = await supabase
+      .from("customer_forms")
+      .update(parsedData)
+      .eq("user_id", formId) // Use "id" instead of "user_id"
+      .select() // Return the updated data
+
+    if (error) {
+      console.error("Erro ao atualizar formulário:", error)
+      throw new Error(error.message)
+    }
+
+    console.log("Update successful, returned data:", data)
+    return data
+  } catch (error) {
+    console.error("Erro ao processar atualização:", error)
+    throw error
   }
-
-  return true;
 }
 
 

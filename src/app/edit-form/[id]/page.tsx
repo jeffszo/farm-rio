@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation"
 import * as S from "../../customer/styles"
 import type { IFormInputs } from "../../../types/form"
 import { api } from "../../../lib/supabase/index"
+import { supabase } from "../../../lib/supabase/client" // ou `supabase.ts`, dependendo do seu projeto
 import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2 } from "lucide-react"
 
 export default function EditFormPage() {
@@ -34,8 +35,8 @@ export default function EditFormPage() {
     const fetchExistingData = async () => {
       try {
         const formData = await api.getCustomerFormById(id as string)
-        if (formData?.resale_certificate) {
-          setExistingFileUrl(formData.resale_certificate)
+        if ((formData as { resale_certificate?: string })?.resale_certificate) {
+          setExistingFileUrl((formData as { resale_certificate?: string }).resale_certificate ?? null)
         }
       } catch (error) {
         console.error("Error fetching existing form data:", error)
@@ -136,16 +137,27 @@ export default function EditFormPage() {
       const sanitizedFormData = Object.fromEntries(
         Object.entries(flattenedFormData).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value ?? ""])
       )
-      const updateResult = await api.updateForm(sanitizedFormData, id as string)
+
+      console.log("ID usado para update e get:", id)
+
+
+      const updateResult = await api.updateForm(JSON.stringify(sanitizedFormData), id as string)
 
       if (!updateResult) {
-        throw new Error("Failed to update form data")
+        setApiError("Falha ao atualizar os dados. Verifique se você tem permissão.")
+        return
       }
+      
 
       // Verify the update was successful by fetching the updated record
-      const updatedRecord = await api.getCustomerFormById(id as string)
-      console.log("Updated record from database:", updatedRecord)
-
+      const { data, error } = await supabase
+      .from("customer_forms")
+      .select("*")
+      .eq("id", id)
+    
+      console.log("🧪 Data recebida manualmente:", data)
+      console.log("🧪 Erro manual:", error)
+    
       setIsModalOpen(true)
     } catch (error: unknown) {
       console.error("Error updating form:", error)
