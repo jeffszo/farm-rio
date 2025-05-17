@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { api } from "../../../../lib/supabase/index"
-import { CircleCheck } from "lucide-react"
-import * as S from "./styles"
+import React, { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { api } from "../../../../lib/supabase/index";
+import { CircleCheck } from "lucide-react";
+import * as S from "./styles";
 import {
   User,
   MapPin,
@@ -18,69 +18,80 @@ import {
   Pencil,
   Check,
   X,
-} from "lucide-react"
+} from "lucide-react";
 
 interface CustomerForm {
-  id: string
-  customer_name: string
-  sales_tax_id: string
-  duns_number: string
-  dba_number: string
-  resale_certificate: string
-  billing_address: string
-  shipping_address: string
-  ap_contact_name: string
-  ap_contact_email: string
-  buyer_name: string
-  buyer_email: string
-  status: string
-  created_at: string
-  atacado_invoicing_company?: string
-  atacado_warehouse?: string
-  atacado_currency?: string
-  atacado_terms?: string
-  atacado_credit?: number
-  atacado_discount?: number
+  id: string;
+  customer_name: string;
+  sales_tax_id: string;
+  duns_number: string;
+  dba_number: string;
+  resale_certificate: string;
+  billing_address: string;
+  shipping_address: string;
+  ap_contact_name: string;
+  ap_contact_email: string;
+  buyer_name: string;
+  buyer_email: string;
+  status: string;
+  created_at: string;
+  atacado_invoicing_company?: string;
+  atacado_warehouse?: string;
+  atacado_currency?: string;
+  atacado_terms?: string;
+  atacado_credit?: number;
+  atacado_discount?: number;
 }
 
 type WholesaleTerms = {
-  wholesale_invoicing_company: string
-  wholesale_warehouse: string
-  wholesale_currency: string
-  wholesale_terms: string
-  wholesale_credit: number
-  wholesale_discount: number
-}
+  wholesale_invoicing_company: string;
+  wholesale_warehouse: string;
+  wholesale_currency: string;
+  wholesale_terms: string;
+  wholesale_credit: number;
+  wholesale_discount: number;
+};
 
 const INVOICING_COMPANIES = [
   "Plantage Rio Inc - United States",
   "Soma Brands International - European Union",
   "Soma Brands UK Limited - United Kingdom",
   "Soma Brands France - France",
-]
+];
 
-const CURRENCIES = ["USD", "EUR", "GBP"]
+const CURRENCIES = ["USD", "EUR", "GBP"];
 
-const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days"]
+const PAYMENT_TERMS = [
+  "100% Prior Ship",
+  "Net 45 Days",
+  "Net 30 Days",
+  "Net 90 Days",
+  "Net 15 Days",
+];
 
 export default function ValidationDetailsPage() {
-  const { id } = useParams()
-  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [modalContent, setModalContent] = useState({ title: "", description: "" })
-  const router = useRouter()
-  const [newDuns, setNewDuns] = useState("")
-  const [editingDuns, setEditingDuns] = useState(false)
-  const [savingDuns, setSavingDuns] = useState(false)
+  const { id } = useParams();
+  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ email: string; role: string } | null>(
+    null
+  );
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: "",
+    description: "",
+  });
+  const router = useRouter();
+  const [newDuns, setNewDuns] = useState("");
+  const [editingDuns, setEditingDuns] = useState(false);
+  const [savingDuns, setSavingDuns] = useState(false);
 
   useEffect(() => {
     if (customerForm?.duns_number) {
-      setNewDuns(customerForm.duns_number)
+      setNewDuns(customerForm.duns_number);
     }
-  }, [customerForm])
+  }, [customerForm]);
 
   const [terms, setTerms] = useState<WholesaleTerms>({
     wholesale_invoicing_company: "",
@@ -89,100 +100,114 @@ export default function ValidationDetailsPage() {
     wholesale_terms: "",
     wholesale_credit: 0,
     wholesale_discount: 0,
-  })
+  });
 
-  const [warehouses, setWarehouses] = useState<string[]>([])
+  const [warehouses, setWarehouses] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
-        setLoading(true)
-        const data = await api.getCustomerFormById(id as string)
-        console.log("ID recebido:", id)
-        console.log("Dados do formulário:", data)
-        if (!data) throw new Error("Formulário não encontrado.")
-        
-        setCustomerForm(data)
-      } catch (err) {
-        console.error("Erro ao buscar detalhes do cliente:", err)
-        setError(err instanceof Error ? err.message : "Erro desconhecido")
-      } finally {
-        setLoading(false)
-      }
-    }
+        setLoading(true);
+        const data = await api.getCustomerFormById(id as string);
+        console.log("ID recebido:", id);
+        console.log("Dados do formulário:", data);
+        if (!data) throw new Error("Formulário não encontrado.");
 
-    if (id) fetchCustomerDetails()
-  }, [id])
+        setCustomerForm(data);
+      } catch (err) {
+        console.error("Erro ao buscar detalhes do cliente:", err);
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchCustomerDetails();
+  }, [id]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined") return;
 
     const fetchUser = async () => {
       try {
-        const currentUser = await api.getCurrentUser()
-        if (!currentUser) return
-        setUser({ email: currentUser.email, role: currentUser.userType })
+        const currentUser = await api.getCurrentUser();
+        if (!currentUser) return;
+        setUser({ email: currentUser.email, role: currentUser.userType });
       } catch (err) {
-        console.error("Erro ao obter usuário:", err)
+        console.error("Erro ao obter usuário:", err);
       }
-    }
+    };
 
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.wholesale_invoicing_company) {
-        setWarehouses([])
-        return
+        setWarehouses([]);
+        return;
       }
 
       try {
-        const warehouses = await api.getWarehousesByCompany(terms.wholesale_invoicing_company)
-        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name))
+        const warehouses = await api.getWarehousesByCompany(
+          terms.wholesale_invoicing_company
+        );
+        setWarehouses(
+          warehouses.map((warehouse: { name: string }) => warehouse.name)
+        );
       } catch (err) {
-        console.error("Erro ao buscar warehouses:", err)
-        setWarehouses([])
+        console.error("Erro ao buscar warehouses:", err);
+        setWarehouses([]);
       }
-    }
+    };
 
-    fetchWarehouses()
-  }, [terms.wholesale_invoicing_company])
+    fetchWarehouses();
+  }, [terms.wholesale_invoicing_company]);
 
-  const handleTermChange = (field: keyof WholesaleTerms, value: string | number) => {
+  const handleTermChange = (
+    field: keyof WholesaleTerms,
+    value: string | number
+  ) => {
     if (field === "wholesale_credit" || field === "wholesale_discount") {
-      const numericValue = value === "" ? 0 : Number(value)
+      const numericValue = value === "" ? 0 : Number(value);
 
-      if (isNaN(numericValue)) return
+      if (isNaN(numericValue)) return;
 
-      setTerms((prev) => ({ ...prev, [field]: numericValue }))
+      setTerms((prev) => ({ ...prev, [field]: numericValue }));
     } else {
-      setTerms((prev) => ({ ...prev, [field]: value }))
+      setTerms((prev) => ({ ...prev, [field]: value }));
     }
-  }
+  };
 
   const handleApproval = async (approved: boolean) => {
-    if (!user) return
-
+    console.log("Iniciando handleApproval. approved =", approved);
+  
+    // 🚫 REMOVIDO: verificação de usuário autenticado
+  
     try {
-      setLoading(true)
-
+      setLoading(true);
+      console.log("Loading true");
+  
       if (approved) {
+        // Validações específicas para aprovação
         const requiredFields: (keyof WholesaleTerms)[] = [
           "wholesale_invoicing_company",
           "wholesale_warehouse",
           "wholesale_currency",
           "wholesale_terms",
-        ]
-        const missingFields = requiredFields.filter((field) => !terms[field])
+        ];
+        const missingFields = requiredFields.filter((field) => !terms[field]);
         if (missingFields.length > 0) {
-          throw new Error(`⚠️ Please fill in all required fields: ${missingFields.join(", ")}`)
+          throw new Error(
+            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
+          );
         }
         if (terms.wholesale_credit < 0 || terms.wholesale_discount < 0) {
-          throw new Error("⚠️ Credit limit and discount must be non-negative!")
+          throw new Error("⚠️ Credit limit and discount must be non-negative!");
         }
       }
-
+  
+      console.log("Chamando validateWholesaleCustomer");
       await api.validateWholesaleCustomer(id as string, approved, {
         wholesale_invoicing_company: terms.wholesale_invoicing_company,
         wholesale_warehouse: terms.wholesale_warehouse,
@@ -190,78 +215,86 @@ export default function ValidationDetailsPage() {
         wholesale_terms: terms.wholesale_terms,
         wholesale_credit: terms.wholesale_credit,
         wholesale_discount: terms.wholesale_discount,
-      })
-
-      // Update the local state to reflect the new status
+      });
+  
+      console.log("Validação finalizada com sucesso");
+  
       if (customerForm) {
         setCustomerForm({
           ...customerForm,
           status: approved ? "approved" : "rejected",
-        })
+        });
       }
-
+  
       setModalContent({
         title: "Ok!",
-        description: approved ? "Client approved! Forwarded to the credit team." : "Customer rejected!",
-      })
-      setShowModal(true)
+        description: approved
+          ? "Client approved! Forwarded to the credit team."
+          : "Customer rejected!",
+      });
+      setShowModal(true);
+      console.log("Modal de sucesso exibido");
     } catch (err) {
-      console.error("Erro ao validar cliente:", err)
+      console.error("Erro ao validar cliente:", err);
       setModalContent({
         title: "Erro!",
         description: err instanceof Error ? err.message : "Erro desconhecido",
-      })
-      setShowModal(true)
+      });
+      setShowModal(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+  
+  
 
   const handleSaveDuns = async () => {
     try {
-      setSavingDuns(true)
-      await api.updateDunsNumber(id as string, newDuns)
+      setSavingDuns(true);
+      await api.updateDunsNumber(id as string, newDuns);
 
       // Update the local state to reflect the change
       if (customerForm) {
         setCustomerForm({
           ...customerForm,
           duns_number: newDuns,
-        })
+        });
       }
 
-      setEditingDuns(false)
+      setEditingDuns(false);
     } catch (error) {
-      console.error("Error updating DUNS number:", error)
+      console.error("Error updating DUNS number:", error);
       // Optionally show an error message to the user
     } finally {
-      setSavingDuns(false)
+      setSavingDuns(false);
     }
-  }
+  };
 
   const handleCancelEdit = () => {
     // Reset to original value and exit edit mode
     if (customerForm) {
-      setNewDuns(customerForm.duns_number || "")
+      setNewDuns(customerForm.duns_number || "");
     }
-    setEditingDuns(false)
-  }
+    setEditingDuns(false);
+  };
 
   const closeModal = () => {
-    setShowModal(false)
-    router.push("/validations/wholesale")
-  }
+    setShowModal(false);
+    router.push("/validations/wholesale");
+  };
 
-  if (loading) return <S.Message>Loading...</S.Message>
-  if (error) return <S.Message>Erro: {error}</S.Message>
-  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>
+  if (loading) return <S.Message>Loading...</S.Message>;
+  if (error) return <S.Message>Erro: {error}</S.Message>;
+  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>;
 
   return (
     <S.ContainerMain>
       <S.Container>
         <S.Header>
           <S.Title>Customer Details</S.Title>
-          <S.StatusBadge status={customerForm.status}>{customerForm.status}</S.StatusBadge>
+          <S.StatusBadge status={customerForm.status}>
+            {customerForm.status}
+          </S.StatusBadge>
         </S.Header>
         <S.FormDetails>
           <S.FormSection>
@@ -289,10 +322,18 @@ export default function ValidationDetailsPage() {
                     autoFocus
                   />
                   <S.ContainerCheck>
-                    <S.CheckButton onClick={handleSaveDuns} disabled={savingDuns} title="Save">
+                    <S.CheckButton
+                      onClick={handleSaveDuns}
+                      disabled={savingDuns}
+                      title="Save"
+                    >
                       <Check size={16} />
                     </S.CheckButton>
-                    <S.CancelButton onClick={handleCancelEdit} disabled={savingDuns} title="Cancel">
+                    <S.CancelButton
+                      onClick={handleCancelEdit}
+                      disabled={savingDuns}
+                      title="Cancel"
+                    >
                       <X size={16} />
                     </S.CancelButton>
                   </S.ContainerCheck>
@@ -309,7 +350,11 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
-                <a href={customerForm.resale_certificate} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={customerForm.resale_certificate}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   View PDF
                 </a>
               ) : (
@@ -356,7 +401,12 @@ export default function ValidationDetailsPage() {
               </label>
               <S.Select
                 value={terms.wholesale_invoicing_company}
-                onChange={(e) => handleTermChange("wholesale_invoicing_company", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange(
+                    "wholesale_invoicing_company",
+                    e.target.value
+                  )
+                }
               >
                 <option value="">Select company</option>
                 {INVOICING_COMPANIES.map((company) => (
@@ -373,7 +423,9 @@ export default function ValidationDetailsPage() {
               </label>
               <S.Select
                 value={terms.wholesale_warehouse}
-                onChange={(e) => handleTermChange("wholesale_warehouse", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange("wholesale_warehouse", e.target.value)
+                }
                 disabled={!terms.wholesale_invoicing_company}
               >
                 <option value="">Select warehouse</option>
@@ -391,7 +443,9 @@ export default function ValidationDetailsPage() {
               </label>
               <S.Select
                 value={terms.wholesale_currency}
-                onChange={(e) => handleTermChange("wholesale_currency", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange("wholesale_currency", e.target.value)
+                }
               >
                 <option value="">Select currency</option>
                 {CURRENCIES.map((currency) => (
@@ -408,7 +462,9 @@ export default function ValidationDetailsPage() {
               </label>
               <S.Select
                 value={terms.wholesale_terms}
-                onChange={(e) => handleTermChange("wholesale_terms", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange("wholesale_terms", e.target.value)
+                }
               >
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
@@ -425,7 +481,9 @@ export default function ValidationDetailsPage() {
               </label>
               <S.NumericInput
                 value={terms.wholesale_credit}
-                onChange={(e) => handleTermChange("wholesale_credit", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange("wholesale_credit", e.target.value)
+                }
                 min="0"
                 step="0.01"
               />
@@ -437,7 +495,9 @@ export default function ValidationDetailsPage() {
               </label>
               <S.NumericInput
                 value={terms.wholesale_discount}
-                onChange={(e) => handleTermChange("wholesale_discount", e.target.value)}
+                onChange={(e) =>
+                  handleTermChange("wholesale_discount", e.target.value)
+                }
                 min="0"
                 max="100"
                 step="0.1"
@@ -447,13 +507,21 @@ export default function ValidationDetailsPage() {
         </S.TermsContainer>
 
         <S.ButtonContainer>
-          <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Reject
-          </S.Button>
-          <S.Button onClick={() => handleApproval(true)} variant="primary">
-            Approve
-          </S.Button>
-        </S.ButtonContainer>
+  <S.Button onClick={() => handleApproval(false)} variant="secondary">
+    Reject
+  </S.Button>
+  
+  <S.Button
+  variant="primary"
+    onClick={() => {
+      console.log("Clique detectado!")
+      handleApproval(true)
+    }}
+  >
+    Approve
+  </S.Button>
+</S.ButtonContainer>
+
 
         {showModal && (
           <S.Modal>
@@ -461,12 +529,14 @@ export default function ValidationDetailsPage() {
               <S.ModalTitle>
                 <CircleCheck size={48} />
               </S.ModalTitle>
-              <S.ModalDescription>{modalContent.description}</S.ModalDescription>
+              <S.ModalDescription>
+                {modalContent.description}
+              </S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}
       </S.Container>
     </S.ContainerMain>
-  )
+  );
 }

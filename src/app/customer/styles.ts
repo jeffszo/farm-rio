@@ -74,12 +74,12 @@ export const Label = styled.label`
 `
 
 export const Input = styled.input.withConfig({
-  shouldForwardProp: (prop) => prop !== 'error',
+  shouldForwardProp: (prop) => prop !== "error",
 })<{ error?: boolean }>`
   width: 100%;
   padding: 0.5rem;
   font-size: 0.875rem;
-  border: 1px solid ${(props) => (props.error ? 'red' : '#ccc')};
+  border: 1px solid ${(props) => (props.error ? "red" : "#ccc")};
   border-radius: 0.25rem;
   background-color: #ffffff;
   color: #18181b;
@@ -96,8 +96,7 @@ export const Input = styled.input.withConfig({
     background-color: #f4f4f5;
     color: #a1a1aa;
   }
-`;
-
+`
 
 export const ErrorMessage = styled.span`
   display: block;
@@ -324,7 +323,6 @@ export const ResponsiveGrid = styled.div`
   }
 `
 
-
 export const AddAddressButton = styled.button`
   display: flex;
   align-items: center;
@@ -367,7 +365,6 @@ export const CompactSection = styled.div`
   max-height: 600px;
   overflow-y: auto;
 `
-
 
 export const AddressSection = styled.div`
   display: flex;
@@ -455,4 +452,87 @@ export const FixButton = styled.button`
   &:hover {
     background-color: #2b6cb0;
   }
-`;
+`
+
+// Novos componentes estilizados para a página de status
+export const StatusCard = styled.div`
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+`
+
+export const StatusHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+`
+
+export const StatusTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+`
+
+export const StatusContent = styled.div`
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: #444;
+`
+
+
+export const EditButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #18181b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin: 0 auto;
+  
+  &:hover {
+    background-color: #27272a;
+  }
+`
+
+export const StatusContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+`
+
+
+export const FeedbackCard = styled.div`
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+`
+
+export const FeedbackTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+`
+
+export const FeedbackContent = styled.p`
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+`

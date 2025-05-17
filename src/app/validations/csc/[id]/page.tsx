@@ -28,7 +28,7 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null)
+  // const [user, setUser] = useState<{ email: string; role: string } | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState({ title: "", description: "" })
   const [feedback, setFeedback] = useState("")
@@ -102,25 +102,25 @@ export default function ValidationDetailsPage() {
   }, [id])
 
   // ✅ Obtém o usuário autenticado (garante que apenas CSC acessa)
-  useEffect(() => {
-    if (typeof window === "undefined") return
+  // useEffect(() => {
+  //   if (typeof window === "undefined") return
 
-    const fetchUser = async () => {
-      try {
-        const currentUser = await api.getCurrentUser()
-        if (!currentUser) return
-        setUser({ email: currentUser.email, role: currentUser.userType })
-      } catch (err) {
-        console.error("Erro ao obter usuário:", err)
-      }
-    }
+  //   const fetchUser = async () => {
+  //     try {
+  //       const currentUser = await api.getCurrentUser()
+  //       if (!currentUser) return
+  //       setUser({ email: currentUser.email, role: currentUser.userType })
+  //     } catch (err) {
+  //       console.error("Erro ao obter usuário:", err)
+  //     }
+  //   }
 
-    fetchUser()
-  }, [])
+  //   fetchUser()
+  // }, [])
 
   // ✅ Aprovação/Rejeição do Cliente
   const handleApproval = async (approved: boolean) => {
-    if (!user) return
+  
 
     try {
       setLoading(true)

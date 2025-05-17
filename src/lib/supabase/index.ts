@@ -18,6 +18,7 @@ class SupabaseAPI implements AuthAPI {
   submitForm = forms.submitForm
   getFormStatus = forms.getFormStatus
   getCustomerFormById = forms.getCustomerFormById
+  updateForm = forms.updateForm
 
   // Validation methods
   validateCustomer = validations.validateCustomer
@@ -35,7 +36,7 @@ class SupabaseAPI implements AuthAPI {
   getApprovedCustomers = queries.getApprovedCustomers
   getCustomerValidationDetails = queries.getCustomerValidationDetails
   resetFormStatus = queries.resetFormStatus
-  updateForm = queries.updateForm
+  
   
 
   uploadResaleCertificate = storage.uploadResaleCertificate

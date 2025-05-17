@@ -54,36 +54,41 @@ export default function OnboardingForm() {
 
   // ✅ Buscar o usuário e o status do formulário corretamente
   useEffect(() => {
-    const fetchUserAndStatus = async () => {
+    const fetchFormStatus = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
   
-        const currentUser = await api.getCurrentUser()
-        if (!currentUser) {
-          console.error("Usuário não autenticado.")
-          return
+        const currentUser = await api.getCurrentUser(); // supondo que essa func retorne { id, userType }
+        setUser(currentUser);
+  
+        if (!currentUser?.id) {
+          setFormStatus(null);
+          setFeedback("");
+          setIsLoading(false);
+          return;
         }
   
-        setUser(currentUser)
-  
-        const formData: FormStatusData | null = await api.getFormStatus(currentUser.id)
+        const formData: FormStatusData | null = await api.getFormStatus(currentUser.id);
   
         if (formData) {
-          setFormStatus(formData.status || null)
-          setFeedback(formData.csc_feedback || "")
-          console.log("Form status:", formData.status)
-          console.log("CSC feedback:", formData.csc_feedback)
+          setFormStatus(formData.status || null);
+          setFeedback(formData.csc_feedback || "");
+        } else {
+          setFormStatus(null);
+          setFeedback("");
         }
-  
       } catch (error) {
-        console.error("Erro ao buscar status do formulário:", error)
+        console.error("Erro ao buscar status do formulário:", error);
+        setFormStatus(null);
+        setFeedback("");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
   
-    fetchUserAndStatus()
-  }, [])
+    fetchFormStatus();
+  }, []);
+  
 
   const onSubmit = async (formData: IFormInputs) => {
     try {

@@ -83,7 +83,7 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null)
+  // const [user, setUser] = useState<{ email: string; role: string } | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState({ title: "", description: "" })
   const router = useRouter()
@@ -127,21 +127,21 @@ export default function ValidationDetailsPage() {
     if (id) fetchCustomerDetails()
   }, [id])
 
-  useEffect(() => {
-    if (typeof window === "undefined") return
+  // useEffect(() => {
+  //   if (typeof window === "undefined") return
 
-    const fetchUser = async () => {
-      try {
-        const currentUser = await api.getCurrentUser()
-        if (!currentUser) return
-        setUser({ email: currentUser.email, role: currentUser.userType })
-      } catch (err) {
-        console.error("Erro ao obter usuário:", err)
-      }
-    }
+  //   const fetchUser = async () => {
+  //     try {
+  //       const currentUser = await api.getCurrentUser()
+  //       if (!currentUser) return
+  //       setUser({ email: currentUser.email, role: currentUser.userType })
+  //     } catch (err) {
+  //       console.error("Erro ao obter usuário:", err)
+  //     }
+  //   }
 
-    fetchUser()
-  }, [])
+  //   fetchUser()
+  // }, [])
 
   useEffect(() => {
     const fetchValidationDetails = async () => {
@@ -214,22 +214,28 @@ export default function ValidationDetailsPage() {
   }
 
   const handleApproval = async (approved: boolean) => {
-    if (!user) return
-
     try {
-      setLoading(true)
-
+      setLoading(true);
+  
       if (approved) {
-        const requiredFields: (keyof CreditTerms)[] = ["invoicing_company", "warehouse", "currency", "payment_terms"]
-        const missingFields = requiredFields.filter((field) => !terms[field])
+        const requiredFields: (keyof CreditTerms)[] = [
+          "invoicing_company",
+          "warehouse",
+          "currency",
+          "payment_terms",
+        ];
+        const missingFields = requiredFields.filter((field) => !terms[field]);
         if (missingFields.length > 0) {
-          throw new Error(`⚠️ Please fill in all required fields: ${missingFields.join(", ")}`)
+          throw new Error(
+            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
+          );
         }
+  
         if (terms.credit_limit < 0 || terms.discount < 0) {
-          throw new Error("⚠️ Credit limit and discount must be non-negative!")
+          throw new Error("⚠️ Credit limit and discount must be non-negative!");
         }
       }
-
+  
       await api.validateCreditCustomer(id as string, approved, {
         credit_invoicing_company: terms.invoicing_company,
         credit_warehouse: terms.warehouse,
@@ -237,25 +243,28 @@ export default function ValidationDetailsPage() {
         credit_terms: terms.payment_terms,
         credit_credit: terms.credit_limit,
         credit_discount: terms.discount,
-      })
-
+      });
+  
       setModalContent({
         title: "Ok!",
-        description: approved ? "Client approved! Forwarded to the CSC team." : "Customer rejected!",
-      })
-      setShowModal(true)
+        description: approved
+          ? "Client approved! Forwarded to the CSC team."
+          : "Customer rejected!",
+      });
+      setShowModal(true);
     } catch (err) {
-      console.error("Erro ao validar cliente:", err)
+      console.error("Erro ao validar cliente:", err);
       setModalContent({
         title: "Erro!",
-        description: err instanceof Error ? err.message : "Erro desconhecido",
-      })
-      setShowModal(true)
+        description:
+          err instanceof Error ? err.message : "Erro desconhecido ao aprovar.",
+      });
+      setShowModal(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
+  
   const closeModal = () => {
     setShowModal(false)
     router.push("/validations/credit")

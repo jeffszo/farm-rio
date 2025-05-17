@@ -1,3 +1,4 @@
+import React from 'react'
 import { useForm, type SubmitHandler } from "react-hook-form"
 import * as S from './styles'
 import type { LoginFormData } from "../../types/auth";

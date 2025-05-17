@@ -1,17 +1,20 @@
 "use client"
 
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
-import Image from "next/image";
-import Logo from "../../../public/logo.png";
-import { LogOut } from "lucide-react";
+import React from 'react'
+import { useRouter } from "next/navigation"
+import * as S from "./styles"
+import Image from "next/image"
+import Logo from "../../../public/logo.png"
+import { LogOut } from "lucide-react"
+import { supabase } from "@/lib/supabase/client" // ajuste o path se necessário
 
 export default function HeaderValidations() {
-  const router = useRouter();
+  const router = useRouter()
 
-  const handleLogout = () => {
-    router.push("/");
-  };
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/") // redireciona para home ou login
+  }
 
   return (
     <S.HeaderContainer>
@@ -22,5 +25,5 @@ export default function HeaderValidations() {
         </S.Logout>
       </S.HeaderContent>
     </S.HeaderContainer>
-  );
+  )
 }

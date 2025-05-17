@@ -87,9 +87,7 @@ export async function validateWholesaleCustomer(
 ) {
   const updateData = {
     status: approved ? "approved by the wholesale team" : "rejected by the team wholesale",
-    wholesale_status: approved ? "aprovado" : "reprovado", // ✅ novo campo de status específico
-
-    // ✅ Termos preenchidos
+    wholesale_status: approved ? "aprovado" : "reprovado",
     wholesale_invoicing_company: terms.wholesale_invoicing_company,
     wholesale_warehouse: terms.wholesale_warehouse,
     wholesale_currency: terms.wholesale_currency,
@@ -100,15 +98,19 @@ export async function validateWholesaleCustomer(
     wholesale_discount: terms.wholesale_discount,
   };
 
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from("customer_forms")
     .update(updateData)
-    .eq("id", customerId);
+    .eq("id", customerId)
+    .select(); // 👈 importante para trazer os dados atualizados
+
+  console.log("Resultado do update no Supabase:", { data, error });
 
   if (error) {
     throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
   }
 }
+
 
 
 
