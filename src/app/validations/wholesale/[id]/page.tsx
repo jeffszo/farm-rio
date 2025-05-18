@@ -129,7 +129,7 @@ export default function ValidationDetailsPage() {
       try {
         const currentUser = await api.getCurrentUser();
         if (!currentUser) return;
-        setUser({ email: currentUser.email, role: currentUser.userType });
+        // setUser({ email: currentUser.email, role: currentUser.userType });
       } catch (err) {
         console.error("Erro ao obter usuário:", err);
       }
