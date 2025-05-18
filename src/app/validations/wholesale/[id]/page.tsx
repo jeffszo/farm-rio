@@ -74,9 +74,6 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{ email: string; role: string } | null>(
-    null
-  );
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
