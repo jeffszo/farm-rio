@@ -101,6 +101,9 @@ export async function getFormStatus(userId: string): Promise<FormStatusData | nu
     console.error("Erro ao buscar status do formulário:", error.message)
     return null
   }
+  
+  console.log("🔥 Dados brutos da query:", data); // ✅ Adicione esse log
+
 
   return data
 }

@@ -3,7 +3,7 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import * as S from './styles'
 import type { LoginFormData } from "../../types/auth";
 import { useRouter } from "next/navigation";
-
+import { api } from '../../lib/supabase/index';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -36,14 +36,22 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
 
       // ✅ Verifica se o usuário é um cliente ou parte do time de validação
       if (user.role === "cliente") {
-        router.push("/customer");
+        const formStatus = await api.getFormStatus(user.id); // Você já buscou o status com user.id
+      
+        if (formStatus?.status) {
+          // CORREÇÃO: Passar o user.id para a rota dinâmica
+          router.push(`/customer/status/${user.id}`); // <--- MUDANÇA AQUI!
+        } else {
+          router.push("/customer/form");
+        }
       } else if (user.role === "atacado") {
         router.push("/validations/wholesale");
       } else if (user.role === "credito") {
-        router.push("/validations/credit")
+        router.push("/validations/credit");
       } else if (user.role === "csc") {
-        router.push("validations/csc")
+        router.push("/validations/csc");
       }
+      
     } catch (error: unknown) {
       const errorMessage = (error as { message?: string }).message || "Erro desconhecido";
       console.error("Erro no login:", errorMessage);

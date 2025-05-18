@@ -2,11 +2,11 @@
 import React from "react"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import * as S from "./styles"
-import type { IFormInputs } from "../../types/form"
+import * as S from "../styles"
+import type { IFormInputs } from "../../../types/form"
 import { useRouter } from "next/navigation"
 import { ChevronRight, ChevronLeft, Upload, Clock4, CircleCheck, Plus, Trash2 } from "lucide-react"
-import { api } from "../../lib/supabase/index"
+import { api } from "../../../lib/supabase/index"
 
 interface FormStatusData {
   status: string
