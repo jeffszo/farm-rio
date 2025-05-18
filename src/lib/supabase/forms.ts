@@ -98,11 +98,11 @@ export async function getFormStatus(userId: string): Promise<FormStatusData | nu
     .maybeSingle() // 🔥 Retorna null se não houver dados
 
   if (error) {
-    console.error("Erro ao buscar status do formulário:", error.message)
+    console.log("Erro ao buscar status do formulário:", error.message)
     return null
   }
   
-  console.log("🔥 Dados brutos da query:", data); // ✅ Adicione esse log
+  // console.log("🔥 Dados brutos da query:", data); // ✅ Adicione esse log
 
 
   return data
@@ -119,7 +119,7 @@ export async function getCustomerFormById(userId: string) {
     .single()
 
   if (error) {
-    console.error("Erro ao buscar formulário:", error)
+    console.log("Erro ao buscar formulário:", error)
     return null
   }
 

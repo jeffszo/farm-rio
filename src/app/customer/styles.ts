@@ -222,7 +222,7 @@ export const ReviewContainer = styled.div`
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   width: 100%;
-  max-width: 600px;
+  max-width: 700px;
   text-align: center;
 
   @media (max-width: 868px) {
@@ -448,6 +448,7 @@ export const FixButton = styled.button`
   cursor: pointer;
   margin-top: 1rem;
   transition: background-color 0.3s;
+  width: 100%;
 
   &:hover {
     background-color: #2b6cb0;
@@ -536,3 +537,4 @@ export const FeedbackContent = styled.p`
   margin: 0;
   white-space: pre-line;
 `
+

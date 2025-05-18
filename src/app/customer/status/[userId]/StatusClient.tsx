@@ -5,7 +5,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Não precisamos de useParams aqui
 import * as S from "../../styles"; // Caminho relativo ajustado
-import { Clock4 } from "lucide-react";
+import { Clock4, FileEdit } from "lucide-react";
 
 
 
@@ -62,9 +62,9 @@ export default function StatusClient({
   }
 
   console.log("CLIENT COMPONENT: Rendering: Valid status:", formStatus);
+  
   return (
     <S.ReviewContainer>
-      <S.ReviewHeader>
         <S.ReviewTitle>Request Status</S.ReviewTitle>
         <S.ReviewSubtitle>
           {formStatus === "pending" && (
@@ -82,17 +82,21 @@ export default function StatusClient({
           )}
 
           {formStatus === "rejected by the CSC team" && (
-            <div style={{ textAlign: "center", marginTop: "2rem" }}>
+            <div>
               <p>Your registration was rejected by our team. Please correct the data and submit again.</p>
-              {feedback && (
-                <div>
-                  <strong>Feedback:</strong> {feedback}
-                </div>
-              )}
-              {/* Usamos initialUserId para o redirecionamento */}
-              <S.FixButton onClick={() => router.push(`/edit-form/${initialUserId}`)}>
-                Correct your data
-              </S.FixButton>
+
+              {(feedback || formStatus.includes("rejected")) && (
+            <S.FeedbackCard>
+              <S.FeedbackTitle>Feedback from CSC Team</S.FeedbackTitle>
+              <S.FeedbackContent>
+                {feedback || "No specific feedback provided. Please contact support for more details."}
+              </S.FeedbackContent>
+            </S.FeedbackCard>
+          )}
+            <S.EditButton onClick={() => router.push(`/edit-form/${initialUserId}`)}>
+                <FileEdit size={18} />
+                Edit Your Information
+              </S.EditButton>
             </div>
           )}
 
@@ -105,7 +109,7 @@ export default function StatusClient({
           )}
 
         </S.ReviewSubtitle>
-      </S.ReviewHeader>
+     
     </S.ReviewContainer>
   );
 }
