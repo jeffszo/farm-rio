@@ -1,10 +1,9 @@
-// src/app/customer/status/[userId]/page.tsx
-// Este é um Server Component, não use "use client" aqui!
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { api } from '../../.././../lib/supabase/index'; // Ajuste o caminho conforme necessário
 import StatusClient from './StatusClient'; // Importa o componente cliente renomeado
 
+// Interface para os dados do status do formulário
 interface FormStatusData {
   status: string;
   csc_feedback: string | null;
@@ -12,7 +11,7 @@ interface FormStatusData {
   user_id?: string;
 }
 
-// Isso é para o Server Component para pegar os parâmetros de rota
+// Interface para as props do Server Component (StatusPage)
 interface StatusPageProps {
   params: {
     userId: string;
