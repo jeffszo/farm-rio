@@ -213,6 +213,7 @@ export const FileNameText = styled.p`
 `
 
 export const ReviewContainer = styled.div`
+
   position: absolute;
   top: 50%;
   left: 50%;
@@ -248,9 +249,9 @@ export const ReviewSubtitle = styled.div`
   line-height: 1.4;
 
   div {
-    display: flex;
+    /* display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; */
     gap: 0.5rem;
     font-size: 1rem;
     font-weight: 500;
@@ -502,7 +503,7 @@ export const EditButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin: 0 auto;
+  margin: 1rem  auto;
   
   &:hover {
     background-color: #27272a;
@@ -521,6 +522,7 @@ export const FeedbackCard = styled.div`
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 20px;
+  margin-top: 1rem;
 `
 
 export const FeedbackTitle = styled.h3`

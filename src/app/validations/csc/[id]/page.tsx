@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
@@ -7,169 +7,158 @@ import * as S from "./styles";
 import { User, MapPin, Mail, CircleCheck } from "lucide-react";
 
 interface CustomerForm {
-  id: string
-  customer_name: string
-  sales_tax_id: string
-  duns_number: string
-  dba_number: string
-  resale_certificate: string
-  billing_address: string
-  shipping_address: string
-  ap_contact_name: string
-  ap_contact_email: string
-  buyer_name: string
-  buyer_email: string
-  status: string
-  created_at: string
+  id: string;
+  customer_name: string;
+  sales_tax_id: string;
+  duns_number: string;
+  dba_number: string;
+  resale_certificate: string;
+  billing_address: string;
+  shipping_address: string;
+  ap_contact_name: string;
+  ap_contact_email: string;
+  buyer_name: string;
+  buyer_email: string;
+  status: string;
+  created_at: string;
 }
 
 export default function ValidationDetailsPage() {
-  const { id } = useParams()
-  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { id } = useParams();
+  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // const [user, setUser] = useState<{ email: string; role: string } | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [modalContent, setModalContent] = useState({ title: "", description: "" })
-  const [feedback, setFeedback] = useState("")
-  const router = useRouter()
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: "",
+    description: "",
+  });
+  const [feedback, setFeedback] = useState("");
+  const router = useRouter();
 
   interface ValidationDetails {
-    wholesale_invoicing_company: string
-    wholesale_warehouse: string
-    wholesale_currency: string
-    wholesale_terms: string
-    wholesale_credit: string
-    wholesale_discount: number
-    credit_invoicing_company: string
-    credit_warehouse: string
-    credit_currency: string
-    credit_terms: string
-    credit_credit: string
-    credit_discount: number
+    wholesale_invoicing_company: string;
+    wholesale_warehouse: string;
+    wholesale_currency: string;
+    wholesale_terms: string;
+    wholesale_credit: string;
+    wholesale_discount: number;
+    credit_invoicing_company: string;
+    credit_warehouse: string;
+    credit_currency: string;
+    credit_terms: string;
+    credit_credit: string;
+    credit_discount: number;
   }
 
-  const [validation, setValidation] = useState<ValidationDetails | null>(null)
-
+  const [validation, setValidation] = useState<ValidationDetails | null>(null);
 
   const handleFinish = async () => {
     try {
-      setLoading(true)
-      await api.finishCustomer(id as string)
+      setLoading(true);
+      await api.finishCustomer(id as string);
       setModalContent({
         title: "Success!",
         description: "Customer finalized successfully!",
-      })
-      setShowModal(true)
+      });
+      setShowModal(true);
     } catch (err) {
-      console.error("Erro ao finalizar cliente:", err)
+      console.error("Erro ao finalizar cliente:", err);
       setModalContent({
         title: "Erro!",
         description: err instanceof Error ? err.message : "Erro desconhecido",
-      })
-      setShowModal(true)
+      });
+      setShowModal(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchValidationDetails = async () => {
-      const validationData = await api.getCustomerValidationDetails(id as string)
-      if (validationData) setValidation(validationData)
-    }
+      const validationData = await api.getCustomerValidationDetails(
+        id as string
+      );
+      if (validationData) setValidation(validationData);
+    };
 
-    if (id) fetchValidationDetails()
-  }, [id])
+    if (id) fetchValidationDetails();
+  }, [id]);
 
   // ✅ Obtém os detalhes do cliente
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
-        setLoading(true)
-        const data = await api.getCustomerFormById(id as string)
-        if (!data) throw new Error("Formulário não encontrado.")
-        setCustomerForm(data)
+        setLoading(true);
+        const data = await api.getCustomerFormById(id as string);
+        if (!data) throw new Error("Formulário não encontrado.");
+        setCustomerForm(data);
       } catch (err) {
-        console.error("Erro ao buscar detalhes do cliente:", err)
-        setError(err instanceof Error ? err.message : "Erro desconhecido")
+        console.error("Erro ao buscar detalhes do cliente:", err);
+        setError(err instanceof Error ? err.message : "Erro desconhecido");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    if (id) fetchCustomerDetails()
-  }, [id])
-
-  // ✅ Obtém o usuário autenticado (garante que apenas CSC acessa)
-  // useEffect(() => {
-  //   if (typeof window === "undefined") return
-
-  //   const fetchUser = async () => {
-  //     try {
-  //       const currentUser = await api.getCurrentUser()
-  //       if (!currentUser) return
-  //       setUser({ email: currentUser.email, role: currentUser.userType })
-  //     } catch (err) {
-  //       console.error("Erro ao obter usuário:", err)
-  //     }
-  //   }
-
-  //   fetchUser()
-  // }, [])
+    if (id) fetchCustomerDetails();
+  }, [id]);
 
   // ✅ Aprovação/Rejeição do Cliente
   const handleApproval = async (approved: boolean) => {
-  
-
     try {
-      setLoading(true)
+      setLoading(true);
 
       // Check if feedback is provided when rejecting
       if (!approved && !feedback.trim()) {
         setModalContent({
           title: "Error!",
           description: "Feedback is required when rejecting a customer.",
-        })
-        setShowModal(true)
-        return
+        });
+        setShowModal(true);
+        return;
       }
 
       // Pass the feedback to the API function
-      await api.validateCSCCustomer(id as string, approved, feedback)
+      await api.validateCSCCustomer(id as string, approved, feedback);
 
       setModalContent({
         title: "Ok!",
-        description: approved ? "Client approved by the CSC team!" : "Customer rejected!",
-      })
-      setShowModal(true)
+        description: approved
+          ? "Client approved by the CSC team!"
+          : "Customer rejected!",
+      });
+      setShowModal(true);
     } catch (err) {
-      console.error("Erro ao validar cliente:", err)
+      console.error("Erro ao validar cliente:", err);
       setModalContent({
         title: "Erro!",
         description: err instanceof Error ? err.message : "Erro desconhecido",
-      })
-      setShowModal(true)
+      });
+      setShowModal(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const closeModal = () => {
-    setShowModal(false)
-    router.push("/validations/csc")
-  }
+    setShowModal(false);
+    router.push("/validations/csc");
+  };
 
-  if (loading) return <S.Message>Loading...</S.Message>
-  if (error) return <S.Message>Erro: {error}</S.Message>
-  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>
+  if (loading) return <S.Message>Loading...</S.Message>;
+  if (error) return <S.Message>Erro: {error}</S.Message>;
+  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>;
 
   return (
     <S.ContainerMain>
       <S.Container>
         <S.Header>
           <S.Title>Customer Details</S.Title>
-          <S.StatusBadge status={customerForm.status}>{customerForm.status}</S.StatusBadge>
+          <S.StatusBadge status={customerForm.status}>
+            {customerForm.status}
+          </S.StatusBadge>
         </S.Header>
         <S.FormDetails>
           <S.FormSection>
@@ -183,7 +172,8 @@ export default function ValidationDetailsPage() {
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
             </S.FormRow>
             <S.FormRow>
-              <strong>D-U-N-S:</strong> {customerForm.dba_number || "Not provided"}
+              <strong>D-U-N-S:</strong>{" "}
+              {customerForm.dba_number || "Not provided"}
             </S.FormRow>
 
             <S.FormRow>
@@ -192,7 +182,11 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
-                <a href={customerForm.resale_certificate} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={customerForm.resale_certificate}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   View PDF
                 </a>
               ) : (
@@ -235,7 +229,8 @@ export default function ValidationDetailsPage() {
             <S.TermsCard>
               <h3>Wholesale Team Validation</h3>
               <p>
-                <strong>Invoicing Company:</strong> {validation.wholesale_invoicing_company}
+                <strong>Invoicing Company:</strong>{" "}
+                {validation.wholesale_invoicing_company}
               </p>
               <p>
                 <strong>Warehouse:</strong> {validation.wholesale_warehouse}
@@ -257,7 +252,8 @@ export default function ValidationDetailsPage() {
             <S.TermsCard>
               <h3>Credit Team Validation</h3>
               <p>
-                <strong>Invoicing Company:</strong> {validation.credit_invoicing_company}
+                <strong>Invoicing Company:</strong>{" "}
+                {validation.credit_invoicing_company}
               </p>
               <p>
                 <strong>Warehouse:</strong> {validation.credit_warehouse}
@@ -278,19 +274,21 @@ export default function ValidationDetailsPage() {
           </S.TermsCardsContainer>
         )}
 
-      {customerForm.status === "approved by the credit team" && (
-        <S.FeedbackGroup>
-          <S.Label htmlFor="feedback">Feedback (required if rejected)</S.Label>
-          <S.Textarea
-            id="feedback"
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Explain the reason for rejection..."
-          />
-        </S.FeedbackGroup>
-      )}
+        {(customerForm.status === "approved by the credit team" ||
+          customerForm.status === "data corrected by the client") && (
+          <S.FeedbackGroup>
+            <S.Label htmlFor="feedback">
+              Feedback (required if rejected)
+            </S.Label>
+            <S.Textarea
+              id="feedback"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Explain the reason for rejection..."
+            />
+          </S.FeedbackGroup>
+        )}
 
-      
         {/* ✅ Botões de Aprovação/Reprovação */}
         <S.ButtonContainer>
           {customerForm.status === "approved by the CSC team" ? (
@@ -299,7 +297,10 @@ export default function ValidationDetailsPage() {
             </S.Button>
           ) : (
             <>
-              <S.Button onClick={() => handleApproval(false)} variant="secondary">
+              <S.Button
+                onClick={() => handleApproval(false)}
+                variant="secondary"
+              >
                 Reject
               </S.Button>
               <S.Button onClick={() => handleApproval(true)} variant="primary">
@@ -315,12 +316,14 @@ export default function ValidationDetailsPage() {
               <S.ModalTitle>
                 <CircleCheck size={48} />
               </S.ModalTitle>
-              <S.ModalDescription>{modalContent.description}</S.ModalDescription>
+              <S.ModalDescription>
+                {modalContent.description}
+              </S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}
       </S.Container>
     </S.ContainerMain>
-  )
+  );
 }
