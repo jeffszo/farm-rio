@@ -5,7 +5,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Não precisamos de useParams aqui
 import * as S from "../../styles"; // Caminho relativo ajustado
-import { Clock4, FileEdit } from "lucide-react";
+import { FileEdit } from "lucide-react";
 
 // Props que este componente cliente receberá do Server Component
 interface StatusClientProps {
@@ -80,9 +80,7 @@ export default function StatusClient({
       <S.ReviewTitle>Request Status</S.ReviewTitle>
       <S.ReviewSubtitle>
         {formStatus === "pending" && (
-          <div>
-            <Clock4 /> Your submission is under review.
-          </div>
+          <div>Your submission is under review.</div>
         )}
 
         {formStatus === "approved by the wholesale team" && (
@@ -123,6 +121,12 @@ export default function StatusClient({
         {formStatus === "finished" && (
           <div>
             Your form has been <strong>successfully finalized!</strong>
+          </div>
+        )}
+
+        {formStatus === "rejected by the team wholesale" && (
+          <div>
+            Your form has already been rejected by the wholesale team
           </div>
         )}
       </S.ReviewSubtitle>

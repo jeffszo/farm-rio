@@ -14,6 +14,7 @@ export const FormContainer = styled.div`
   background: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  margin-top: 8rem;
 
   @media (max-width: 868px) {
     margin-top: 12rem;
