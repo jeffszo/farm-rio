@@ -1,58 +1,43 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { api } from '../../../../lib/supabase/index'; // Ajuste o caminho conforme necessário
-import StatusClient from './StatusClient'; // Importa o componente cliente renomeado
+import { api } from '../../../../lib/supabase/index';
+import StatusClient from './StatusClient';
 
-// Importe o tipo PageProps do Next.js.
-// É crucial que esta importação seja feita para que o Next.js reconheça o tipo correto
-// para as props de página.
-import type { PageProps } from 'next'; // Adicione esta linha!
-
-// Interface para os dados do status do formulário
 interface FormStatusData {
   status: string;
   csc_feedback: string | null;
-  // Opcional: Inclua user_id se sua função getFormStatus também o retornaraa
   user_id?: string;
 }
 
-// Interface para as props do Server Component (StatusPage)
-// Agora, vamos estender de PageProps do Next.js e usar os generics
-// para tipar corretamente os parâmetros de rota.
-interface StatusPageProps extends PageProps<{ userId: string }> {}
-// OU:
-// interface StatusPageProps {
-//   params: {
-//     userId: string;
-//   };
-//   // Se você tiver outras props que vêm do Layout, elas iriam aqui:
-//   // searchParams?: { [key: string]: string | string[] | undefined };
-// }
+
+interface StatusPageProps {
+  params: {
+    userId: string;
+  };
+}
 
 
+// Use a interface StatusPageProps que você definiu diretamente
 export default async function StatusPage({ params }: StatusPageProps) {
   const { userId } = params;
 
-  // Log no servidor para verificar o userId ANTES de passar para o cliente
   console.log("SERVER COMPONENT: userId from params:", userId);
 
   if (!userId) {
-    // Isso deve ser raro com rota dinâmica, mas é uma segurança
     console.error("SERVER COMPONENT: userId is undefined. Showing notFound.");
-    notFound(); // Ou redirecionar para uma página de erro
+    notFound();
   }
 
-  // Chame a API para obter o status aqui no servidor
   let initialFormStatus: FormStatusData | null = null;
   let initialFeedback: string = "";
-  let dataFound: boolean = false;
+  let dataFound = false;
 
   try {
     const formData = await api.getFormStatus(userId);
     console.log("SERVER COMPONENT: Raw form data from API (server side):", formData);
 
     if (formData) {
-      initialFormStatus = formData; // Passa o objeto completo se necessário
+      initialFormStatus = formData;
       initialFeedback = formData.csc_feedback || "";
       dataFound = true;
     } else {
@@ -60,17 +45,15 @@ export default async function StatusPage({ params }: StatusPageProps) {
     }
   } catch (error) {
     console.error("SERVER COMPONENT: Error fetching form status on server:", error);
-    // Aqui você pode definir um estado de erro para o cliente também
     initialFormStatus = { status: "error", csc_feedback: "An error occurred on server." };
   }
 
-  // Passe os dados como props para o componente cliente
   return (
     <StatusClient
-      initialUserId={userId} // Passa o userId explicitamente
+      initialUserId={userId}
       initialFormStatus={initialFormStatus?.status || (dataFound ? "no_data_found" : null)}
       initialFeedback={initialFeedback}
-      initialIsLoading={false} // Já carregamos no servidor
+      initialIsLoading={false}
     />
   );
 }
