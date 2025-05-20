@@ -1,7 +1,12 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { api } from '../../.././../lib/supabase/index'; // Ajuste o caminho conforme necessário
+import { api } from '../../../../lib/supabase/index'; // Ajuste o caminho conforme necessário
 import StatusClient from './StatusClient'; // Importa o componente cliente renomeado
+
+// Importe o tipo PageProps do Next.js.
+// É crucial que esta importação seja feita para que o Next.js reconheça o tipo correto
+// para as props de página.
+import type { PageProps } from 'next'; // Adicione esta linha!
 
 // Interface para os dados do status do formulário
 interface FormStatusData {
@@ -12,11 +17,18 @@ interface FormStatusData {
 }
 
 // Interface para as props do Server Component (StatusPage)
-interface StatusPageProps {
-  readonly params: {
-    readonly userId: string;
-  };
-}
+// Agora, vamos estender de PageProps do Next.js e usar os generics
+// para tipar corretamente os parâmetros de rota.
+interface StatusPageProps extends PageProps<{ userId: string }> {}
+// OU:
+// interface StatusPageProps {
+//   params: {
+//     userId: string;
+//   };
+//   // Se você tiver outras props que vêm do Layout, elas iriam aqui:
+//   // searchParams?: { [key: string]: string | string[] | undefined };
+// }
+
 
 export default async function StatusPage({ params }: StatusPageProps) {
   const { userId } = params;
