@@ -7,14 +7,14 @@ import StatusClient from './StatusClient'; // Importa o componente cliente renom
 interface FormStatusData {
   status: string;
   csc_feedback: string | null;
-  // Opcional: Inclua user_id se sua função getFormStatus também o retornar
+  // Opcional: Inclua user_id se sua função getFormStatus também o retornaraa
   user_id?: string;
 }
 
 // Interface para as props do Server Component (StatusPage)
 interface StatusPageProps {
-  params: {
-    userId: string;
+  readonly params: {
+    readonly userId: string;
   };
 }
 
