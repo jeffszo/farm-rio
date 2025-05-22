@@ -5,9 +5,9 @@ import StatusClient from "./StatusClient";
 export default async function StatusPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const { userId } = params;
+  const { userId } = await params;
 
   if (!userId) {
     notFound();
