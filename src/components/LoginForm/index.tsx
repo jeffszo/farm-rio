@@ -88,7 +88,7 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
             required: "Senha é obrigatória",
             minLength: {
               value: 6,
-              message: "A senha deve ter pelo menos 6 caracteres",
+              message: "Password must be at least 6 characters long",
             },
           })}
         />
