@@ -27,13 +27,15 @@ export default async function StatusPage({ params }: Params) {
       />
     );
   } catch (error) {
-    return (
-      <StatusClient
-        initialUserId={userId}
-        initialFormStatus="error"
-        initialFeedback="Erro ao buscar status do formulário"
-        initialIsLoading={false}
-      />
-    );
-  }
+  console.error("Erro ao buscar status do formulário:", error);
+  return (
+    <StatusClient
+      initialUserId={userId}
+      initialFormStatus="error"
+      initialFeedback="Erro ao buscar status do formulário"
+      initialIsLoading={false}
+    />
+  );
+}
+
 }
