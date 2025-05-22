@@ -10,15 +10,9 @@ interface FormStatusData {
 }
 
 
-interface StatusPageProps {
-  params: {
-    userId: string;
-  };
-}
-
-
 // Use a interface StatusPageProps que você definiu diretamente
-export default async function StatusPage({ params }: StatusPageProps) {
+export default async function StatusPage({ params }: { params: { userId: string } }) {
+
   const { userId } = params;
 
   console.log("SERVER COMPONENT: userId from params:", userId);
