@@ -2,13 +2,11 @@ import { notFound } from "next/navigation";
 import { api } from "../../../../lib/supabase";
 import StatusClient from "./StatusClient";
 
-type Params = {
-  params: {
-    userId: string;
-  };
-};
-
-export default async function StatusPage({ params }: Params) {
+export default async function StatusPage({
+  params,
+}: {
+  params: { userId: string };
+}) {
   const { userId } = params;
 
   if (!userId) {
@@ -27,15 +25,14 @@ export default async function StatusPage({ params }: Params) {
       />
     );
   } catch (error) {
-  console.error("Erro ao buscar status do formulário:", error);
-  return (
-    <StatusClient
-      initialUserId={userId}
-      initialFormStatus="error"
-      initialFeedback="Erro ao buscar status do formulário"
-      initialIsLoading={false}
-    />
-  );
-}
-
+    console.error("Erro ao buscar status do formulário:", error);
+    return (
+      <StatusClient
+        initialUserId={userId}
+        initialFormStatus="error"
+        initialFeedback="Erro ao buscar status do formulário"
+        initialIsLoading={false}
+      />
+    );
+  }
 }
