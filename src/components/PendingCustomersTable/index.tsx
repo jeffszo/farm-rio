@@ -109,7 +109,7 @@ export default function PendingCustomersTable({
                 <S.TableHeaderFilter>
                   Status
                   <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    <option value="all">All Statuses</option>
+                    <option value="all">All status</option>
                     <option value="pending">Pending</option>
                     <option value="approvedByWholesale">Approved by Wholesale</option>
                     <option value="rejectedByWholesale">Rejected by Wholesale</option>
@@ -131,7 +131,22 @@ export default function PendingCustomersTable({
                   <S.TableData>
                     <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
                   </S.TableData>
-                  <S.TableData>{new Date(customer.created_at).toLocaleString()}</S.TableData>
+                  <S.TableData>
+  {new Date(customer.created_at).toLocaleString(
+    navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+    {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      // hour: '2-digit',
+      // minute: '2-digit',
+      // second: '2-digit',
+      // hour12: false, // Opcional: define formato 24h
+      // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
+      // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
+    }
+  )}
+</S.TableData>
                   <S.TableData>
                     <S.Button
                       onClick={() => onViewDetails(customer.id)}
@@ -160,7 +175,7 @@ export default function PendingCustomersTable({
               Filter by Status:
             </S.FilterLabel>
             <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-              <option value="all">All Statuses</option>
+              <option value="all">All status</option>
               <option value="pending">Pending</option>
               <option value="approvedByWholesale">Approved by Wholesale</option>
               <option value="rejectedByWholesale">Rejected by Wholesale</option>
@@ -179,7 +194,20 @@ export default function PendingCustomersTable({
                     Status: <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
                   </S.MobileListItemContent>
                   <S.MobileListItemContent>
-                    Date: {new Date(customer.created_at).toLocaleString()}
+                    Date: {new Date(customer.created_at).toLocaleString(
+    navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+    {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      // hour: '2-digit',
+      // minute: '2-digit',
+      // second: '2-digit',
+      // hour12: false, // Opcional: define formato 24h
+      // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
+      // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
+    }
+  )}
                   </S.MobileListItemContent>
                   <S.Button
                     onClick={() => onViewDetails(customer.id)}

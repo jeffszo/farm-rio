@@ -68,7 +68,7 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
           type="email"
           placeholder="example@farmrio.com"
           {...register("email", {
-            required: "Email é obrigatório",
+            required: "Email is required",
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
               message: "Email inválido",
@@ -85,10 +85,10 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
           type="password"
           placeholder="••••••••"
           {...register("password", {
-            required: "Senha é obrigatória",
+            required: "Password is required",
             minLength: {
               value: 6,
-              message: "Password must be at least 6 characters long",
+              message: "Password must be at least 8 characters long",
             },
           })}
         />

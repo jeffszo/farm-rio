@@ -1,5 +1,6 @@
+// src/app/customer/form/page.tsx
 "use client"
-import  React from "react"
+import React from "react"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter, useParams } from "next/navigation"
@@ -21,6 +22,7 @@ export default function EditFormPage() {
   const totalSteps = 4
   const router = useRouter()
   const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null)
+  const [previousFormStatus, setPreviousFormStatus] = useState<string | null>(null); // NOVO ESTADO: Para guardar o status anterior
 
   const {
     register,
@@ -35,8 +37,16 @@ export default function EditFormPage() {
     const fetchExistingData = async () => {
       try {
         const formData = await api.getCustomerFormById(id as string)
-        if ((formData as { resale_certificate?: string })?.resale_certificate) {
-          setExistingFileUrl((formData as { resale_certificate?: string }).resale_certificate ?? null)
+        if (formData) {
+          // Atualiza o estado do status anterior
+          setPreviousFormStatus(formData.status); //
+          if ((formData as { resale_certificate?: string })?.resale_certificate) {
+            setExistingFileUrl((formData as { resale_certificate?: string }).resale_certificate ?? null)
+          }
+          // Você também precisaria usar o 'setValue' do react-hook-form aqui
+          // para preencher os campos do formulário com os dados existentes
+          // Ex: setValue('customerInfo.legalName', formData.customer_name);
+          // Este preenchimento não está no escopo da sua pergunta, mas é importante para um "edit form" completo.
         }
       } catch (error) {
         console.error("Error fetching existing form data:", error)
@@ -79,6 +89,22 @@ export default function EditFormPage() {
         }
       }
 
+      // Determine the new status based on the previous form status
+      let newCalculatedStatus: string;
+      if (previousFormStatus === "rejected by the team wholesale") { //
+        newCalculatedStatus = "pending"; //
+      } else if (previousFormStatus === "rejected by the CSC team") { //
+        newCalculatedStatus = "data corrected by client"; //
+      } else {
+        // Para o caso de um formulário existente que não foi rejeitado, ou um estado inicial desconhecido.
+        // Ou se esta é a primeira submissão, mas este é um formulário de edição (o que é uma contradição).
+        // Se este é um 'EditFormPage', significa que já existe um formulário.
+        // Se não foi rejeitado, pode ir para "pending" (revisão geral) ou "data corrected by client" (se o usuário editou por outro motivo).
+        // A lógica de "pending" parece mais segura para qualquer re-submissão.
+        newCalculatedStatus = "pending";
+      }
+
+
       // Flatten the nested structure while preserving essential field names
       const flattenedFormData: {
         id: string // Make sure to include the ID
@@ -95,7 +121,7 @@ export default function EditFormPage() {
         buyer_email: string | null
         additional_shipping_addresses?: string[]
         additional_billing_addresses?: string[]
-        status: string
+        status: string // Agora dinâmico
       } = {
         id: id as string, // Include the ID in the data
         customer_name: formData.customerInfo?.legalName || null,
@@ -109,7 +135,7 @@ export default function EditFormPage() {
         ap_contact_email: formData.apContact?.email || null,
         buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
-        status: "data corrected by the client",
+        status: newCalculatedStatus, // USA O STATUS CALCULADO AQUI!
       }
 
       // Process multiple shipping addresses
@@ -147,17 +173,17 @@ export default function EditFormPage() {
         setApiError("Falha ao atualizar os dados. Verifique se você tem permissão.")
         return
       }
-      
+
 
       // Verify the update was successful by fetching the updated record
       const { data, error } = await supabase
       .from("customer_forms")
       .select("*")
       .eq("id", id)
-    
+
       console.log("🧪 Data recebida manualmente:", data)
       console.log("🧪 Erro manual:", error)
-    
+
       setIsModalOpen(true)
     } catch (error: unknown) {
       console.error("Error updating form:", error)
@@ -280,7 +306,7 @@ export default function EditFormPage() {
 
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
-                  <S.Input type="number" id="dba" {...register("customerInfo.dba")} />
+                  <S.Input placeholder="Trade name" type="string" id="dba" {...register("customerInfo.dba")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
@@ -301,7 +327,7 @@ export default function EditFormPage() {
                     id="dunNumber"
                     type="number"
                     {...register("customerInfo.dunNumber", {
-                      required: "DBA is required",
+                      required: "DUNS is required",
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
@@ -595,10 +621,10 @@ export default function EditFormPage() {
                     placeholder="example@hotmail.com"
                     {...register("apContact.email", {
                       required: "Email is required",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com)$/,
-                        message: "Only emails from Gmail, Outlook, Hotmail, or Yahoo are allowed",
-                      },
+      pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Please enter a valid email address.",
+                },
                     })}
                     error={!!errors.apContact?.email}
                   />
@@ -673,10 +699,10 @@ export default function EditFormPage() {
                     placeholder="example@hotmail.com"
                     {...register("buyerInfo.email", {
                       required: "Email is required",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com)$/,
-                        message: "Only emails from Gmail, Outlook, Hotmail, or Yahoo are allowed",
-                      },
+pattern: {
+    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    message: "Please enter a valid email address.",
+},
                     })}
                     error={!!errors.buyerInfo?.email}
                   />

@@ -416,7 +416,7 @@ export default function OnboardingForm() {
 
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
-                  <S.Input type="number" id="dba" {...register("customerInfo.dba")} />
+                  <S.Input placeholder="Trade name" type="text" id="dba" {...register("customerInfo.dba")} />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
@@ -731,10 +731,10 @@ export default function OnboardingForm() {
                     placeholder="example@hotmail.com"
                     {...register("apContact.email", {
                       required: "Email is required",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com)$/,
-                        message: "Only emails from Gmail, Outlook, Hotmail, or Yahoo are allowed",
-                      },
+                    pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Please enter a valid email address.",
+                },
                     })}
                     error={!!errors.apContact?.email}
                   />
@@ -809,10 +809,10 @@ export default function OnboardingForm() {
                     placeholder="example@hotmail.com"
                     {...register("buyerInfo.email", {
                       required: "Email is required",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com)$/,
-                        message: "Only emails from Gmail, Outlook, Hotmail, or Yahoo are allowed",
-                      },
+            pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Please enter a valid email address.",
+                },
                     })}
                     error={!!errors.buyerInfo?.email}
                   />

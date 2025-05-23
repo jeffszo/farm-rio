@@ -80,7 +80,7 @@ export default function StatusClient({
       <S.ReviewTitle>Request Status</S.ReviewTitle>
       <S.ReviewSubtitle>
         {formStatus === "pending" && (
-          <div>Your submission is under review.</div>
+          <p>Your submission is under review.</p>
         )}
 
         {formStatus === "approved by the wholesale team" && (
@@ -100,7 +100,8 @@ export default function StatusClient({
               data and submit again.
             </p>
 
-            {formStatus.includes("rejected by the CSC team") && (
+            {/* Este inner includes ainda usa includes, que pode ser substituído por '===' também se 'formStatus' for apenas "rejected by the CSC team" */}
+            {formStatus === "rejected by the CSC team" && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from CSC Team:</S.FeedbackTitle>
                 <S.FeedbackContent>
@@ -131,7 +132,7 @@ export default function StatusClient({
         )}
       </S.ReviewSubtitle>
 
-      {formStatus.includes("rejected by the CSC team") && (
+      {(formStatus === "rejected by the CSC team" || formStatus === "rejected by the team wholesale") && (
         <S.EditButton
           onClick={() => router.push(`/edit-form/${initialUserId}`)}
         >
