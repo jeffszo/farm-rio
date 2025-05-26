@@ -130,6 +130,10 @@ export default function StatusClient({
             Your form has already been rejected by the wholesale team
           </div>
         )}
+
+        {formStatus === "data corrected by the client" && (
+          <div>Your changed data is awaiting validation by the CSC team.</div>
+        )}
       </S.ReviewSubtitle>
 
       {(formStatus === "rejected by the CSC team" || formStatus === "rejected by the team wholesale") && (

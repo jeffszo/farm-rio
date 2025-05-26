@@ -91,18 +91,18 @@ export default function EditFormPage() {
 
       // Determine the new status based on the previous form status
       let newCalculatedStatus: string;
-      if (previousFormStatus === "rejected by the team wholesale") { //
-        newCalculatedStatus = "pending"; //
-      } else if (previousFormStatus === "rejected by the CSC team") { //
-        newCalculatedStatus = "data corrected by client"; //
+
+      
+      const normalizedStatus = previousFormStatus?.toLowerCase().trim()
+
+      if (normalizedStatus === "rejected by the team wholesale") {
+        newCalculatedStatus = "pending"
+      } else if (normalizedStatus === "rejected by the csc team") {
+        newCalculatedStatus = "data corrected by client"
       } else {
-        // Para o caso de um formulário existente que não foi rejeitado, ou um estado inicial desconhecido.
-        // Ou se esta é a primeira submissão, mas este é um formulário de edição (o que é uma contradição).
-        // Se este é um 'EditFormPage', significa que já existe um formulário.
-        // Se não foi rejeitado, pode ir para "pending" (revisão geral) ou "data corrected by client" (se o usuário editou por outro motivo).
-        // A lógica de "pending" parece mais segura para qualquer re-submissão.
-        newCalculatedStatus = "pending";
+        newCalculatedStatus = "pending"
       }
+
 
 
       // Flatten the nested structure while preserving essential field names

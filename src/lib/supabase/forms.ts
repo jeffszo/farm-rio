@@ -137,7 +137,7 @@ export async function updateForm(formData: string, formId: string) {
     const { data, error } = await supabase
       .from("customer_forms")
       .update(parsedData)
-      .eq("user_id", formId) // Use "id" instead of "user_id"
+      .eq("id", formId) // Use "id" instead of "user_id"
       .select() // Return the updated data
 
     if (error) {
