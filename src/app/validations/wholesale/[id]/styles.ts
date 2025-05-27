@@ -1,9 +1,9 @@
 import styled from "styled-components"
 
 export const ContainerMain = styled.div`
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
   /* height: 100vh; */
 
 `
@@ -11,14 +11,14 @@ export const ContainerMain = styled.div`
 export const Container = styled.div`
   max-width: 1200px;
   width: 100%;
-  margin: 3rem auto; 
+  margin: 3rem auto;
   padding: 1.8rem;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   background-color: #ffffff;
   border-radius: 8px;
-  
+
 `
 
 export const Header = styled.div`
@@ -47,7 +47,8 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* MODIFICAÇÃO AQUI: A coluna do meio (endereços) agora é 2x mais larga */
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
 
@@ -204,11 +205,6 @@ export const ModalButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.2s;
-
-
-
-
-  
 `
 
 export const Select = styled.select`
@@ -302,8 +298,7 @@ export const EditWrapper = styled.div`
 export const InlineEditWrapper = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 4px; 
- 
+  gap: 4px;
 `
 
 export const SmallInput = styled.input`
@@ -325,7 +320,7 @@ export const CheckButton = styled.button`
   flex-direction: column;
   margin-left: 4px;
 
-  
+
   &:hover {
     background-color: rgba(0, 128, 0, 0.1);
   }
@@ -346,7 +341,7 @@ export const CancelButton = styled.button`
   border-radius: 4px;
   flex-direction: column;
   margin-left: 8px;
-  
+
   &:hover {
     background-color: rgba(229, 62, 62, 0.1);
   }
@@ -374,3 +369,30 @@ export const ContainerCheck = styled.div`
   align-items: center;
 
 `
+
+export const AddressBlock = styled.div`
+  background: #f0f4f8;
+  padding: 0.8rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e2e8f0;
+  color: #2d3748;
+
+  div {
+    font-size: 0.875rem;
+    padding: 0.1rem 0;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #2d3748;
+  }
+`;
+
+export const AddressTitle = styled.h4`
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1a202c;
+`;

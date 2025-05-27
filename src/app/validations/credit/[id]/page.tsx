@@ -20,6 +20,27 @@ import {
   X
 } from "lucide-react"
 
+// Interface definition for a single address (AddressDetail)
+interface AddressDetail {
+  street?: string;
+  zipCode?: string;
+  city?: string;
+  state?: string;
+  county?: string;
+  country?: string;
+  // Add other address properties if they exist
+  // Add possible variations of key names that might come from the backend
+  street_name?: string; // Example of variation
+  address_city?: string; // Example of variation
+  state_province?: string; // Example of variation
+  zip_code?: string; // Example of variation
+  postal_code?: string; // Example of variation
+  address_county?: string; // Example of variation
+  suburb?: string; // Example of variation
+  address_country?: string; // Example of variation
+}
+
+// Updated CustomerForm interface to reflect that addresses are arrays of objects
 interface CustomerForm {
   id: string
   customer_name: string
@@ -27,8 +48,8 @@ interface CustomerForm {
   duns_number: string
   dba_number: string
   resale_certificate: string
-  billing_address: string
-  shipping_address: string
+  billing_address: AddressDetail[]; // Updated to AddressDetail[]
+  shipping_address: AddressDetail[]; // Updated to AddressDetail[]
   ap_contact_name: string
   ap_contact_email: string
   buyer_name: string
@@ -78,6 +99,28 @@ const CURRENCIES = ["USD", "EUR", "GBP"]
 
 const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days"]
 
+// Helper function to format an address object into a single string
+const formatAddress = (address: AddressDetail): string => {
+  const parts = [];
+
+  // Check for defined keys in the interface and also common variations
+  const street = address.street || address.street_name || '';
+  const city = address.city || address.address_city || '';
+  const state = address.state || address.state_province || '';
+  const zipCode = address.zipCode || address.zip_code || address.postal_code || '';
+  const county = address.county || address.address_county || address.suburb || '';
+  const country = address.country || address.address_country || '';
+
+  if (street) parts.push(street);
+  if (city) parts.push(city);
+  if (state) parts.push(state);
+  if (zipCode) parts.push(zipCode);
+  if (county) parts.push(county);
+  if (country) parts.push(country);
+
+  return parts.join(', ') || 'Not provided';
+};
+
 export default function ValidationDetailsPage() {
   const { id } = useParams()
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
@@ -114,8 +157,56 @@ export default function ValidationDetailsPage() {
       try {
         setLoading(true)
         const data = await api.getCustomerFormById(id as string)
+        console.log("ID received:", id);
+        console.log("RAW form data (before processing):", data);
+
         if (!data) throw new Error("Formulário não encontrado.")
-        setCustomerForm(data)
+
+        // Function to process and ensure address data are arrays of objects
+        const processAddressArray = (addrData: unknown): AddressDetail[] => {
+            if (!addrData) return []; // Return empty array if no data
+
+            // If it's a single JSON string
+            if (typeof addrData === 'string') {
+                try {
+                    const parsed = JSON.parse(addrData);
+                    // If the parsed JSON is an array, return it; otherwise, wrap the object in an array
+                    return Array.isArray(parsed) ? parsed : [parsed];
+                } catch (e) {
+                    console.error("Error parsing address string JSON:", e);
+                    return []; // Return empty array in case of parsing error
+                }
+            }
+            // If it's already an array, iterate over it to ensure all items are objects
+            if (Array.isArray(addrData)) {
+                return addrData.map(item => {
+                    if (typeof item === 'string') {
+                        try {
+                            return JSON.parse(item);
+                        } catch (e) {
+                            console.error("Error parsing address item in array:", e);
+                            return {}; // Return empty object if an item fails parsing
+                        }
+                    }
+                    return item; // Item is already an object
+                });
+            }
+            // If it's a single object (not a string and not an array), wrap it in an array
+            return [addrData];
+        };
+
+        const processedData: CustomerForm = {
+            ...data,
+            // Apply the processing function for billing_address and shipping_address
+            billing_address: processAddressArray(data.billing_address),
+            shipping_address: processAddressArray(data.shipping_address),
+        };
+
+        setCustomerForm(processedData);
+        // Log processed address data for debugging
+        console.log("Processed Billing Addresses (after parse):", processedData.billing_address);
+        console.log("Processed Shipping Addresses (after parse):", processedData.shipping_address);
+
       } catch (err) {
         console.error("Erro ao buscar detalhes do cliente:", err)
         setError(err instanceof Error ? err.message : "Erro desconhecido")
@@ -207,7 +298,7 @@ export default function ValidationDetailsPage() {
 
       if (isNaN(numericValue)) return
 
-      setTerms((prev) => ({ ...prev, [field]: value }))
+      setTerms((prev) => ({ ...prev, [field]: numericValue })) // Changed value to numericValue for these fields
     } else {
       setTerms((prev) => ({ ...prev, [field]: value }))
     }
@@ -216,7 +307,7 @@ export default function ValidationDetailsPage() {
   const handleApproval = async (approved: boolean) => {
     try {
       setLoading(true);
-  
+
       if (approved) {
         const requiredFields: (keyof CreditTerms)[] = [
           "invoicing_company",
@@ -227,15 +318,15 @@ export default function ValidationDetailsPage() {
         const missingFields = requiredFields.filter((field) => !terms[field]);
         if (missingFields.length > 0) {
           throw new Error(
-            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
+            `⚠️ Por favor, preencha todos os campos obrigatórios: ${missingFields.join(", ")}`
           );
         }
-  
+
         if (terms.credit_limit < 0 || terms.discount < 0) {
-          throw new Error("⚠️ Credit limit and discount must be non-negative!");
+          throw new Error("⚠️ O limite de crédito e o desconto devem ser não-negativos!");
         }
       }
-  
+
       await api.validateCreditCustomer(id as string, approved, {
         credit_invoicing_company: terms.invoicing_company,
         credit_warehouse: terms.warehouse,
@@ -244,11 +335,11 @@ export default function ValidationDetailsPage() {
         credit_credit: terms.credit_limit,
         credit_discount: terms.discount,
       });
-  
+
       setModalContent({
         title: "Ok!",
         description: approved
-          ? "Client approved! Forwarded to the CSC team."
+          ? "Customer approved! Forwarded to CSC team."
           : "Customer rejected!",
       });
       setShowModal(true);
@@ -264,7 +355,7 @@ export default function ValidationDetailsPage() {
       setLoading(false);
     }
   };
-  
+
   const closeModal = () => {
     setShowModal(false)
     router.push("/validations/credit")
@@ -341,10 +432,30 @@ export default function ValidationDetailsPage() {
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
             <S.FormRow>
-              <strong>Billing:</strong> {customerForm.billing_address}
+              <strong>Billing Addresses:</strong>
+              {customerForm.billing_address && customerForm.billing_address.length > 0 ? (
+                customerForm.billing_address.map((address, index) => (
+                  <S.AddressBlock key={index}>
+                    <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+                    <div>{formatAddress(address)}</div>
+                  </S.AddressBlock>
+                ))
+              ) : (
+                <div>No billing addresses provided.</div>
+              )}
             </S.FormRow>
             <S.FormRow>
-              <strong>Shipping:</strong> {customerForm.shipping_address}
+              <strong>Shipping Addresses:</strong>
+              {customerForm.shipping_address && customerForm.shipping_address.length > 0 ? (
+                customerForm.shipping_address.map((address, index) => (
+                  <S.AddressBlock key={index}>
+                    <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+                    <div>{formatAddress(address)}</div>
+                  </S.AddressBlock>
+                ))
+              ) : (
+                <div>No shipping addresses provided.</div>
+              )}
             </S.FormRow>
           </S.FormSection>
 

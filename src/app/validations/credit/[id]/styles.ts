@@ -266,7 +266,7 @@ export const TermsSection = styled.div`
   }
 `
 export const TermsCardsContainer = styled.div`
-
+  
 `
 
 export const TermsCard = styled.div`
@@ -347,7 +347,7 @@ export const InlineEditWrapper = styled.div`
   display: inline-flex;
   align-items: center; 
   gap: 4px;
- 
+  
 `
 
 export const SmallInput = styled.input`
@@ -418,3 +418,20 @@ export const ContainerCheck = styled.div`
   align-items: center;
 
 `
+
+export const AddressBlock = styled.div`
+  background: #f0f4f8;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #2d3748;
+  line-height: 1.4;
+`;
+
+export const AddressTitle = styled.span`
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+  display: block; /* Make title take full width for better separation */
+`;

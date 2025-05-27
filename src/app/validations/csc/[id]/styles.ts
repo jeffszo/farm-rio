@@ -2,14 +2,13 @@ import styled from "styled-components"
 
 export const ContainerMain = styled.div`
   display: flex;
-  justify-content: center; 
-  align-items: center; 
-  height: 120vh;
-
+  justify-content: center;
+  align-items: center;
+  margin-top: 5rem;
 `
 
 export const Container = styled.div`
-  max-width: 1000px;
+  width: 1200px;
   padding: 1.8rem;
   display: flex;
   flex-direction: column;
@@ -21,8 +20,8 @@ export const Container = styled.div`
   @media (max-width: 768px) {
     max-width: 90%;
   }
-  
-  `
+
+`
 
 export const Header = styled.div`
   display: flex;
@@ -33,7 +32,7 @@ export const Header = styled.div`
   @media (max-width: 768px) {
     width: 100%;
   }
-  
+
 `
 
 export const Title = styled.h2`
@@ -82,7 +81,7 @@ export const SectionTitle = styled.h3`
   gap: 0.25rem;
 `
 
-export const FormRow = styled.p`
+export const FormRow = styled.div`
   font-size: 0.875rem;
   color: #4a5568;
   padding: 0.25rem 0;
@@ -267,4 +266,71 @@ export const Label = styled.label`
   font-size: 0.95rem;
   font-weight: 600;
   color: #2d3748;
+`;
+
+export const AddressBlock = styled.div`
+  background: #f0f4f8;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #2d3748;
+  line-height: 1.4;
+`;
+
+export const AddressTitle = styled.span`
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+  display: block; /* Make title take full width for better separation */
+`;
+
+// New styles for editable fields
+export const EditableValueContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+`;
+
+export const EditIcon = styled.span`
+  cursor: pointer;
+  color: #606060;
+  &:hover {
+    color: #1a202c;
+  }
+`;
+
+export const EditInput = styled.input`
+  flex-grow: 1;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #2d3748;
+  &:focus {
+    outline: none;
+    border-color: #4a5568;
+    box-shadow: 0 0 0 1px #4a5568;
+  }
+`;
+
+export const EditButtonContainer = styled.div`
+  display: flex;
+  gap: 0.25rem;
+`;
+
+export const ActionButton = styled.button<{ color?: string }>`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ color }) => color || '#4a5568'};
+
+  &:hover {
+    color: ${({ color }) => (color === 'red' ? '#e53e3e' : color === 'green' ? '#38a169' : '#1a202c')};
+  }
 `;

@@ -43,14 +43,27 @@ export default function PendingCustomersTable({
   const filteredCustomers = useMemo(() => {
     if (filterStatus === "all") return customers
 
+    // Garanta que essas strings batem EXATAMENTE com as do banco de dados
     const statusMap = {
       pending: "pending",
       approvedByWholesale: "approved by the wholesale team",
-      rejectedByWholesale: "rejected by wholesale team",
+      // CORRIGIDO: Use a string exata do banco de dados para rejeições
+      rejectedByWholesale: "rejected by the wholesale team", // <-- Verifique esta string no seu DB
       approvedByCredit: "approved by the credit team",
-      rejectedByCredit: "rejected by credit team",
+      // CORRIGIDO: Use a string exata do banco de dados para rejeições
+      rejectedByCredit: "rejected by the credit team", // <-- Verifique esta string no seu DB
       approvedByCSC: "approved by the CSC team",
+      dataByClient: "data corrected by client", // <-- Esta string deve bater EXATAMENTE com o DB
     }
+
+    // Adicione console.log para depuração
+    console.log("Current filterStatus:", filterStatus);
+    console.log("Target status from map:", statusMap[filterStatus as keyof typeof statusMap]);
+    customers.forEach(customer => {
+      if (customer.status === statusMap[filterStatus as keyof typeof statusMap]) {
+        console.log("MATCH FOUND for customer:", customer.customer_name, "with status:", customer.status);
+      }
+    });
 
     return customers.filter((customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap])
   }, [customers, filterStatus])
@@ -116,6 +129,7 @@ export default function PendingCustomersTable({
                     <option value="approvedByCredit">Approved by Credit</option>
                     <option value="rejectedByCredit">Rejected by Credit</option>
                     <option value="approvedByCSC">Approved by CSC</option>
+                    <option value="dataByClient">Data corrected by client</option>
                   </S.TableFilterSelect>
                 </S.TableHeaderFilter>
               </S.TableHeader>
@@ -132,21 +146,21 @@ export default function PendingCustomersTable({
                     <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
                   </S.TableData>
                   <S.TableData>
-  {new Date(customer.created_at).toLocaleString(
-    navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
-    {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      // hour: '2-digit',
-      // minute: '2-digit',
-      // second: '2-digit',
-      // hour12: false, // Opcional: define formato 24h
-      // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
-      // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
-    }
-  )}
-</S.TableData>
+                    {new Date(customer.created_at).toLocaleString(
+                      navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+                      {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        // hour: '2-digit',
+                        // minute: '2-digit',
+                        // second: '2-digit',
+                        // hour12: false, // Opcional: define formato 24h
+                        // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
+                        // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
+                      }
+                    )}
+                  </S.TableData>
                   <S.TableData>
                     <S.Button
                       onClick={() => onViewDetails(customer.id)}
@@ -182,6 +196,7 @@ export default function PendingCustomersTable({
               <option value="approvedByCredit">Approved by Credit</option>
               <option value="rejectedByCredit">Rejected by Credit</option>
               <option value="approvedByCSC">Approved by CSC</option>
+              <option value="dataByClient">Data corrected by client</option>
             </S.TableFilterSelect>
           </S.MobileFilterContainer>
 
@@ -195,19 +210,19 @@ export default function PendingCustomersTable({
                   </S.MobileListItemContent>
                   <S.MobileListItemContent>
                     Date: {new Date(customer.created_at).toLocaleString(
-    navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
-    {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      // hour: '2-digit',
-      // minute: '2-digit',
-      // second: '2-digit',
-      // hour12: false, // Opcional: define formato 24h
-      // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
-      // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
-    }
-  )}
+                      navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+                      {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        // hour: '2-digit',
+                        // minute: '2-digit',
+                        // second: '2-digit',
+                        // hour12: false, // Opcional: define formato 24h
+                        // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
+                        // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
+                      }
+                    )}
                   </S.MobileListItemContent>
                   <S.Button
                     onClick={() => onViewDetails(customer.id)}

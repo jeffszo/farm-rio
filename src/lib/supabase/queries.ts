@@ -85,7 +85,7 @@ export async function getPendingCSCValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" }) // 🔥 Pegando a contagem exata dos registros
-    .in("status", ["approved by the credit team", "approved by the CSC team", "data corrected by the client"]) 
+    .in("status", ["approved by the credit team", "approved by the CSC team", "data corrected by client"]) 
     .range(from, to) // 🔥 Pegando apenas os clientes da página atual
     .order("created_at", { ascending: true })
 

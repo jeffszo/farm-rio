@@ -1,10 +1,20 @@
+// src/app/validations/csc/[id]/page.tsx
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
 import * as S from "./styles";
-import { User, MapPin, Mail, CircleCheck } from "lucide-react";
+import { User, MapPin, Mail, CircleCheck, Pencil, Check, X } from "lucide-react"; // Import Pencil, Check, X
+
+interface Address {
+  street: string;
+  zipCode: string;
+  city: string;
+  state: string;
+  county: string;
+  country: string;
+}
 
 interface CustomerForm {
   id: string;
@@ -13,8 +23,8 @@ interface CustomerForm {
   duns_number: string;
   dba_number: string;
   resale_certificate: string;
-  billing_address: string;
-  shipping_address: string;
+  billing_address: string; // This is a JSON string of Address[]
+  shipping_address: string; // This is a JSON string of Address[]
   ap_contact_name: string;
   ap_contact_email: string;
   buyer_name: string;
@@ -28,7 +38,6 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const [user, setUser] = useState<{ email: string; role: string } | null>(null)
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -36,6 +45,11 @@ export default function ValidationDetailsPage() {
   });
   const [feedback, setFeedback] = useState("");
   const router = useRouter();
+
+  // States for editable DUNS field ONLY
+  const [editingDuns, setEditingDuns] = useState(false);
+  const [editedDuns, setEditedDuns] = useState("");
+
 
   interface ValidationDetails {
     wholesale_invoicing_company: string;
@@ -77,23 +91,28 @@ export default function ValidationDetailsPage() {
 
   useEffect(() => {
     const fetchValidationDetails = async () => {
-      const validationData = await api.getCustomerValidationDetails(
-        id as string
-      );
-      if (validationData) setValidation(validationData);
+      // Ensure id is a string before passing to API
+      if (typeof id === 'string') {
+        const validationData = await api.getCustomerValidationDetails(id);
+        if (validationData) setValidation(validationData);
+      }
     };
 
     if (id) fetchValidationDetails();
   }, [id]);
 
-  // ✅ Obtém os detalhes do cliente
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
         setLoading(true);
-        const data = await api.getCustomerFormById(id as string);
-        if (!data) throw new Error("Formulário não encontrado.");
-        setCustomerForm(data);
+        // Ensure id is a string before passing to API
+        if (typeof id === 'string') {
+          const data = await api.getCustomerFormById(id);
+          if (!data) throw new Error("Formulário não encontrado.");
+          setCustomerForm(data);
+          // Initialize editable DUNS state with fetched data
+          setEditedDuns(data.duns_number || "");
+        }
       } catch (err) {
         console.error("Erro ao buscar detalhes do cliente:", err);
         setError(err instanceof Error ? err.message : "Erro desconhecido");
@@ -105,12 +124,36 @@ export default function ValidationDetailsPage() {
     if (id) fetchCustomerDetails();
   }, [id]);
 
-  // ✅ Aprovação/Rejeição do Cliente
+  // Function to handle saving edits for D-U-N-S
+ const handleSaveDuns = async () => {
+    if (!customerForm || typeof id !== 'string') return; // Ensure customerForm and id are valid
+    try {
+      setLoading(true);
+      // Alterado para passar apenas id e editedDuns
+      await api.updateDunsNumber(id, editedDuns);
+      setCustomerForm(prev => prev ? { ...prev, duns_number: editedDuns } : null);
+      setEditingDuns(false);
+    } catch (err) {
+      console.error("Error updating D-U-N-S:", err);
+      setModalContent({
+        title: "Erro!",
+        description: err instanceof Error ? err.message : "Erro ao atualizar D-U-N-S.",
+      });
+      setShowModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleApproval = async (approved: boolean) => {
     try {
       setLoading(true);
+      // Ensure id is a string before passing to API
+      if (typeof id !== 'string') {
+        throw new Error("ID do cliente inválido.");
+      }
 
-      // Check if feedback is provided when rejecting
       if (!approved && !feedback.trim()) {
         setModalContent({
           title: "Error!",
@@ -120,8 +163,7 @@ export default function ValidationDetailsPage() {
         return;
       }
 
-      // Pass the feedback to the API function
-      await api.validateCSCCustomer(id as string, approved, feedback);
+      await api.validateCSCCustomer(id, approved, feedback);
 
       setModalContent({
         title: "Ok!",
@@ -144,12 +186,60 @@ export default function ValidationDetailsPage() {
 
   const closeModal = () => {
     setShowModal(false);
-    router.push("/validations/csc");
+    // If modal is for success/rejection, redirect
+    if (modalContent.title === "Ok!" || modalContent.title === "Error!") {
+      router.push("/validations/csc");
+    }
+    // If modal is for update errors, just close it.
   };
+
+  // Helper function to render an address
+  const renderAddress = (address: Address) => (
+    <>
+      {address.street && <p>{address.street}</p>}
+      {address.city && address.state && address.zipCode && (
+        <p>{address.city}, {address.state} {address.zipCode}</p>
+      )}
+      {address.county && <p>{address.county}</p>}
+      {address.country && <p>{address.country}</p>}
+    </>
+  );
+
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Erro: {error}</S.Message>;
   if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>;
+
+  let parsedBillingAddresses: Address[] = [];
+  try {
+    // Only parse if customerForm.billing_address exists and is a string
+    if (customerForm.billing_address && typeof customerForm.billing_address === 'string') {
+        parsedBillingAddresses = JSON.parse(customerForm.billing_address);
+    }
+  } catch (e) {
+    console.error("Error parsing billing address JSON:", e);
+    // Fallback if parsing fails or data is not a string, display as plain text or empty
+    parsedBillingAddresses = [{
+      street: customerForm.billing_address || '', // Use empty string if null/undefined
+      zipCode: '', city: '', state: '', county: '', country: ''
+    }];
+  }
+
+  let parsedShippingAddresses: Address[] = [];
+  try {
+    // Only parse if customerForm.shipping_address exists and is a string
+    if (customerForm.shipping_address && typeof customerForm.shipping_address === 'string') {
+        parsedShippingAddresses = JSON.parse(customerForm.shipping_address);
+    }
+  } catch (e) {
+    console.error("Error parsing shipping address JSON:", e);
+    // Fallback if parsing fails or data is not a string, display as plain text or empty
+    parsedShippingAddresses = [{
+      street: customerForm.shipping_address || '', // Use empty string if null/undefined
+      zipCode: '', city: '', state: '', county: '', country: ''
+    }];
+  }
+
 
   return (
     <S.ContainerMain>
@@ -171,14 +261,44 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
             </S.FormRow>
+
+            {/* D-U-N-S Number (Editable) */}
             <S.FormRow>
               <strong>D-U-N-S:</strong>{" "}
-              {customerForm.dba_number || "Not provided"}
+              {editingDuns ? (
+                <S.EditableValueContainer>
+                  <S.EditInput
+                    type="text"
+                    value={editedDuns}
+                    onChange={(e) => setEditedDuns(e.target.value)}
+                  />
+                  <S.EditButtonContainer>
+                    <S.ActionButton onClick={handleSaveDuns} color="green">
+                      <Check size={16} />
+                    </S.ActionButton>
+                    <S.ActionButton onClick={() => { setEditingDuns(false); setEditedDuns(customerForm.duns_number || ""); }} color="red">
+                      <X size={16} />
+                    </S.ActionButton>
+                  </S.EditButtonContainer>
+                </S.EditableValueContainer>
+              ) : (
+                <S.EditableValueContainer>
+                  {/* The className "flex items-center ml-1" seems like Tailwind, ensure it's compatible or remove if not needed */}
+                  <span className="flex items-center ml-1">
+                    {customerForm.duns_number || "Not provided"}
+                    <S.EditIcon onClick={() => setEditingDuns(true)}>
+                      <Pencil size={16} />
+                    </S.EditIcon>
+                  </span>
+                </S.EditableValueContainer>
+              )}
             </S.FormRow>
 
+            {/* DBA Number (NOT Editable - Simple Display) */}
             <S.FormRow>
-              <strong>DBA:</strong> {customerForm.duns_number || "Not provided"}
+              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
+
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
@@ -198,12 +318,21 @@ export default function ValidationDetailsPage() {
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
-            <S.FormRow>
-              <strong>Billing:</strong> {customerForm.billing_address}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Shipping:</strong> {customerForm.shipping_address}
-            </S.FormRow>
+            {/* Display Billing Addresses */}
+            {parsedBillingAddresses.length > 0 ? parsedBillingAddresses.map((address, index) => (
+              <S.AddressBlock key={`billing-${index}`}>
+                <S.AddressTitle>Billing Address {parsedBillingAddresses.length > 1 ? index + 1 : ''}:</S.AddressTitle>
+                {renderAddress(address)}
+              </S.AddressBlock>
+            )) : <S.AddressBlock>No billing address provided.</S.AddressBlock>} {/* Fallback for no addresses */}
+
+            {/* Display Shipping Addresses */}
+            {parsedShippingAddresses.length > 0 ? parsedShippingAddresses.map((address, index) => (
+              <S.AddressBlock key={`shipping-${index}`}>
+                <S.AddressTitle>Shipping Address {parsedShippingAddresses.length > 1 ? index + 1 : ''}:</S.AddressTitle>
+                {renderAddress(address)}
+              </S.AddressBlock>
+            )) : <S.AddressBlock>No shipping address provided.</S.AddressBlock>} {/* Fallback for no addresses */}
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
@@ -289,7 +418,6 @@ export default function ValidationDetailsPage() {
           </S.FeedbackGroup>
         )}
 
-        {/* ✅ Botões de Aprovação/Reprovação */}
         <S.ButtonContainer>
           {customerForm.status === "approved by the CSC team" ? (
             <S.Button onClick={handleFinish} variant="primary">
