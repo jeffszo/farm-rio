@@ -266,7 +266,7 @@ export default function OnboardingForm() {
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
                   <S.Input
-                    type="number"
+                    type="string"
                     id="taxId"
                     {...register("customerInfo.taxId", {
                       required: "Tax ID is required",
