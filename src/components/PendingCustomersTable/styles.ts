@@ -22,7 +22,7 @@ export const TitleWrapper = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 1rem;
+
   }
 `
 
@@ -33,6 +33,14 @@ export const TitleContainer = styled.div`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+
+    @media (max-width: 768px) {
+     position: static;
+     justify-content: center;
+     width: 100%;
+     left: 0;
+     transform: translateX(-25%);
+}
 `
 
 export const Title = styled.h3`
@@ -40,6 +48,10 @@ export const Title = styled.h3`
   font-weight: bold;
   color: #1a202c;
   margin-left: 0.5rem;
+
+   @media (max-width: 768px) {
+    margin: 0;
+  }
 `
 
 export const ExportButton = styled.button`
@@ -60,6 +72,9 @@ export const ExportButton = styled.button`
   &:hover {
     background-color: #555555;
   }
+
+    @media (max-width: 768px) {
+}
 `
 
 export const TotalCount = styled.p`
@@ -67,6 +82,10 @@ export const TotalCount = styled.p`
   font-size: 0.9rem;
   margin-top: 1rem;
   text-align: center;
+
+    @media (max-width: 768px) {
+      margin-top: 0.5rem;
+}
 `
 
 export const Message = styled.p`
@@ -255,11 +274,15 @@ export const Button = styled.button`
 
 export const Pagination = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-top: 1.5rem;
   margin-bottom: 2rem;
   gap: 2rem;
+   position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 `
 
 export const PageInfo = styled.span`
@@ -305,7 +328,8 @@ export const MobileFilterContainer = styled.div`
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   
-  @media (max-width: 480px) {
+  @media (max-width: 768px) {
+    margin: 2rem 0 0 0;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;

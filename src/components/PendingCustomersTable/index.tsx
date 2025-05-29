@@ -186,7 +186,7 @@ export default function PendingCustomersTable({
           <S.MobileFilterContainer>
             <S.FilterLabel>
               <Filter size={16} />
-              Filter by Status:
+              Filter by status:
             </S.FilterLabel>
             <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All status</option>

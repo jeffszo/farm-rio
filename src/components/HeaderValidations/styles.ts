@@ -5,6 +5,8 @@ export const HeaderContainer = styled.header`
   background-color: ${theme.colors.backgroundHeader};
   padding: ${theme.spacing[4]} ${theme.spacing[2]};
   border-bottom: 1px solid ${theme.colors.border};
+
+
 `
 
 export const HeaderContent = styled.div`
@@ -12,6 +14,10 @@ export const HeaderContent = styled.div`
   display: flex;
   justify-content: space-between; /* Alterado para distribuir espaço */
   align-items: center;
+
+  @media (max-width: 768px) {
+    margin: auto 2rem;
+  }
 `
 
 

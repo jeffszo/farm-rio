@@ -5,6 +5,11 @@ export const ContainerMain = styled.div`
   justify-content: center;
   align-items: center;
   height: 85vh;
+
+    @media (max-width: 768px) {
+    margin: 3rem 0;
+    height: 100%;
+}
 `
 
 export const FormContainer = styled.div`
@@ -14,11 +19,11 @@ export const FormContainer = styled.div`
   background: #ffffff;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  margin-top: 8rem;
+  margin-top: 2rem;
 
-  @media (max-width: 868px) {
-    margin-top: 12rem;
-  }
+  @media (max-width: 768px) {
+    height: 100%;
+}
 
 
 `

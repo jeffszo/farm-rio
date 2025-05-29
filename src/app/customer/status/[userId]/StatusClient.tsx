@@ -141,8 +141,8 @@ export default function StatusClient({
           onClick={() => router.push(`/edit-form/${initialUserId}`)}
         >
           <FileEdit size={18} />
-          Edit Your Information
-        </S.EditButton>
+Edit your information        
+</S.EditButton>
       )}
     </S.ReviewContainer>
   );
