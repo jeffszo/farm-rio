@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { api } from "../../../../lib/supabase/index"
-import * as S from "./styles"
+import React, { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { api } from "../../../../lib/supabase/index";
+import { CircleCheck } from "lucide-react";
+import * as S from "./styles";
 import {
   User,
   MapPin,
@@ -14,11 +15,10 @@ import {
   Calendar,
   DollarSign,
   Percent,
-  CircleCheck,
   Pencil,
   Check,
-  X
-} from "lucide-react"
+  X,
+} from "lucide-react";
 
 // Interface definition for a single address (AddressDetail)
 interface AddressDetail {
@@ -42,68 +42,96 @@ interface AddressDetail {
 
 // Updated CustomerForm interface to reflect that addresses are arrays of objects
 interface CustomerForm {
-  id: string
-  customer_name: string
-  sales_tax_id: string
-  duns_number: string
-  dba_number: string
-  resale_certificate: string
+  id: string;
+  customer_name: string;
+  sales_tax_id: string;
+  duns_number: string;
+  dba_number: string;
+  resale_certificate: string;
   billing_address: AddressDetail[]; // Updated to AddressDetail[]
   shipping_address: AddressDetail[]; // Updated to AddressDetail[]
-  ap_contact_name: string
-  ap_contact_email: string
-  buyer_name: string
-  buyer_email: string
-  status: string
-  created_at: string
-  credit_invoicing_company?: string
-  credit_warehouse?: string
-  credit_currency?: string
-  credit_terms?: string
-  credit_credit?: number
-  credit_discount?: number
+  ap_contact_name: string;
+  ap_contact_email: string;
+  buyer_name: string;
+  buyer_email: string;
+  status: string;
+  created_at: string;
+  // Campos relacionados ao crédito
+  credit_invoicing_company?: string;
+  credit_warehouse?: string;
+  credit_currency?: string;
+  credit_terms?: string;
+  credit_credit?: number;
+  credit_discount?: number;
+  // Campos relacionados ao atacado (mantidos para referência se ambos os fluxos estiverem na mesma página)
+  atacado_invoicing_company?: string;
+  atacado_warehouse?: string;
+  atacado_currency?: string;
+  atacado_terms?: string;
+  atacado_credit?: number;
+  atacado_discount?: number;
 }
 
-interface ValidationDetails {
-  wholesale_invoicing_company: string
-  wholesale_warehouse: string
-  wholesale_currency: string
-  wholesale_terms: string
-  wholesale_credit: string
-  wholesale_discount: number
-  credit_invoicing_company: string
-  credit_warehouse: string
-  credit_currency: string
-  credit_terms: string
-  credit_credit: string
-  credit_discount: number
-}
 
+
+// Interface para os termos de validação do Credit (mais consistente com o uso no componente)
 interface CreditTerms {
-  invoicing_company: string
-  warehouse: string
-  currency: string
-  payment_terms: string
-  credit_limit: number
-  discount: number
+  invoicing_company: string;
+  warehouse: string;
+  currency: string;
+  payment_terms: string;
+  credit_limit: number;
+  discount: number;
 }
 
-const INVOICING_COMPANIES = [
-  "Plantage Rio Inc - United States",
-  "Soma Brands International - European Union",
-  "Soma Brands UK Limited - United Kingdom",
-  "Soma Brands France - France",
-]
+interface ValidationDetails { // Interface para dados de validação existentes (se houver)
+  wholesale_invoicing_company: string;
+  wholesale_warehouse: string;
+  wholesale_currency: string;
+  wholesale_terms: string;
+  wholesale_credit: string;
+  wholesale_discount: number;
+  credit_invoicing_company: string;
+  credit_warehouse: string;
+  credit_currency: string;
+  credit_terms: string;
+  credit_credit: string;
+  credit_discount: number;
+}
 
-const CURRENCIES = ["USD", "EUR", "GBP"]
 
-const PAYMENT_TERMS = ["100% Prior Ship", "Net 45 Days", "Net 30 Days", "Net 90 Days", "Net 15 Days"]
+// Dados de empresas de faturamento que possuem armazéns, associados a moedas.
+// Assumimos que esta informação viria do backend, mas para o exemplo, é estática.
+// Mapeamento de moeda para empresas de faturamento relevantes.
+const INVOICING_COMPANIES_BY_CURRENCY: Record<string, string[]> = {
+    "USD": [
+        "Plantage Rio Inc - United States"
+    ],
+    "EUR": [
+        "Soma Brands International - European Union",
+        "Soma Brands France - France"
+    ],
+    "GBP": [
+        "Soma Brands UK Limited - United Kingdom"
+    ],
+};
+
+const CURRENCIES = ["USD", "EUR", "GBP"];
+
+const PAYMENT_TERMS = [
+  "100% Prior Ship",
+  "Net 45 Days",
+  "Net 30 Days",
+  "Net 90 Days",
+  "Net 15 Days",
+];
 
 // Helper function to format an address object into a single string
 const formatAddress = (address: AddressDetail): string => {
   const parts = [];
 
   // Check for defined keys in the interface and also common variations
+  // Based on your console.log, keys are in camelCase.
   const street = address.street || address.street_name || '';
   const city = address.city || address.address_city || '';
   const state = address.state || address.state_province || '';
@@ -122,84 +150,90 @@ const formatAddress = (address: AddressDetail): string => {
 };
 
 export default function ValidationDetailsPage() {
-  const { id } = useParams()
-  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  // const [user, setUser] = useState<{ email: string; role: string } | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [modalContent, setModalContent] = useState({ title: "", description: "" })
-  const router = useRouter()
-  const [validation, setValidation] = useState<ValidationDetails | null>(null)
-  const [newDuns, setNewDuns] = useState("")
-  const [editingDuns, setEditingDuns] = useState(false)
-  const [savingDuns, setSavingDuns] = useState(false)
+  const { id } = useParams();
+  const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: "",
+    description: "",
+  });
+  const router = useRouter();
+  const [newDuns, setNewDuns] = useState("");
+  const [editingDuns, setEditingDuns] = useState(false);
+  const [savingDuns, setSavingDuns] = useState(false);
+  const [validation, setValidation] = useState<ValidationDetails | null>(null); // Para mostrar os termos do wholesale
 
   useEffect(() => {
     if (customerForm?.duns_number) {
-      setNewDuns(customerForm.duns_number)
+      setNewDuns(customerForm.duns_number);
     }
-  }, [customerForm])
+  }, [customerForm]);
 
-  const [terms, setTerms] = useState<CreditTerms>({
+  // Estado para os termos do time de CRÉDITO
+  const [creditTerms, setCreditTerms] = useState<CreditTerms>({
     invoicing_company: "",
     warehouse: "",
     currency: "",
     payment_terms: "",
     credit_limit: 0,
     discount: 0,
-  })
+  });
 
-  const [warehouses, setWarehouses] = useState<string[]>([])
+  // Estado para os armazéns disponíveis para o time de CRÉDITO
+  const [creditWarehouses, setCreditWarehouses] = useState<string[]>([]);
+  // Estado para as empresas de faturamento disponíveis para o time de CRÉDITO (baseado na moeda)
+  const [availableCreditInvoicingCompanies, setAvailableCreditInvoicingCompanies] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
-        setLoading(true)
-        const data = await api.getCustomerFormById(id as string)
+        setLoading(true);
+        const data = await api.getCustomerFormById(id as string);
         console.log("ID received:", id);
         console.log("RAW form data (before processing):", data);
 
-        if (!data) throw new Error("Formulário não encontrado.")
+        if (!data) throw new Error("Form not found.");
 
         // Function to process and ensure address data are arrays of objects
         const processAddressArray = (addrData: unknown): AddressDetail[] => {
-            if (!addrData) return []; // Return empty array if no data
+          if (!addrData) return []; // Return empty array if no data
 
-            // If it's a single JSON string
-            if (typeof addrData === 'string') {
-                try {
-                    const parsed = JSON.parse(addrData);
-                    // If the parsed JSON is an array, return it; otherwise, wrap the object in an array
-                    return Array.isArray(parsed) ? parsed : [parsed];
-                } catch (e) {
-                    console.error("Error parsing address string JSON:", e);
-                    return []; // Return empty array in case of parsing error
-                }
-            }
-            // If it's already an array, iterate over it to ensure all items are objects
-            if (Array.isArray(addrData)) {
-                return addrData.map(item => {
-                    if (typeof item === 'string') {
-                        try {
-                            return JSON.parse(item);
-                        } catch (e) {
-                            console.error("Error parsing address item in array:", e);
-                            return {}; // Return empty object if an item fails parsing
-                        }
-                    }
-                    return item; // Item is already an object
-                });
-            }
-            // If it's a single object (not a string and not an array), wrap it in an array
-            return [addrData];
+          // If it's a single JSON string (scenario from your console.log)
+          if (typeof addrData === 'string') {
+              try {
+                  const parsed = JSON.parse(addrData);
+                  // If the parsed JSON is an array, return it; otherwise, wrap the object in an array
+                  return Array.isArray(parsed) ? parsed : [parsed];
+              } catch (e) {
+                  console.error("Error parsing address string JSON:", e);
+                  return []; // Return empty array in case of parsing error
+              }
+          }
+          // If it's already an array, iterate over it to ensure all items are objects
+          if (Array.isArray(addrData)) {
+              return addrData.map(item => {
+                  if (typeof item === 'string') {
+                      try {
+                          return JSON.parse(item);
+                      } catch (e) {
+                          console.error("Error parsing address item in array:", e);
+                          return {}; // Return empty object if an item fails parsing
+                      }
+                  }
+                  return item; // Item is already an object
+              });
+          }
+          // If it's a single object (not a string and not an array), wrap it in an array
+          return [addrData];
         };
 
         const processedData: CustomerForm = {
-            ...data,
-            // Apply the processing function for billing_address and shipping_address
-            billing_address: processAddressArray(data.billing_address),
-            shipping_address: processAddressArray(data.shipping_address),
+          ...data,
+          // Apply the processing function for billing_address and shipping_address
+          billing_address: processAddressArray(data.billing_address),
+          shipping_address: processAddressArray(data.shipping_address),
         };
 
         setCustomerForm(processedData);
@@ -208,32 +242,33 @@ export default function ValidationDetailsPage() {
         console.log("Processed Shipping Addresses (after parse):", processedData.shipping_address);
 
       } catch (err) {
-        console.error("Erro ao buscar detalhes do cliente:", err)
-        setError(err instanceof Error ? err.message : "Erro desconhecido")
+        console.error("Error fetching customer details:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    if (id) fetchCustomerDetails()
-  }, [id])
+    if (id) fetchCustomerDetails();
+  }, [id]);
 
-  // useEffect(() => {
-  //   if (typeof window === "undefined") return
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-  //   const fetchUser = async () => {
-  //     try {
-  //       const currentUser = await api.getCurrentUser()
-  //       if (!currentUser) return
-  //       setUser({ email: currentUser.email, role: currentUser.userType })
-  //     } catch (err) {
-  //       console.error("Erro ao obter usuário:", err)
-  //     }
-  //   }
+    const fetchUser = async () => {
+      try {
+        const currentUser = await api.getCurrentUser();
+        if (!currentUser) return;
+        // setUser({ email: currentUser.email, role: currentUser.userType });
+      } catch (err) {
+        console.error("Error getting user:", err);
+      }
+    };
 
-  //   fetchUser()
-  // }, [])
+    fetchUser();
+  }, []);
 
+  // useEffect para buscar detalhes de validação (se ainda houver)
   useEffect(() => {
     const fetchValidationDetails = async () => {
       const validationData = await api.getCustomerValidationDetails(id as string)
@@ -243,98 +278,139 @@ export default function ValidationDetailsPage() {
     if (id) fetchValidationDetails()
   }, [id])
 
+
+  // NOVO useEffect para o time de CRÉDITO: atualizar empresas de faturamento disponíveis com base na moeda selecionada
+  useEffect(() => {
+    const selectedCurrency = creditTerms.currency; // Usa o estado de termos do CRÉDITO
+    if (selectedCurrency && INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]) {
+      setAvailableCreditInvoicingCompanies(INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]);
+    } else {
+      setAvailableCreditInvoicingCompanies([]);
+    }
+    // Resetar empresa de faturamento e armazém do CRÉDITO quando a moeda muda
+    setCreditTerms((prev) => ({
+      ...prev,
+      invoicing_company: "",
+      warehouse: "",
+    }));
+    // Limpar armazéns do CRÉDITO também
+    setCreditWarehouses([]);
+  }, [creditTerms.currency]); // Dependência na moeda do CRÉDITO
+
+  // useEffect para o time de CRÉDITO: buscar armazéns quando a empresa de faturamento muda
   useEffect(() => {
     const fetchWarehouses = async () => {
-      if (!terms.invoicing_company) {
-        setWarehouses([])
-        return
+      if (!creditTerms.invoicing_company) {
+        setCreditWarehouses([]);
+        return;
       }
 
       try {
-        const warehouses = await api.getWarehousesByCompany(terms.invoicing_company)
-        setWarehouses(warehouses.map((warehouse: { name: string }) => warehouse.name))
+        const warehouses = await api.getWarehousesByCompany(
+          creditTerms.invoicing_company
+        );
+        setCreditWarehouses(
+          warehouses.map((warehouse: { name: string }) => warehouse.name)
+        );
       } catch (err) {
-        console.error("Erro ao buscar warehouses:", err)
-        setWarehouses([])
+        console.error("Error fetching credit warehouses:", err);
+        setCreditWarehouses([]);
       }
-    }
+    };
 
-    fetchWarehouses()
-  }, [terms.invoicing_company])
+    fetchWarehouses();
+  }, [creditTerms.invoicing_company]); // Dependência na empresa de faturamento do CRÉDITO
 
   const handleSaveDuns = async () => {
     try {
-      setSavingDuns(true)
-      await api.updateDunsNumber(id as string, newDuns)
+      setSavingDuns(true);
+      await api.updateDunsNumber(id as string, newDuns);
 
       // Update the local state to reflect the change
       if (customerForm) {
         setCustomerForm({
           ...customerForm,
           duns_number: newDuns,
-        })
+        });
       }
 
-      setEditingDuns(false)
+      setEditingDuns(false);
     } catch (error) {
-      console.error("Error updating DUNS number:", error)
+      console.error("Error updating DUNS number:", error);
       // Optionally show an error message to the user
     } finally {
-      setSavingDuns(false)
+      setSavingDuns(false);
     }
-  }
+  };
 
   const handleCancelEdit = () => {
     // Reset to original value and exit edit mode
     if (customerForm) {
-      setNewDuns(customerForm.duns_number || "")
+      setNewDuns(customerForm.duns_number || "");
     }
-    setEditingDuns(false)
-  }
+    setEditingDuns(false);
+  };
 
-  const handleTermChange = (field: keyof CreditTerms, value: string | number) => {
+  // Handler para as mudanças nos termos do CRÉDITO
+  const handleCreditTermChange = (
+    field: keyof CreditTerms,
+    value: string | number
+  ) => {
     if (field === "credit_limit" || field === "discount") {
-      const numericValue = value === "" ? 0 : Number(value)
+      const numericValue = value === "" ? 0 : Number(value);
 
-      if (isNaN(numericValue)) return
+      if (isNaN(numericValue)) return;
 
-      setTerms((prev) => ({ ...prev, [field]: numericValue })) // Changed value to numericValue for these fields
+      setCreditTerms((prev) => ({ ...prev, [field]: numericValue }));
     } else {
-      setTerms((prev) => ({ ...prev, [field]: value }))
+      setCreditTerms((prev) => ({ ...prev, [field]: value }));
     }
-  }
+  };
 
   const handleApproval = async (approved: boolean) => {
+    console.log("Starting handleApproval. approved =", approved);
+
     try {
       setLoading(true);
+      console.log("Loading true");
 
       if (approved) {
+        // Specific validations for approval for CREDIT TEAM
         const requiredFields: (keyof CreditTerms)[] = [
           "invoicing_company",
           "warehouse",
           "currency",
           "payment_terms",
         ];
-        const missingFields = requiredFields.filter((field) => !terms[field]);
+        const missingFields = requiredFields.filter((field) => !creditTerms[field]); // Usa creditTerms
         if (missingFields.length > 0) {
           throw new Error(
             `⚠️ Por favor, preencha todos os campos obrigatórios: ${missingFields.join(", ")}`
           );
         }
-
-        if (terms.credit_limit < 0 || terms.discount < 0) {
+        if (creditTerms.credit_limit < 0 || creditTerms.discount < 0) { // Usa creditTerms
           throw new Error("⚠️ O limite de crédito e o desconto devem ser não-negativos!");
         }
       }
 
+      console.log("Calling validateCreditCustomer");
       await api.validateCreditCustomer(id as string, approved, {
-        credit_invoicing_company: terms.invoicing_company,
-        credit_warehouse: terms.warehouse,
-        credit_currency: terms.currency,
-        credit_terms: terms.payment_terms,
-        credit_credit: terms.credit_limit,
-        credit_discount: terms.discount,
+        credit_invoicing_company: creditTerms.invoicing_company, // Usa creditTerms
+        credit_warehouse: creditTerms.warehouse, // Usa creditTerms
+        credit_currency: creditTerms.currency, // Usa creditTerms
+        credit_terms: creditTerms.payment_terms, // Usa creditTerms
+        credit_credit: creditTerms.credit_limit, // Usa creditTerms
+        credit_discount: creditTerms.discount, // Usa creditTerms
       });
+
+      console.log("Validation completed successfully");
+
+      if (customerForm) {
+        setCustomerForm({
+          ...customerForm,
+          status: approved ? "approved" : "rejected",
+        });
+      }
 
       setModalContent({
         title: "Ok!",
@@ -343,6 +419,7 @@ export default function ValidationDetailsPage() {
           : "Customer rejected!",
       });
       setShowModal(true);
+      console.log("Success modal displayed");
     } catch (err) {
       console.error("Erro ao validar cliente:", err);
       setModalContent({
@@ -357,20 +434,22 @@ export default function ValidationDetailsPage() {
   };
 
   const closeModal = () => {
-    setShowModal(false)
-    router.push("/validations/credit")
-  }
+    setShowModal(false);
+    router.push("/validations/credit"); // Redireciona para a página de validações de crédito
+  };
 
-  if (loading) return <S.Message>Loading...</S.Message>
-  if (error) return <S.Message>Erro: {error}</S.Message>
-  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>
+  if (loading) return <S.Message>Loading...</S.Message>;
+  if (error) return <S.Message>Error: {error}</S.Message>;
+  if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
   return (
     <S.ContainerMain>
       <S.Container>
         <S.Header>
           <S.Title>Customer Details</S.Title>
-          <S.StatusBadge status={customerForm.status}>{customerForm.status}</S.StatusBadge>
+          <S.StatusBadge status={customerForm.status}>
+            {customerForm.status}
+          </S.StatusBadge>
         </S.Header>
         <S.FormDetails>
           <S.FormSection>
@@ -382,6 +461,9 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
             <S.FormRow>
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
+            </S.FormRow>
+            <S.FormRow>
+              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
             <S.FormRow className="flex items-center">
               <strong>D-U-N-S:</strong>{" "}
@@ -395,10 +477,18 @@ export default function ValidationDetailsPage() {
                     autoFocus
                   />
                   <S.ContainerCheck>
-                    <S.CheckButton onClick={handleSaveDuns} disabled={savingDuns} title="Save">
+                    <S.CheckButton
+                      onClick={handleSaveDuns}
+                      disabled={savingDuns}
+                      title="Save"
+                    >
                       <Check size={16} />
                     </S.CheckButton>
-                    <S.CancelButton onClick={handleCancelEdit} disabled={savingDuns} title="Cancel">
+                    <S.CancelButton
+                      onClick={handleCancelEdit}
+                      disabled={savingDuns}
+                      title="Cancel"
+                    >
                       <X size={16} />
                     </S.CancelButton>
                   </S.ContainerCheck>
@@ -412,14 +502,14 @@ export default function ValidationDetailsPage() {
                 </span>
               )}
             </S.FormRow>
-
-            <S.FormRow>
-              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
-            </S.FormRow>
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
-                <a href={customerForm.resale_certificate} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={customerForm.resale_certificate}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   View PDF
                 </a>
               ) : (
@@ -458,13 +548,12 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
           </S.FormSection>
-
           <S.FormSection>
             <S.SectionTitle>
               <Mail size={16} /> Contacts
             </S.SectionTitle>
             <S.FormRow>
-              <strong>AP:</strong> {customerForm.ap_contact_name}
+              <strong>AP Contact:</strong> {customerForm.ap_contact_name}
             </S.FormRow>
             <S.FormRow>
               <strong>AP Email:</strong> {customerForm.ap_contact_email}
@@ -477,7 +566,7 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
           </S.FormSection>
 
-          {validation && (
+                    {validation && (
             <S.TermsCardsContainer>
               <S.TermsCard>
                 <h3>Wholesale Team Validation</h3>
@@ -503,20 +592,41 @@ export default function ValidationDetailsPage() {
             </S.TermsCardsContainer>
           )}
         </S.FormDetails>
+              
+
+        
 
         <S.TermsContainer>
           <S.TermsTitle>Validation Terms (Credit Team)</S.TermsTitle>
           <S.TermsGrid>
             <S.TermsSection>
               <label>
+                <CreditCard size={16} /> Currency
+              </label>
+              <S.Select
+                value={creditTerms.currency} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("currency", e.target.value)} // Usa handleCreditTermChange
+              >
+                <option value="">Select currency</option>
+                {CURRENCIES.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </S.Select>
+            </S.TermsSection>
+
+            <S.TermsSection>
+              <label>
                 <Building2 size={16} /> Invoicing Company
               </label>
               <S.Select
-                value={terms.invoicing_company}
-                onChange={(e) => handleTermChange("invoicing_company", e.target.value)}
+                value={creditTerms.invoicing_company} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("invoicing_company", e.target.value)} // Usa handleCreditTermChange
+                disabled={!creditTerms.currency} // Desabilita até que uma moeda seja selecionada
               >
                 <option value="">Select company</option>
-                {INVOICING_COMPANIES.map((company) => (
+                {availableCreditInvoicingCompanies.map((company) => ( // Renderiza opções baseadas no novo estado
                   <option key={company} value={company}>
                     {company}
                   </option>
@@ -529,30 +639,23 @@ export default function ValidationDetailsPage() {
                 <Warehouse size={16} /> Warehouse
               </label>
               <S.Select
-                value={terms.warehouse}
-                onChange={(e) => handleTermChange("warehouse", e.target.value)}
-                disabled={!terms.invoicing_company}
+                value={creditTerms.warehouse} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("warehouse", e.target.value)} // Usa handleCreditTermChange
+                disabled={!creditTerms.currency} // HABILITA AQUI APÓS A SELEÇÃO DA MOEDA
               >
                 <option value="">Select warehouse</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse} value={warehouse}>
-                    {warehouse}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
-
-            <S.TermsSection>
-              <label>
-                <CreditCard size={16} /> Currency
-              </label>
-              <S.Select value={terms.currency} onChange={(e) => handleTermChange("currency", e.target.value)}>
-                <option value="">Select currency</option>
-                {CURRENCIES.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
+                {/* Se não houver invoicing_company selecionada, creditWarehouses estará vazio */}
+                {creditWarehouses.length > 0 ? (
+                    creditWarehouses.map((warehouse) => (
+                        <option key={warehouse} value={warehouse}>
+                            {warehouse}
+                        </option>
+                    ))
+                ) : (
+                    <option value="" disabled>
+                        Select an Invoicing Company first
+                    </option>
+                )}
               </S.Select>
             </S.TermsSection>
 
@@ -560,7 +663,10 @@ export default function ValidationDetailsPage() {
               <label>
                 <Calendar size={16} /> Payment Terms
               </label>
-              <S.Select value={terms.payment_terms} onChange={(e) => handleTermChange("payment_terms", e.target.value)}>
+              <S.Select
+                value={creditTerms.payment_terms} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("payment_terms", e.target.value)} // Usa handleCreditTermChange
+              >
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
                   <option key={`${term}-${index}`} value={term}>
@@ -575,8 +681,8 @@ export default function ValidationDetailsPage() {
                 <DollarSign size={16} /> Credit Limit
               </label>
               <S.NumericInput
-                value={terms.credit_limit}
-                onChange={(e) => handleTermChange("credit_limit", Number.parseFloat(e.target.value))}
+                value={creditTerms.credit_limit} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("credit_limit", e.target.value)} // Usa handleCreditTermChange
                 min="0"
                 step="0.01"
               />
@@ -587,8 +693,8 @@ export default function ValidationDetailsPage() {
                 <Percent size={16} /> Discount
               </label>
               <S.NumericInput
-                value={terms.discount}
-                onChange={(e) => handleTermChange("discount", Number.parseFloat(e.target.value))}
+                value={creditTerms.discount} // Usa creditTerms
+                onChange={(e) => handleCreditTermChange("discount", e.target.value)} // Usa handleCreditTermChange
                 min="0"
                 max="100"
                 step="0.1"
@@ -598,13 +704,21 @@ export default function ValidationDetailsPage() {
         </S.TermsContainer>
 
         <S.ButtonContainer>
-          <S.Button type="button" onClick={() => handleApproval(false)} variant="secondary">
+          <S.Button onClick={() => handleApproval(false)} variant="secondary">
             Reject
           </S.Button>
-          <S.Button type="button" onClick={() => handleApproval(true)} variant="primary">
+
+          <S.Button
+            variant="primary"
+            onClick={() => {
+              console.log("Click detected!")
+              handleApproval(true)
+            }}
+          >
             Approve
           </S.Button>
         </S.ButtonContainer>
+
 
         {showModal && (
           <S.Modal>
@@ -612,12 +726,14 @@ export default function ValidationDetailsPage() {
               <S.ModalTitle>
                 <CircleCheck size={48} />
               </S.ModalTitle>
-              <S.ModalDescription>{modalContent.description}</S.ModalDescription>
+              <S.ModalDescription>
+                {modalContent.description}
+              </S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}
       </S.Container>
     </S.ContainerMain>
-  )
+  );
 }

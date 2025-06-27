@@ -266,7 +266,10 @@ export const TermsSection = styled.div`
   }
 `
 export const TermsCardsContainer = styled.div`
-  
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 `
 
 export const TermsCard = styled.div`

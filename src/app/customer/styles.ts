@@ -13,7 +13,7 @@ export const ContainerMain = styled.div`
 `
 
 export const FormContainer = styled.div`
-  width: 85%; /* Ou um valor fixo como 800px */
+  width: 95%; /* Ou um valor fixo como 800px */
   max-width: 1200px;
   padding: 1.5rem;
   background: #ffffff;
@@ -50,7 +50,7 @@ export const FormSubtitle = styled.p`
 `
 
 export const Section = styled.section`
-  margin-bottom: 2Rerem;
+
 `
 
 export const SectionTitle = styled.h2`
@@ -58,6 +58,12 @@ export const SectionTitle = styled.h2`
   font-weight: 600;
   color: #18181b;
   margin-bottom: 1rem;
+`
+
+export const SectionTitleBuyer = styled.h2`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #18181b;
 `
 
 export const Grid = styled.div`
@@ -217,6 +223,24 @@ export const FileNameText = styled.p`
   color: #333;
   margin-top: 4px;
 `
+
+export const FilePreviewContainer = styled.div`
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+`
+
+export const FilePreview = styled.span`
+  background-color: #f0f0f0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #555;
+  display: inline-flex;
+  align-items: center;
+`
+
 
 export const ReviewContainer = styled.div`
 
@@ -546,3 +570,87 @@ export const FeedbackContent = styled.p`
   white-space: pre-line;
 `
 
+// Novo estilo para agrupar o código do país e o número de telefone
+export const PhoneInputGroup = styled.div`
+  display: flex;
+  gap: 1rem; /* Espaçamento entre o código do país e o número */
+  width: 100%;
+
+  ${InputGroup} { /* Aplica estilos do InputGroup aos elementos internos */
+    flex: 1; /* Distribui o espaço igualmente */
+  }
+
+  ${InputGroup}:first-child {
+    flex: 1; /* Ajusta o tamanho do campo de código do país */
+    max-width: 100px; /* Limita a largura do campo de código do país */
+  }
+
+  ${InputGroup}:last-child {
+    flex: 1.6; /* Ocupa o restante do espaço */
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column; /* Empilha em telas menores */
+    ${InputGroup}:first-child, ${InputGroup}:last-child {
+      flex: none; /* Remove o flex em telas menores */
+      max-width: 100%; /* Ocupa a largura total */
+    }
+  }
+`
+
+export const InfoButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666; /* Adjust color as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 24px; /* Adjust size as needed */
+  height: 24px; /* Adjust size as needed */
+  border-radius: 50%; /* Makes it circular */
+  /* transition: all 0.2s ease-in-out; */
+  position: relative; /* Needed for tooltip positioning */
+
+  &:hover {
+    color: #007bff; /* Example hover color */
+    background-color: #f0f0f0; /* Light background on hover */
+  }
+
+  /* Tooltip styles */
+  &[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%; /* Position above the button */
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    margin-bottom: 8px; /* Space between button and tooltip */
+    z-index: 10; /* Ensure it's above other elements */
+    pointer-events: none; /* Allows clicks on elements behind the tooltip */
+  }
+`;
+
+export const AlertMessage = styled.p`
+  background-color: rgb(240, 240, 240);
+  color:rgb(19, 19, 19); 
+  border: 1px solid transparent; /* Slightly darker yellow border */
+  border-radius: 0.25rem;
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem; /* Space above the alert */
+  font-size: 1.15rem; /* Larger font size */
+  font-weight: 600; /* Bold text */
+  text-align: center;
+  line-height: 1.4;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+  }
+`;

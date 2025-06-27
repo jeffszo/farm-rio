@@ -2,20 +2,33 @@ import { supabase } from "./client"
 
 export async function submitForm(formData: unknown, userId: string) {
   interface FormData {
-    customer_name: string
-    sales_tax_id: string
-    resale_certificate?: string | null
-    billing_address: string[]
-    shipping_address: string[]
-    ap_contact_name: string
-    ap_contact_email: string
-    buyer_name: string
-    buyer_email: string
-    dba_number?: string | null
-    duns_number?: string | null
+    customer_name: string;
+    sales_tax_id: string;
+    resale_certificate?: string | null;
+    billing_address: any[]; // Usar 'any[]' ou definir uma interface para o endereço
+    shipping_address: any[]; // Usar 'any[]' ou definir uma interface para o endereço
+    ap_contact_name: string;
+    ap_contact_email: string;
+    ap_contact_country_code?: number | null; // Adicionado
+    ap_contact_number?: number | null; // Adicionado
+    buyer_name: string;
+    buyer_email: string;
+    buyer_country_code?: number | null; // Adicionado
+    buyer_number?: number | null; // Adicionado
+    dba_number?: string | null;
+    duns_number?: string | null;
+    photo_urls?: string[]; // Adicionado
+    branding_mix?: string | null; // Adicionado
+    instagram?: string | null; // Adicionado
+    website?: string | null; // Adicionado
+    terms?: string | null; // Adicionado
+    currency?: string | null; // Adicionado
+    estimated_purchase_amount?: number | null; // Adicionado
+    financial_statements?: string | null; // Adicionado (URL do arquivo)
+    status: string; // Adicionado, embora já estivesse no payload, é bom explicitá-lo aqui
   }
 
-  if (typeof formData === 'object' && formData !== null) {
+  if (typeof formData === "object" && formData !== null) {
     const {
       customer_name,
       sales_tax_id,
@@ -24,10 +37,23 @@ export async function submitForm(formData: unknown, userId: string) {
       shipping_address,
       ap_contact_name,
       ap_contact_email,
+      ap_contact_country_code, // Desestruturado
+      ap_contact_number, // Desestruturado
       buyer_name,
       buyer_email,
+      buyer_country_code, // Desestruturado
+      buyer_number, // Desestruturado
       dba_number,
-      duns_number
+      duns_number,
+      photo_urls, // Desestruturado
+      branding_mix, // Desestruturado
+      instagram, // Desestruturado
+      website, // Desestruturado
+      terms, // Desestruturado
+      currency, // Desestruturado
+      estimated_purchase_amount, // Desestruturado
+      financial_statements, // Desestruturado
+      status, // Desestruturado (se vier do formData)
     } = formData as FormData;
 
     // 🔍 Verifica se já existe formulário
@@ -39,7 +65,8 @@ export async function submitForm(formData: unknown, userId: string) {
       .limit(1)
       .maybeSingle();
 
-    if (checkError) throw new Error(`Erro ao verificar formulário existente: ${checkError.message}`);
+    if (checkError)
+      throw new Error(`Erro ao verificar formulário existente: ${checkError.message}`);
 
     const payload = {
       user_id: userId,
@@ -50,11 +77,23 @@ export async function submitForm(formData: unknown, userId: string) {
       shipping_address: JSON.stringify(shipping_address),
       ap_contact_name,
       ap_contact_email,
+      ap_contact_country_code: ap_contact_country_code ?? null, // Adicionado ao payload
+      ap_contact_number: ap_contact_number ?? null, // Adicionado ao payload
       buyer_name,
       buyer_email,
+      buyer_country_code: buyer_country_code ?? null, // Adicionado ao payload
+      buyer_number: buyer_number ?? null, // Adicionado ao payload
       dba_number: dba_number ?? null,
       duns_number: duns_number ?? null,
-      status: "pending",
+      photo_urls: photo_urls || [], // Adicionado ao payload, garantindo array vazio se null/undefined
+      branding_mix: branding_mix ?? null, // Adicionado ao payload
+      instagram: instagram ?? null, // Adicionado ao payload
+      website: website ?? null, // Adicionado ao payload
+      terms: terms ?? null, // Adicionado ao payload
+      currency: currency ?? null, // Adicionado ao payload
+      estimated_purchase_amount: estimated_purchase_amount ?? null, // Adicionado ao payload
+      financial_statements: financial_statements ?? null, // Adicionado ao payload
+      status: status ?? "pending", // Garante que o status seja 'pending' se não for fornecido
     };
 
     if (existingForm) {
@@ -81,7 +120,6 @@ export async function submitForm(formData: unknown, userId: string) {
     throw new Error("formData não possui o formato esperado.");
   }
 }
-
 
 interface FormStatusData {
   status: string

@@ -1,54 +1,93 @@
+// page.tsx
 "use client"
 import React from "react"
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import * as S from "../../customer/styles" // Verifique se este caminho está correto para seus estilos
-import type { IFormInputs } from "../../../types/form" // Verifique se este caminho está correto para seus tipos
+import * as S from "../../customer/styles"
+import type { IFormInputs } from "../../../types/form"
 import { useRouter } from "next/navigation"
-import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2 } from "lucide-react"
-import { api } from "../../../lib/supabase/index" // Verifique se este caminho está correto para sua API Supabase
+import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react"
+import { api } from "../../../lib/supabase/index"
 
-// Não precisamos de FormStatusData aqui, pois é um formulário de onboarding
-// interface FormStatusData {
-//   status: string
-//   csc_feedback: string
-// }
+// Opções para os selects (adicione/ajuste conforme suas telas de validação)
+const termsOptions = [
+  { value: "", label: "Select terms" },
+  { value: "100% Prior to Ship", label: "100% Prior to Ship" },
+  { value: "Net 15", label: "Net 15" },
+  { value: "Net 30", label: "Net 30" },
+];
+
+const currencyOptions = [
+  { value: "", label: "Select currency" },
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "GBP", label: "GBP" },
+];
 
 export default function OnboardingForm() {
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null) // Para Resale Certificate
+  const [imageFiles, setImageFiles] = useState<File[]>([]) // Para Multiple Images
+  const [financialStatementsFile, setFinancialStatementsFile] = useState<File | null>(null); // ESTADO PARA O ARQUIVO FINANCIAL STATEMENTS
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  // `shippingAddress` e `billingAddress` são usados para controlar o número de campos dinâmicos no JSX.
-  // Eles devem iniciar com um elemento para o primeiro endereço.
   const [shippingAddress, setshippingAddress] = useState<number[]>([0])
+  const [isSameAsBilling, setIsSameAsBilling] = useState(false) // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0])
-  // feedback, formStatus, user, isLoading não são necessários para um onboarding simples,
-  // mas estou mantendo se você tiver outra lógica atrelada a eles.
-  // const [feedback, setFeedback] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 4
-  // const [formStatus, setFormStatus] = useState<string | null>(null)
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(null)
-  const [isLoading, setIsLoading] = useState(true) // Considerar se é realmente necessário aqui
+  const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
   const router = useRouter()
+
+  // Adicione esta linha para declarar e gerenciar o estado de validação do passo 4
+  const [stepFourAttemptedValidation, setStepFourAttemptedValidation] = useState(false);
 
   const {
     register,
     handleSubmit: hookFormSubmit,
     formState: { errors },
-    trigger,// getValues é útil se você precisar acessar os valores antes do submit completo
+    trigger,
+    getValues,
+    setValue,
+    clearErrors, // Importe clearErrors
+    setError, // Importe setError
   } = useForm<IFormInputs>({
     mode: "onChange",
-    // Adicione defaultValues para inicializar arrays vazios, evitando 'undefined' se nada for preenchido
     defaultValues: {
-      billingAddress: [{}],
-      shippingAddress: [{}],
-      // Outros campos se necessário
+      billingAddress: [{} as any],
+      shippingAddress: [{} as any],
+      // Definir valor padrão para os selects para evitar erro de componente não controlado
+       buyerInfo: {
+        terms: "", // Valor vazio para a opção "Select terms"
+        currency: "", // Valor vazio para a opção "Select currency"
+        // ... outros campos de buyerInfo
+      } as any, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
     },
   })
 
-  // useEffect para carregar o usuário, se aplicável
+const handleFinancialStatementsFileChange = (
+  event: React.ChangeEvent<HTMLInputElement>,
+) => {
+  if (event.target.files && event.target.files[0]) {
+    const selectedFile = event.target.files[0];
+    if (selectedFile.type !== "application/pdf") {
+      setError("buyerInfo.financialStatements", { type: "manual", message: "Financial Statements devem ser um arquivo PDF." });
+      setFinancialStatementsFile(null); // Limpa o arquivo inválido
+      console.log("Arquivo de Financial Statements inválido: não é PDF.");
+      return;
+    }
+    setFinancialStatementsFile(selectedFile);
+    // Limpa o erro se um arquivo for selecionado e for PDF válido
+    clearErrors("buyerInfo.financialStatements");
+    console.log("Arquivo de Financial Statements selecionado:", selectedFile.name);
+  } else {
+    setFinancialStatementsFile(null);
+    clearErrors("buyerInfo.financialStatements"); // Limpa o erro se nenhum arquivo for selecionado
+    console.log("Nenhum arquivo de Financial Statements selecionado.");
+  }
+};
+
   useEffect(() => {
     const fetchUser = async () => {
       const currentUser = await api.getCurrentUser()
@@ -58,96 +97,184 @@ export default function OnboardingForm() {
     fetchUser()
   }, [])
 
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
         alert("Please upload a PDF file.")
+        setFile(null); // Limpa o arquivo inválido
+        console.log("Arquivo de Resale Certificate inválido: não é PDF.");
         return
       }
       setFile(selectedFile)
+      console.log("Arquivo de Resale Certificate selecionado:", selectedFile.name);
+    } else {
+      setFile(null);
+      console.log("Nenhum arquivo de Resale Certificate selecionado.");
+    }
+  }
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // É importante usar event.target.files aqui, pois event.files não existe.
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+        setImageFiles((prev) => [...prev, ...files]);
+        console.log("Imagens selecionadas:", files.map(f => f.name));
+    } else {
+        console.log("Nenhuma imagem selecionada.");
     }
   }
 
   const onSubmit = async (formData: IFormInputs) => {
+    console.log("Submit button clicked. Starting onSubmit function.");
     try {
-      setApiError(null)
-      setIsUploading(true)
+      setApiError(null);
+      setIsUploading(true);
+      console.log("isUploading set to true.");
 
-      const currentUser = user || (await api.getCurrentUser()) // Garante que o user está disponível
+      const currentUser = user || (await api.getCurrentUser());
       if (!currentUser || !currentUser.id) {
-        console.error("Usuário não autenticado. Redirecionando para login.")
-        setApiError("Sua sessão expirou ou você não está logado. Faça login novamente.")
-        router.push("/login") // Redirecione para a página de login, se apropriado
-        return
+        console.error("Usuário não autenticado. Redirecionando para login.");
+        setApiError("Sua sessão expirou ou você não está logado. Faça login novamente.");
+        router.push("/");
+        setIsUploading(false);
+        return;
       }
+      console.log("Current user ID:", currentUser.id);
 
-      console.log("Dados recebidos no formulário:", formData)
+      console.log("Dados recebidos no formulário (formData):", formData);
 
-      let fileUrl: string | null = null
+      const termsSelected = formData.buyerInfo?.terms;
+
+      // REFORÇO DA VALIDAÇÃO DE FINANCIAL STATEMENTS NO SUBMIT
+      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+          setError("buyerInfo.financialStatements", { type: "required", message: "Declarações Financeiras são obrigatórias se os Termos forem selecionados." });
+          setApiError("Declarações Financeiras são obrigatórias se os Termos forem selecionados.");
+          setIsUploading(false);
+          console.error("Validação de Financial Statements falhou no onSubmit: Termos selecionados, mas arquivo ausente.");
+          return;
+      }
+      if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
+          setError("buyerInfo.financialStatements", { type: "manual", message: "Financial Statements devem ser um arquivo PDF." });
+          setApiError("Financial Statements devem ser um arquivo PDF.");
+          setIsUploading(false);
+          console.error("Validação de Financial Statements falhou no onSubmit: Arquivo não é PDF.");
+          return;
+      }
+      // FIM DO REFORÇO DA VALIDAÇÃO
+
+      let fileUrl: string | null = null;
       if (file) {
         try {
-          // O id do usuário é usado como parte do caminho de armazenamento no Supabase
-          fileUrl = await api.uploadResaleCertificate(file, currentUser.id)
-          console.log("Arquivo enviado com sucesso:", fileUrl)
+          console.log("Attempting to upload resale certificate.");
+          fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
+          console.log("Arquivo de certificado de revenda enviado com sucesso:", fileUrl);
         } catch (error) {
-          console.error("Erro ao enviar o arquivo:", error)
-          setApiError(error instanceof Error ? error.message : "Erro ao enviar o arquivo. Tente novamente.")
-          setIsUploading(false)
-          return
+          console.error("Erro ao enviar o arquivo de certificado de revenda:", error);
+          setApiError(error instanceof Error ? error.message : "Erro ao enviar o arquivo. Tente novamente.");
+          setIsUploading(false);
+          return;
         }
+      } else {
+          console.log("No resale certificate file to upload.");
       }
 
-      // Prepara o payload para o Supabase
-      // As colunas JSONB (billing_address, shipping_address) receberão diretamente o array de objetos
+      const photoUrls: string[] = [];
+      if (imageFiles.length > 0) {
+          console.log("Attempting to upload image files.");
+          for (const imageFile of imageFiles) {
+              try {
+                  const imageUrl = await api.uploadImage(imageFile, currentUser.id);
+                  photoUrls.push(imageUrl);
+                  console.log(`Image ${imageFile.name} uploaded successfully.`);
+              } catch (error) {
+                  console.error(`Erro ao enviar a imagem ${imageFile.name}:`, error);
+                  setApiError(error instanceof Error ? error.message : "Erro ao enviar imagens. Tente novamente.");
+                  setIsUploading(false);
+                  return;
+              }
+          }
+      } else {
+          console.log("No image files to upload.");
+      }
+
+      let financialStatementsFileUrl: string | null = null;
+      if (financialStatementsFile) { // Só tenta fazer upload se o estado do arquivo for válido e não nulo
+          try {
+              console.log("Attempting to upload financial statements.");
+              financialStatementsFileUrl = await api.uploadFinancialStatements(financialStatementsFile, currentUser.id);
+              console.log("Arquivo de Financial Statements enviado com sucesso:", financialStatementsFileUrl);
+          } catch (error) {
+              console.error("Erro ao enviar Financial Statements:", error);
+              setApiError(error instanceof Error ? error.message : "Erro ao enviar Financial Statements. Tente novamente.");
+              setIsUploading(false);
+              return;
+          }
+      } else {
+          console.log("No financial statements file to upload or not required.");
+      }
+
+      // Garanta que os campos de select vazios sejam tratados como null, se necessário para o banco de dados
+      const termsValue = formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+      const currencyValue = formData.buyerInfo?.currency === "" ? null : formData.buyerInfo?.currency;
+
       const payload = {
-        user_id: currentUser.id, // Garante que o user_id está no payload
+        user_id: currentUser.id,
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
         duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
         resale_certificate: fileUrl,
-        
-        // AQUI ESTÁ A SOLUÇÃO: Passar o array de objetos diretamente
-        // Certifique-se de que billingAddress e shippingAddress no IFormInputs
-        // são definidos como `AddressInput[]` (ou similar)
         billing_address: formData.billingAddress || [],
         shipping_address: formData.shippingAddress || [],
-
         ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
         ap_contact_email: formData.apContact?.email || null,
-        // É importante que buyer_name e ap_contact_name sejam strings ou null.
-        // Se `buyerInfo.firstName` e `lastName` puderem ser nulos, `trim()` pode falhar.
+        ap_contact_country_code: formData.apContact?.countryCode || null,
+        ap_contact_number: formData.apContact?.contactNumber || null,
         buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
-        // Status inicial para um novo formulário de onboarding
-        status: "pending", 
-      }
+        buyer_country_code: formData.buyerInfo?.countryCode || null,
+        buyer_number: formData.buyerInfo?.buyerNumber || null,
+        status: "pending",
+        photo_urls: photoUrls,
+        branding_mix: formData.brandingMix || null,
+        instagram: formData.instagram || null,
+        website: formData.website || null,
+        terms: termsValue, // Usando o valor tratado
+        currency: currencyValue, // Usando o valor tratado
+        estimated_purchase_amount: formData.buyerInfo?.estimatedPurchaseAmount || null,
+        financial_statements: financialStatementsFileUrl,
+      };
 
-      console.log("Payload sendo enviado para submitForm:", payload)
+      console.log("Payload sendo enviado para submitForm:", payload);
 
-      // A função submitForm deve estar preparada para receber o objeto payload e enviá-lo
-      // diretamente para o Supabase (sem stringify adicional se o Supabase espera um objeto).
-      await api.submitForm(payload, currentUser.id)
-      setIsModalOpen(true)
+      await api.submitForm(payload, currentUser.id);
+      console.log("Form submitted successfully via API.");
+      setIsModalOpen(true);
+      console.log("Modal set to open.");
+
     } catch (error: unknown) {
-      console.error("Erro ao enviar o formulário:", error instanceof Error ? error.message : String(error))
-      setApiError(error instanceof Error ? error.message : "Erro ao enviar o formulário. Tente novamente.")
+      console.error("Erro GERAL ao enviar o formulário:", error instanceof Error ? error.message : String(error));
+      setApiError(error instanceof Error ? error.message : "Erro ao enviar o formulário. Tente novamente.");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
+      console.log("isUploading set to false. End of onSubmit function.");
     }
   }
 
   const nextStep = async () => {
-    let fieldsToValidate: string[] = []
+    let fieldsToValidate: (keyof IFormInputs | string)[] = []
 
     if (currentStep === 1) {
-      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
-      // Você pode adicionar validação para o arquivo aqui se `resale_certificate` for obrigatório
-      // if (!file && !getValues('resale_certificate')) { /* ... error handling ... */ }
+      fieldsToValidate = [
+        "customerInfo.legalName",
+        "customerInfo.taxId",
+        "customerInfo.dunNumber",
+        "brandingMix",
+        "instagram",
+        "website"
+      ];
     } else if (currentStep === 2) {
-      // Validate billing addresses
       billingAddress.forEach((index) => {
         fieldsToValidate.push(
           `billingAddress.${index}.street`,
@@ -159,7 +286,6 @@ export default function OnboardingForm() {
         )
       })
 
-      // Validate shipping addresses
       shippingAddress.forEach((index) => {
         fieldsToValidate.push(
           `shippingAddress.${index}.street`,
@@ -178,19 +304,49 @@ export default function OnboardingForm() {
         "apContact.countryCode",
         "apContact.contactNumber",
       ]
-    } else if (currentStep === 4) { // Adicionado para garantir validação do último passo antes de submeter
-        fieldsToValidate = [
-            "buyerInfo.firstName",
-            "buyerInfo.lastName",
-            "buyerInfo.email",
-            "buyerInfo.countryCode",
-            "buyerInfo.buyerNumber",
-        ];
+    } else if (currentStep === 4) {
+      fieldsToValidate = [
+        "buyerInfo.firstName",
+        "buyerInfo.lastName",
+        "buyerInfo.email",
+        "buyerInfo.countryCode",
+        "buyerInfo.buyerNumber",
+        "buyerInfo.terms",
+        "buyerInfo.currency",
+        "buyerInfo.estimatedPurchaseAmount",
+      ];
+      setStepFourAttemptedValidation(true);
+
+      const termsSelected = getValues("buyerInfo.terms");
+      // Validação de Financial Statements no nextStep
+      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+        setError("buyerInfo.financialStatements", { type: "required", message: "Declarações Financeiras são obrigatórias se os Termos forem selecionados." });
+        console.log("Erro de validação (nextStep): Financial Statements são obrigatórias.");
+      } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
+        setError("buyerInfo.financialStatements", { type: "manual", message: "Financial Statements devem ser um arquivo PDF." });
+        console.log("Erro de validação (nextStep): Financial Statements deve ser PDF.");
+      } else {
+        clearErrors("buyerInfo.financialStatements");
+      }
     }
 
-    // @ts-expect-error - Ignorando erro de tipo para fieldsToValidate dinâmicos
+    // @ts-expect-error
     const isValid = await trigger(fieldsToValidate)
-    if (!isValid) return
+
+    // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
+    if (currentStep === 4) {
+      if (errors.buyerInfo?.financialStatements || !isValid) { // Adicionado !isValid para garantir que todos os campos validados sejam checados
+        console.log("Validação do passo 4 falhou devido a Financial Statements ou outros campos.");
+        return;
+      }
+    }
+
+
+    if (!isValid) {
+        console.log("Form validation failed for current step:", errors);
+        return;
+    }
+    console.log("Form validation successful for current step.");
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
   }
 
@@ -199,31 +355,50 @@ export default function OnboardingForm() {
   }
 
   const addShippingAddress = () => {
-    // Adiciona um novo índice ao array de estado para renderizar mais campos
     setshippingAddress((prev) => [...prev, prev.length])
   }
 
-  const addBillingAddress = () => {
-    // Adiciona um novo índice ao array de estado para renderizar mais campos
-    setbillingAddress((prev) => [...prev, prev.length])
-  }
-
   const removeShippingAddress = (indexToRemove: number) => {
-    if (shippingAddress.length <= 1) return // Não permite remover o último endereço
+    if (shippingAddress.length <= 1) return
     setshippingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
-    // Opcional: Limpar os valores do react-hook-form para o índice removido
-    // setValue(`shippingAddress.${indexToRemove}`, undefined);
+    setValue(`shippingAddress.${indexToRemove}`, {} as any);
   }
 
   const removeBillingAddress = (indexToRemove: number) => {
-    if (billingAddress.length <= 1) return // Não permite remover o último endereço
+    if (billingAddress.length <= 1) return
     setbillingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
-    // Opcional: Limpar os valores do react-hook-form para o índice removido
-    // setValue(`billingAddress.${indexToRemove}`, undefined);
+    setValue(`billingAddress.${indexToRemove}`, {} as any);
   }
 
+  const handleSameAsBilling = () => {
+    const currentBillingAddress = getValues("billingAddress.0");
+    if (currentBillingAddress) {
+      setValue("shippingAddress.0.street", currentBillingAddress.street || "");
+      setValue("shippingAddress.0.zipCode", currentBillingAddress.zipCode || "");
+      setValue("shippingAddress.0.city", currentBillingAddress.city || "");
+      setValue("shippingAddress.0.state", currentBillingAddress.state || "");
+      setValue("shippingAddress.0.county", currentBillingAddress.county || "");
+      setValue("shippingAddress.0.country", currentBillingAddress.country || "");
+      clearErrors("shippingAddress.0.street");
+      clearErrors("shippingAddress.0.zipCode");
+      clearErrors("shippingAddress.0.city");
+      clearErrors("shippingAddress.0.state");
+      clearErrors("shippingAddress.0.county");
+      clearErrors("shippingAddress.0.country");
+      console.log("Endereço de entrega preenchido com base no endereço de cobrança.");
+    } else {
+        console.warn("Endereço de cobrança não encontrado para copiar.");
+    }
+    setIsSameAsBilling(true);
+  };
+
+  useEffect(() => {
+    // Este useEffect estava vazio, pode ser usado para algo como carregar dados iniciais do usuário
+    // ou resetar estados. Mantido aqui se houver um propósito futuro.
+  }, []);
+
   if (isLoading) {
-    return <p>Loading...</p> // Ou seu componente de loading
+    return <p>Loading...</p>
   }
 
   return (
@@ -240,6 +415,9 @@ export default function OnboardingForm() {
           <S.ProgressFill progress={(currentStep / totalSteps) * 100} />
         </S.ProgressBar>
 
+        {/* O hookFormSubmit(onSubmit) precisa ser passado diretamente para o onSubmit do form,
+            não o onSubmit que você criou. O nome da função está correto, mas a chamada
+            direta para hookFormSubmit é a forma correta. */}
         <form onSubmit={hookFormSubmit(onSubmit)}>
           {currentStep === 1 && (
             <S.Section>
@@ -283,21 +461,81 @@ export default function OnboardingForm() {
                     type="number"
                     {...register("customerInfo.dunNumber", {
                       required: "DUNS is required",
+                      valueAsNumber: true, // Garante que seja um número
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
-
                   {errors.customerInfo?.dunNumber && (
                     <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
+                <S.InputGroup>
+                  <S.Label htmlFor="brandingMix">Brand/Branding Mix</S.Label>
+                  <S.Input
+                    id="brandingMix"
+                    {...register("brandingMix" as any, { required: "Brand/Branding Mix is required" })}
+                    error={!!(errors as any).brandingMix}
+                  />
+                  {(errors as any).brandingMix && <S.ErrorMessage>{(errors as any).brandingMix.message}</S.ErrorMessage>}
+                </S.InputGroup>
+                <S.InputGroup>
+                  <S.Label htmlFor="instagram">Instagram Link</S.Label>
+                  <S.Input
+                    id="instagram"
+                    type="url"
+                    placeholder="https://instagram.com/yourprofile"
+                    {...register("instagram" as any, {
+                      pattern: {
+                        value: /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
+                        message: "Please enter a valid Instagram URL.",
+                      },
+                    })}
+                    error={!!(errors as any).instagram}
+                  />
+                  {(errors as any).instagram && <S.ErrorMessage>{(errors as any).instagram.message}</S.ErrorMessage>}
+                </S.InputGroup>
+                <S.InputGroup>
+                  <S.Label htmlFor="website">Website Link</S.Label>
+                  <S.Input
+                    id="website"
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    {...register("website" as any, {
+                      pattern: {
+                        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                        message: "Please enter a valid Website URL.",
+                      },
+                    })}
+                    error={!!(errors as any).website}
+                  />
+                  {(errors as any).website && <S.ErrorMessage>{(errors as any).website.message}</S.ErrorMessage>}
+                </S.InputGroup>
+
                 <S.FileInputContainer>
-                  <S.Label htmlFor="resale">Resale Certificate</S.Label>
+                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
                   <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
                   <S.UploadButton htmlFor="file-upload">
                     <Upload size={16} />
                     {file ? file.name : "Attach file (PDF)"}
                   </S.UploadButton>
+                  {errors.customerInfo?.resaleCertificate && (
+                      <S.ErrorMessage>{errors.customerInfo.resaleCertificate.message}</S.ErrorMessage>
+                  )}
+                </S.FileInputContainer>
+                <S.FileInputContainer>
+                  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+                  <S.HiddenInput id="image-upload" type="file" accept="image/*" multiple onChange={handleImageChange} />
+                  <S.UploadButton htmlFor="image-upload">
+                    <Upload size={16} />
+                    {imageFiles.length > 0 ? `${imageFiles.length} file(s) selected` : "Attach image files"}
+                  </S.UploadButton>
+                  {imageFiles.length > 0 && (
+                    <S.FilePreviewContainer>
+                      {imageFiles.map((img, idx) => (
+                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
+                      ))}
+                    </S.FilePreviewContainer>
+                  )}
                 </S.FileInputContainer>
               </S.Grid>
             </S.Section>
@@ -418,14 +656,17 @@ export default function OnboardingForm() {
                     </div>
                   ))}
 
-                  <S.AddAddressButton type="button" onClick={addBillingAddress}>
-                    <Plus size={16} /> Add another billing address
-                  </S.AddAddressButton>
                 </S.AddressSection>
 
                 <S.AddressSection>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
                     <S.AddressTitle>Shipping Address</S.AddressTitle>
+                    <S.Button
+                      type="button"
+                      onClick={handleSameAsBilling}
+                    >
+                      Same as Billing Address
+                    </S.Button>
                   </div>
 
                   {shippingAddress.map((index) => (
@@ -547,7 +788,7 @@ export default function OnboardingForm() {
               <S.SectionTitle>Accounts Payable Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="apFirstName">AP Contact First Name</S.Label>
+                  <S.Label htmlFor="apFirstName">First name</S.Label>
                   <S.Input
                     id="apFirstName"
                     {...register("apContact.firstName", {
@@ -558,7 +799,7 @@ export default function OnboardingForm() {
                   {errors.apContact?.firstName && <S.ErrorMessage>{errors.apContact.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apLastName">AP Contact Last Name</S.Label>
+                  <S.Label htmlFor="apLastName">Last name</S.Label>
                   <S.Input
                     id="apLastName"
                     {...register("apContact.lastName", {
@@ -569,7 +810,7 @@ export default function OnboardingForm() {
                   {errors.apContact?.lastName && <S.ErrorMessage>{errors.apContact.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apEmail">AP Contact E-mail</S.Label>
+                  <S.Label htmlFor="apEmail">E-mail</S.Label>
                   <S.Input
                     id="apEmail"
                     type="email"
@@ -585,47 +826,51 @@ export default function OnboardingForm() {
                   />
                   {errors.apContact?.email && <S.ErrorMessage>{errors.apContact.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="apCountryCode">AP Contact Country Code</S.Label>
-                  <S.Input
-                    id="apCountryCode"
-                    type="number"
-                    min={0}
-                    style={{ width: "80px" }}
-                    {...register("apContact.countryCode", {
-                      required: "Country code is required",
-                    })}
-                    error={!!errors.apContact?.countryCode}
-                  />
-                  {errors.apContact?.countryCode && (
-                    <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>
-                  )}
-                </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="apContactNumber">AP Contact Number:</S.Label>
-                  <S.Input
-                    id="apContactNumber"
-                    type="number"
-                    min={0}
-                    {...register("apContact.contactNumber", {
-                      required: "Contact number is required",
-                    })}
-                    error={!!errors.apContact?.contactNumber}
-                  />
-                  {errors.apContact?.contactNumber && (
-                    <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+                <S.PhoneInputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="apCountryCode">Country Code</S.Label>
+                    <S.Input
+                      id="apCountryCode"
+                      type="number"
+                      min={0}
+                      {...register("apContact.countryCode", {
+                        required: "Code is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.apContact?.countryCode}
+                    />
+                    {errors.apContact?.countryCode && (
+                      <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="apContactNumber">Phone:</S.Label>
+                    <S.Input
+                      id="apContactNumber"
+                      type="number"
+                      min={0}
+                      {...register("apContact.contactNumber", {
+                        required: "Contact number is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.apContact?.contactNumber}
+                    />
+                    {errors.apContact?.contactNumber && (
+                      <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                </S.PhoneInputGroup>
               </S.Grid>
             </S.Section>
           )}
 
           {currentStep === 4 && (
             <S.Section>
-              <S.SectionTitle>Buyer Information</S.SectionTitle>
+                <S.SectionTitleBuyer>Buyer Information</S.SectionTitleBuyer>
+
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerFirstName">Buyer First Name:</S.Label>
+                  <S.Label htmlFor="buyerFirstName">First name:</S.Label>
                   <S.Input
                     id="buyerFirstName"
                     {...register("buyerInfo.firstName", {
@@ -636,7 +881,7 @@ export default function OnboardingForm() {
                   {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerLastName">Buyer Last Name:</S.Label>
+                  <S.Label htmlFor="buyerLastName">Last name:</S.Label>
                   <S.Input
                     id="buyerLastName"
                     {...register("buyerInfo.lastName", {
@@ -647,7 +892,7 @@ export default function OnboardingForm() {
                   {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerEmail">Buyer E-mail:</S.Label>
+                  <S.Label htmlFor="buyerEmail">E-mail:</S.Label>
                   <S.Input
                     id="buyerEmail"
                     type="email"
@@ -664,38 +909,135 @@ export default function OnboardingForm() {
                   {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
 
-                <S.InputGroup>
-                  <S.Label htmlFor="buyerCountryCode">Buyer Country Code:</S.Label>
+                <S.PhoneInputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="buyerCountryCode">Country Code:</S.Label>
+                    <S.Input
+                      id="buyerCountryCode"
+                      type="number"
+                      min={0}
+                      {...register("buyerInfo.countryCode", {
+                        required: "Code is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.buyerInfo?.countryCode}
+                    />
+                    {errors.buyerInfo?.countryCode && (
+                      <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="buyerNumber">Phone:</S.Label>
+                    <S.Input
+                      type="number"
+                      id="buyerNumber"
+                      min={0}
+                      {...register("buyerInfo.buyerNumber", {
+                        required: "Phone number is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.buyerInfo?.buyerNumber}
+                    />
+                    {errors.buyerInfo?.buyerNumber && (
+                      <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                </S.PhoneInputGroup>
+
+                <S.InputGroup >
+                  <S.Label htmlFor="terms">Terms</S.Label>
                   <S.Input
-                    id="buyerCountryCode"
+                     style={{ width: '250px' }}
+                    as="select"
+                    id="terms"
+                    {...register("buyerInfo.terms", {
+                      required: "Terms are required",
+                      validate: (value) => value !== "" || "Please select terms",
+                    })}
+                    error={!!errors.buyerInfo?.terms}
+                  >
+                    {termsOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </S.Input>
+                  {errors.buyerInfo?.terms && <S.ErrorMessage>{errors.buyerInfo.terms.message}</S.ErrorMessage>}
+                </S.InputGroup>
+
+                <S.InputGroup>
+                  <S.Label htmlFor="currency">Currency</S.Label>
+                  <S.Input
+                    style={{ width: '250px' }}
+                    as="select"
+                    id="currency"
+                    {...register("buyerInfo.currency", {
+                      required: "Currency is required",
+                      validate: (value) => value !== "" || "Please select a currency",
+                    })}
+                    error={!!errors.buyerInfo?.currency}
+                  >
+                    {currencyOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </S.Input>
+                  {errors.buyerInfo?.currency && <S.ErrorMessage>{errors.buyerInfo.currency.message}</S.ErrorMessage>}
+                </S.InputGroup>
+
+                <S.InputGroup>
+                  <S.Label htmlFor="estimatedPurchaseAmount">Estimated Purchase Amount</S.Label>
+                  <S.Input
+                    id="estimatedPurchaseAmount"
                     type="number"
                     min={0}
-                    style={{ width: "80px" }}
-                    {...register("buyerInfo.countryCode", {
-                      required: "Country code is required",
+                    step="0.01"
+                    {...register("buyerInfo.estimatedPurchaseAmount", {
+                      required: "Estimated purchase amount is required",
+                      valueAsNumber: true,
+                      min: { value: 0, message: "Amount must be positive" },
                     })}
-                    error={!!errors.buyerInfo?.countryCode}
+                    error={!!errors.buyerInfo?.estimatedPurchaseAmount}
                   />
-                  {errors.buyerInfo?.countryCode && (
-                    <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
+                  {errors.buyerInfo?.estimatedPurchaseAmount && (
+                    <S.ErrorMessage>{errors.buyerInfo.estimatedPurchaseAmount.message}</S.ErrorMessage>
                   )}
                 </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="buyerNumber">Buyer Number:</S.Label>
-                  <S.Input
-                    type="number"
-                    id="buyerNumber"
-                    min={0}
-                    {...register("buyerInfo.buyerNumber", {
-                      required: "Buyer number is required",
-                    })}
-                    error={!!errors.buyerInfo?.buyerNumber}
-                  />
-                  {errors.buyerInfo?.buyerNumber && (
-                    <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+
+                <S.FileInputContainer>
+  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+    <S.Label htmlFor="financialStatements-upload">
+      Financial Statements
+    </S.Label>
+    <S.InfoButton
+      type="button"
+      title="Please upload the company’s official financial statements (e.g., balance sheet, income statement) referring to the most recently disclosed reporting period"
+    >
+      <Info size={16} />
+    </S.InfoButton>
+  </div>
+  <S.HiddenInput
+    id="financialStatements-upload"
+    type="file"
+    accept="application/pdf"
+    onChange={handleFinancialStatementsFileChange}
+  />
+  <S.UploadButton htmlFor="financialStatements-upload">
+    <Upload size={16} />
+    {financialStatementsFile ? financialStatementsFile.name : "Attach file (PDF)"}
+  </S.UploadButton>
+  {/* A mensagem de erro só aparece se houve tentativa de validação do passo 4 E houver erro */}
+  {errors.buyerInfo?.financialStatements && stepFourAttemptedValidation && (
+    <S.ErrorMessage>{errors.buyerInfo.financialStatements.message}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
               </S.Grid>
+
+            <S.AlertMessage>
+              ALL ACCOUNTS START WITH 100% PRIOR TO SHIPMENT PAYMENTS <br/>
+              You may request alternative payment terms, which will be subject to approval
+            </S.AlertMessage>
             </S.Section>
           )}
 
@@ -715,8 +1057,13 @@ export default function OnboardingForm() {
               </S.Button>
             )}
           </S.ButtonGroup>
+
+
         </form>
+
+
       </S.FormContainer>
+
 
       {isModalOpen && (
         <S.ModalOverlay>
@@ -728,7 +1075,7 @@ export default function OnboardingForm() {
             <S.ModalButton
               onClick={() => {
                 setIsModalOpen(false)
-                router.push("/") // Redirecione para a página inicial ou de sucesso
+                router.push("/")
               }}
             >
               OK

@@ -73,12 +73,21 @@ type WholesaleTerms = {
   wholesale_discount: number;
 };
 
-const INVOICING_COMPANIES = [
-  "Plantage Rio Inc - United States",
-  "Soma Brands International - European Union",
-  "Soma Brands UK Limited - United Kingdom",
-  "Soma Brands France - France",
-];
+// Dados de empresas de faturamento que possuem armazéns, associados a moedas.
+// Assumimos que esta informação viria do backend, mas para o exemplo, é estática.
+// Mapeamento de moeda para empresas de faturamento relevantes.
+const INVOICING_COMPANIES_BY_CURRENCY: Record<string, string[]> = {
+    "USD": [
+        "Plantage Rio Inc - United States"
+    ],
+    "EUR": [
+        "Soma Brands International - European Union",
+        "Soma Brands France - France" // Adicionei Soma Brands France com base no seu código original
+    ],
+    "GBP": [
+        "Soma Brands UK Limited - United Kingdom"
+    ],
+};
 
 const CURRENCIES = ["USD", "EUR", "GBP"];
 
@@ -144,6 +153,7 @@ export default function ValidationDetailsPage() {
   });
 
   const [warehouses, setWarehouses] = useState<string[]>([]);
+  const [availableInvoicingCompanies, setAvailableInvoicingCompanies] = useState<string[]>([]); // Novo estado para empresas de faturamento disponíveis
 
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -227,6 +237,25 @@ export default function ValidationDetailsPage() {
     fetchUser();
   }, []);
 
+  // Novo useEffect para atualizar as empresas de faturamento disponíveis com base na moeda selecionada
+  useEffect(() => {
+    const selectedCurrency = terms.wholesale_currency;
+    if (selectedCurrency && INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]) {
+      setAvailableInvoicingCompanies(INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]);
+    } else {
+      setAvailableInvoicingCompanies([]);
+    }
+    // Resetar empresa de faturamento e armazém quando a moeda muda
+    setTerms((prev) => ({
+      ...prev,
+      wholesale_invoicing_company: "",
+      wholesale_warehouse: "",
+    }));
+    // Limpar armazéns também
+    setWarehouses([]); // Adicionado para limpar os armazéns imediatamente
+  }, [terms.wholesale_currency]);
+
+  // useEffect existente para buscar armazéns quando a empresa de faturamento muda
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.wholesale_invoicing_company) {
@@ -248,7 +277,7 @@ export default function ValidationDetailsPage() {
     };
 
     fetchWarehouses();
-  }, [terms.wholesale_invoicing_company]);
+  }, [terms.wholesale_invoicing_company]); // A dependência permanece na empresa de faturamento
 
   const handleTermChange = (
     field: keyof WholesaleTerms,
@@ -501,19 +530,36 @@ export default function ValidationDetailsPage() {
           <S.TermsGrid>
             <S.TermsSection>
               <label>
+                <CreditCard size={16} /> Currency
+              </label>
+              <S.Select
+                value={terms.wholesale_currency}
+                onChange={(e) =>
+                  handleTermChange("wholesale_currency", e.target.value)
+                }
+              >
+                <option value="">Select currency</option>
+                {CURRENCIES.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </S.Select>
+            </S.TermsSection>
+
+            <S.TermsSection>
+              <label>
                 <Building2 size={16} /> Invoicing Company
               </label>
               <S.Select
                 value={terms.wholesale_invoicing_company}
                 onChange={(e) =>
-                  handleTermChange(
-                    "wholesale_invoicing_company",
-                    e.target.value
-                  )
+                  handleTermChange("wholesale_invoicing_company", e.target.value)
                 }
+                disabled={!terms.wholesale_currency} // Desabilita até que uma moeda seja selecionada
               >
                 <option value="">Select company</option>
-                {INVOICING_COMPANIES.map((company) => (
+                {availableInvoicingCompanies.map((company) => ( // Renderiza opções baseadas no estado availableInvoicingCompanies
                   <option key={company} value={company}>
                     {company}
                   </option>
@@ -530,33 +576,23 @@ export default function ValidationDetailsPage() {
                 onChange={(e) =>
                   handleTermChange("wholesale_warehouse", e.target.value)
                 }
-                disabled={!terms.wholesale_invoicing_company}
+                // HABILITA AQUI APÓS A SELEÇÃO DA MOEDA
+                // MAS AINDA EXIBIRÁ OPÇÕES VAZIAS ATÉ QUE A EMPRESA DE FATURAMENTO SEJA ESCOLHIDA
+                disabled={!terms.wholesale_currency} // Agora depende apenas da moeda para ser habilitado
               >
                 <option value="">Select warehouse</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse} value={warehouse}>
-                    {warehouse}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
-
-            <S.TermsSection>
-              <label>
-                <CreditCard size={16} /> Currency
-              </label>
-              <S.Select
-                value={terms.wholesale_currency}
-                onChange={(e) =>
-                  handleTermChange("wholesale_currency", e.target.value)
-                }
-              >
-                <option value="">Select currency</option>
-                {CURRENCIES.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
+                {/* Se não houver invoicing_company selecionada, warehouses estará vazio */}
+                {warehouses.length > 0 ? (
+                    warehouses.map((warehouse) => (
+                        <option key={warehouse} value={warehouse}>
+                            {warehouse}
+                        </option>
+                    ))
+                ) : (
+                    <option value="" disabled>
+                        Select an Invoicing Company first
+                    </option>
+                )}
               </S.Select>
             </S.TermsSection>
 

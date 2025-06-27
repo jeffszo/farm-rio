@@ -30,7 +30,7 @@ export default function WholesaleValidationsPage() {
     const fetchPendingCustomers = async () => {
       try {
         setLoading(true);
-        const { data, error, count } = await api.getPendingValidations(currentPage, itemsPerPage);
+        const { data, error, count } = await api.getPendingWholesaleValidations(currentPage, itemsPerPage);
         if (error) throw new Error(error.message);
 
         // Agora setamos o estado com os dados retornados da API

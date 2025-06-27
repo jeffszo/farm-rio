@@ -1,78 +1,159 @@
 import { supabase } from "./client"
 
+// Helper function to determine the next status in the new flow
+function getNextStatus(teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final"): string {
+  switch (teamRole) {
+    case "csc_initial":
+      return "approved by the CSC team initial";
+    case "tax":
+      return "approved by the tax team";
+    case "wholesale":
+      return "approved by the wholesale team";
+    case "credit":
+      return "approved by the credit team";
+    case "csc_final":
+      return "finished"; // Assuming "finished" is the ultimate final status
+    default:
+      return "pending"; // Initial state for new forms
+  }
+}
+
 export async function validateCustomer(
   customerId: string,
-  teamRole: "atacado" | "credito" | "csc",
+  teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final",
   approved: boolean,
-  terms: Record<string, boolean> | null = null
+  terms: Record<string, boolean> | null = null // Terms only for initial CSC if needed
 ) {
   // 1. Autenticação
-  const { data: userSession, error: sessionError } = await supabase.auth.getUser()
+  const { data: userSession, error: sessionError } = await supabase.auth.getUser();
   if (sessionError || !userSession?.user) {
-    throw new Error("Usuário não autenticado.")
+    throw new Error("Usuário não autenticado.");
   }
 
-  const userId = userSession.user.id
-  const userEmail = userSession.user.email
+  const userId = userSession.user.id;
+  const userEmail = userSession.user.email;
 
-  // 2. Autorização
-  if (teamRole === "atacado" && userEmail !== "wholesale@farm.com") {
-    throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.")
+  // 2. Autorização (Update emails for each team if restricted)
+  // Adicione verificações de email para cada equipe se houver restrições de domínio.
+  if (teamRole === "wholesale" && userEmail !== "wholesale@farm.com") {
+    throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.");
   }
+  // Exemplo para a equipe de Tax:
+  // if (teamRole === "tax" && userEmail !== "tax@farm.com") {
+  //   throw new Error("Usuário não autorizado para validar os clientes do time de Tributário.");
+  // }
+  // Exemplo para a equipe de Crédito:
+  // if (teamRole === "credit" && userEmail !== "credit@farm.com") {
+  //   throw new Error("Usuário não autorizado para validar os clientes do time de Crédito.");
+  // }
+  // Exemplo para a equipe CSC Inicial/Final:
+  // if ((teamRole === "csc_initial" || teamRole === "csc_final") && userEmail !== "csc@farm.com") {
+  //   throw new Error("Usuário não autorizado para validar os clientes do time de CSC.");
+  // }
 
-  // 3. Verificação de equipe
+  // 3. Verificação de team_users table (assumindo 'team_role' matches the new flow)
   const { data: teamUser, error: teamError } = await supabase
     .from("team_users")
     .select("id")
     .eq("user_id", userId)
-    .eq("team_role", teamRole)
-    .single()
+    .eq("team_role", teamRole) // This assumes your team_users table has roles like "csc_initial", "tax", etc.
+    .single();
 
   if (teamError || !teamUser) {
-    throw new Error("Usuário não encontrado na equipe de validação.")
+    throw new Error(`Usuário não encontrado na equipe de validação de ${teamRole}.`);
   }
 
-  // 4. Verificação dos termos (se aprovando)
+  // 4. Verification of terms (if approving and terms are provided, currently only relevant for initial CSC)
   if (approved && terms) {
-    const allTermsAccepted = Object.values(terms).every((term) => term === true)
+    const allTermsAccepted = Object.values(terms).every((term) => term === true);
     if (!allTermsAccepted) {
-      throw new Error("Todos os termos devem ser aceitos para aprovação.")
+      throw new Error("Todos os termos devem ser aceitos para aprovação.");
     }
   }
 
-  // 5. Atualização do cliente na tabela customer_forms
-  const updateFields: Record<string, string | boolean> = {
+  // 5. Update customer_forms table
+  const updateFields: Record<string, string | boolean | null> = { // Adicionado 'null' para tipos possíveis
     status: approved ? getNextStatus(teamRole) : "reprovado",
-  }
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+  };
 
-  // Marca o time como tendo validado
-  if (teamRole === "atacado") updateFields.validated_by_atacado = approved
-  if (teamRole === "credito") updateFields.validated_by_credito = approved
-  if (teamRole === "csc") updateFields.validated_by_csc = approved
+  // Mark the team as having validated
+  if (teamRole === "csc_initial") {
+    updateFields.validated_by_csc_initial = approved;
+    updateFields.csc_initial_status = approved ? "aprovado" : "reprovado";
+    // Nota: feedback não é tratado aqui, mas nas funções específicas de validação
+  }
+  if (teamRole === "tax") {
+    updateFields.validated_by_tax = approved;
+    updateFields.tax_status = approved ? "aprovado" : "reprovado";
+  }
+  if (teamRole === "wholesale") {
+    updateFields.validated_by_atacado = approved;
+    updateFields.wholesale_status = approved ? "aprovado" : "reprovado";
+  }
+  if (teamRole === "credit") {
+    updateFields.validated_by_credito = approved;
+    updateFields.credit_status = approved ? "aprovado" : "reprovado";
+  }
+  if (teamRole === "csc_final") {
+    updateFields.validated_by_csc_final = approved;
+    updateFields.csc_final_status = approved ? "aprovado" : "reprovado";
+  }
 
   const { error: updateError } = await supabase
     .from("customer_forms")
     .update(updateFields)
-    .eq("id", customerId)
+    .eq("id", customerId);
 
-  if (updateError) throw new Error(`Erro ao validar cliente: ${updateError.message}`)
+  if (updateError) throw new Error(`Erro ao validar cliente: ${updateError.message}`);
 }
 
-// Função auxiliar para status com base no time
-function getNextStatus(teamRole: string): string {
-  switch (teamRole) {
-    case "atacado":
-      return "approved by the wholesale team"
-    case "credito":
-      return "approved by the credit team"
-    case "csc":
-      return "approved by the CSC team"
-    default:
-      return "pending"
+
+// Nova função para validação inicial do CSC
+export async function validateCSCInitialCustomer(customerId: string, approved: boolean, feedback: string) {
+  const updateData = {
+    status: approved ? getNextStatus("csc_initial") : "rejected by the CSC initial team",
+    csc_initial_status: approved ? "aprovado" : "reprovado",
+    csc_initial_feedback: feedback || null,
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+  };
+
+  const { error } = await supabase
+    .from("customer_forms")
+    .update(updateData)
+    .eq("id", customerId);
+
+  if (error) {
+    throw new Error(`Erro ao validar cliente pelo CSC Inicial: ${error.message}`);
   }
 }
 
+// Nova função para validação Tributária (Tax)
+interface TaxDetails {
+  tax_status: string; // "aprovado" ou "reprovado"
+  tax_notes?: string;
+  // Adicione quaisquer outros campos específicos para validação fiscal (por exemplo, tax IDs, certificates, etc.)
+}
 
+export async function validateTaxCustomer(customerId: string, approved: boolean, taxDetails: TaxDetails) {
+  const updateData = {
+    status: approved ? getNextStatus("tax") : "rejected by the tax team",
+    tax_status: taxDetails.tax_status,
+    tax_notes: taxDetails.tax_notes ?? null,
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+  };
+
+  const { error } = await supabase
+    .from("customer_forms")
+    .update(updateData)
+    .eq("id", customerId);
+
+  if (error) {
+    throw new Error(`Erro ao validar cliente pelo time de Tributário (Tax): ${error.message}`);
+  }
+}
+
+// Existing function, now reflecting the new flow's status update
 export async function validateWholesaleCustomer(
   customerId: string,
   approved: boolean,
@@ -86,7 +167,7 @@ export async function validateWholesaleCustomer(
   }
 ) {
   const updateData = {
-    status: approved ? "approved by the wholesale team" : "rejected by the team wholesale",
+    status: approved ? getNextStatus("wholesale") : "rejected by the wholesale team", // Updated status
     wholesale_status: approved ? "aprovado" : "reprovado",
     wholesale_invoicing_company: terms.wholesale_invoicing_company,
     wholesale_warehouse: terms.wholesale_warehouse,
@@ -96,13 +177,14 @@ export async function validateWholesaleCustomer(
       : terms.wholesale_terms ?? null,
     wholesale_credit: terms.wholesale_credit,
     wholesale_discount: terms.wholesale_discount,
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
   };
 
   const { error, data } = await supabase
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId)
-    .select(); // 👈 importante para trazer os dados atualizados
+    .select();
 
   console.log("Resultado do update no Supabase:", { data, error });
 
@@ -111,28 +193,27 @@ export async function validateWholesaleCustomer(
   }
 }
 
-
-
-
+// Existing function, now reflecting the new flow's status update
 interface CreditTerms {
   credit_invoicing_company: string;
   credit_warehouse: string;
   credit_currency: string;
   credit_credit: number;
   credit_discount: number;
-  credit_terms?: string; // Ensure this matches the expected type
+  credit_terms?: string;
 }
 
 export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
   const updateData = {
-    status: approved ? "approved by the credit team" : "rejected by credit team",
-    credit_status: approved ? "aprovado" : "reprovado", // novo campo específico
+    status: approved ? getNextStatus("credit") : "rejected by credit team", // Updated status
+    credit_status: approved ? "aprovado" : "reprovado",
     credit_invoicing_company: creditTerms.credit_invoicing_company,
     credit_warehouse: creditTerms.credit_warehouse,
     credit_currency: creditTerms.credit_currency,
     credit_terms: creditTerms.credit_terms ?? null,
     credit_credit: creditTerms.credit_credit,
     credit_discount: creditTerms.credit_discount,
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
   };
 
   const { error } = await supabase
@@ -145,15 +226,13 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   }
 }
 
-
-
-
-
-export async function validateCSCCustomer(customerId: string, approved: boolean, feedback: string) {
+// Existing function, now for the final CSC review
+export async function validateCSCFinalCustomer(customerId: string, approved: boolean, feedback: string) {
   const updateData = {
-    status: approved ? "approved by the CSC team" : "rejected by the CSC team",
-    csc_status: approved ? "aprovado" : "reprovado",     
-    csc_feedback: feedback || null,                      
+    status: approved ? getNextStatus("csc_final") : "rejected by the CSC final team", // Updated status
+    csc_final_status: approved ? "aprovado" : "reprovado", // New field for final CSC
+    csc_final_feedback: feedback || null,
+    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
   };
 
   const { error } = await supabase
@@ -162,25 +241,18 @@ export async function validateCSCCustomer(customerId: string, approved: boolean,
     .eq("id", customerId);
 
   if (error) {
-    throw new Error(`Erro ao validar cliente pelo CSC: ${error.message}`);
+    throw new Error(`Erro ao validar cliente pelo CSC Final: ${error.message}`);
   }
 }
 
-
-
-
-
-// Finaliza o cliente na customer_forms e validations
+// Finaliza o cliente na customer_forms (This might be redundant if validateCSCFinalCustomer sets status to "finished")
 export async function finishCustomer(customerId: string) {
-  // Atualiza status na tabela customer_forms
   const { error: customerError } = await supabase
     .from("customer_forms")
-    .update({ status: "finished" })
+    .update({ status: "finished", updated_at: new Date().toISOString() }) // Adiciona o timestamp de atualização
     .eq("id", customerId);
 
   if (customerError) {
     throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
   }
-
 }
-

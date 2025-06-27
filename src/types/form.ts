@@ -29,14 +29,20 @@ export interface BuyerInfo {
     email: string;
     countryCode: string;
     buyerNumber: string;
+    // Novos campos adicionados
+    terms: string; // Ex: 'Net 30', 'COD', etc.
+    currency: string; // Ex: 'USD', 'EUR', 'BRL'
+    estimatedPurchaseAmount: number; // Valor numérico
 }
 
 export interface IFormInputs {
     customerInfo: CustomerInfo;
-    billingAddress: AddressInput[]; // AGORA É UM ARRAY DE AddressInput
-    shippingAddress: AddressInput[]; // AGORA É UM ARRAY DE AddressInput
+    billingAddress: AddressInput[];
+    shippingAddress: AddressInput[];
     apContact: ApContactInfo;
     buyerInfo: BuyerInfo;
-    // Não é necessário resale_certificate aqui, pois é um File ou string de URL
-    // e é tratado separadamente no onSubmit.
+    photoUrls?: string[];
+    brandingMix?: string;
+    instagram?: string;
+    website?: string;
 }

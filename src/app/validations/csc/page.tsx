@@ -30,7 +30,7 @@ export default function Page() {
     const fetchPendingCustomers = async () => {
       try {
         setLoading(true);
-        const { data, error, count } = await api.getPendingCSCValidations(currentPage, itemsPerPage);
+        const { data, error, count } = await api.getPendingCSCFirstValidations(currentPage, itemsPerPage);
         if (error) throw new Error(error.message);
 
         setCustomers(data as Customer[]);
