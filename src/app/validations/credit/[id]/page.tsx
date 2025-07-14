@@ -47,6 +47,7 @@ interface CustomerForm {
   sales_tax_id: string;
   duns_number: string;
   dba_number: string;
+  financial_statements: string;
   resale_certificate: string;
   billing_address: AddressDetail[]; // Updated to AddressDetail[]
   shipping_address: AddressDetail[]; // Updated to AddressDetail[]
@@ -56,6 +57,10 @@ interface CustomerForm {
   buyer_email: string;
   status: string;
   created_at: string;
+  photo_urls: string[]; // Changed to array of strings
+  instagram: string;
+  website: string;
+  branding_mix: string;
   // Campos relacionados ao crédito
   credit_invoicing_company?: string;
   credit_warehouse?: string;
@@ -109,10 +114,10 @@ const INVOICING_COMPANIES_BY_CURRENCY: Record<string, string[]> = {
     ],
     "EUR": [
         "Soma Brands International - European Union",
-        "Soma Brands France - France"
+        // "Soma Brands France - France" // Adicionei Soma Brands France com base no seu código original
     ],
     "GBP": [
-        "Soma Brands UK Limited - United Kingdom"
+        "Soma Brands International"
     ],
 };
 
@@ -120,10 +125,8 @@ const CURRENCIES = ["USD", "EUR", "GBP"];
 
 const PAYMENT_TERMS = [
   "100% Prior Ship",
-  "Net 45 Days",
-  "Net 30 Days",
-  "Net 90 Days",
   "Net 15 Days",
+  "Net 30 Days",
 ];
 
 // Helper function to format an address object into a single string
@@ -268,7 +271,7 @@ export default function ValidationDetailsPage() {
     fetchUser();
   }, []);
 
-  // useEffect para buscar detalhes de validação (se ainda houver)
+  // // useEffect para buscar detalhes de validação (se ainda houver)
   useEffect(() => {
     const fetchValidationDetails = async () => {
       const validationData = await api.getCustomerValidationDetails(id as string)
@@ -442,6 +445,18 @@ export default function ValidationDetailsPage() {
   if (error) return <S.Message>Error: {error}</S.Message>;
   if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
+  let parsedPhotoUrls: string[] = [];
+  try {
+    if (customerForm.photo_urls && typeof customerForm.photo_urls === 'string') {
+        parsedPhotoUrls = JSON.parse(customerForm.photo_urls);
+    } else if (Array.isArray(customerForm.photo_urls)) { // Handle case if already an array
+        parsedPhotoUrls = customerForm.photo_urls;
+    }
+  } catch (e) {
+    console.error("Error parsing photo_urls JSON:", e);
+    parsedPhotoUrls = []; // Fallback to empty array on error
+  }
+
   return (
     <S.ContainerMain>
       <S.Container>
@@ -457,7 +472,7 @@ export default function ValidationDetailsPage() {
               <User size={16} /> Customer Information
             </S.SectionTitle>
             <S.FormRow>
-              <strong>Name:</strong> {customerForm.customer_name}
+              <strong>Legal Name:</strong> {customerForm.customer_name}
             </S.FormRow>
             <S.FormRow>
               <strong>Tax ID:</strong> {customerForm.sales_tax_id}
@@ -503,6 +518,23 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
             <S.FormRow>
+
+                          <S.FormRow>
+                            <strong>Financial Statements: </strong>{" "}
+                            {customerForm.financial_statements ? (
+                              <a
+                                href={customerForm.financial_statements}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View PDF
+                              </a>
+                            ) : (
+                              "Not sent"
+                            )}
+                          </S.FormRow>
+
+                          
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
                 <a
@@ -515,6 +547,37 @@ export default function ValidationDetailsPage() {
               ) : (
                 "Not sent"
               )}
+            </S.FormRow>
+
+                                     <S.FormRow>
+              <strong>Instagram: </strong>
+              <a target="_blank"  href={customerForm.instagram}>
+                {customerForm.instagram}
+              </a>
+
+            </S.FormRow>
+                        <S.FormRow>
+              <strong>Website: </strong>
+              <a target="_blank"  href={customerForm.website}>
+                {customerForm.website}
+              </a>
+
+            </S.FormRow>
+            <S.FormRow>
+               <strong>Photos:</strong>{" "}
+              {parsedPhotoUrls.length > 0 ? (
+                <S.PhotoGallery> {/* Assuming you have a styled component for a gallery */}
+                  {parsedPhotoUrls.map((url, index) => (
+                    <a key={index} href={url} target="_blank" rel="noopener noreferrer">
+                      View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ''}
+                      {/* Or an image tag: <img src={url} alt={`Customer Photo ${index + 1}`} style={{ maxWidth: '100px', maxHeight: '100px', margin: '5px' }} /> */}
+                    </a>
+                  ))}
+                </S.PhotoGallery>
+              ) : (
+                "Not sent"
+              )}
+
             </S.FormRow>
           </S.FormSection>
           <S.FormSection>

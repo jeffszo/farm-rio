@@ -1,4 +1,5 @@
 import { supabase } from "./client"
+import { v4 as uuidv4 } from 'uuid'
 
 export async function uploadResaleCertificate(file: File, customerId: string) {
   const fileExt = file.name.split(".").pop()
@@ -46,24 +47,25 @@ export async function uploadResaleCertificate(file: File, customerId: string) {
  * Upload de imagens (múltiplas fotos)
  */
 export async function uploadImage(file: File, customerId: string): Promise<string> {
-  const fileName = `${customerId}/${uniqueSuffix}-${file.name}`
-  const filePath = fileName
+  const uniqueSuffix = uuidv4(); 
+  const fileName = `${customerId}/${uniqueSuffix}-${file.name}`;
+  const filePath = fileName;
 
   const { error } = await supabase.storage
     .from("customerimages")
-    .upload(filePath, file, { upsert: false })
+    .upload(filePath, file, { upsert: false });
 
-  if (error) throw new Error(`Erro ao fazer upload da imagem: ${error.message}`)
+  if (error) throw new Error(`Erro ao fazer upload da imagem: ${error.message}`);
 
   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from("customerimages")
-    .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10)
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10); // 10 anos
 
   if (signedUrlError || !signedUrlData?.signedUrl) {
-    throw new Error("Erro ao gerar link da imagem.")
+    throw new Error("Erro ao gerar link da imagem.");
   }
 
-  return signedUrlData.signedUrl
+  return signedUrlData.signedUrl;
 }
 
 
@@ -100,7 +102,7 @@ export async function uploadFinancialStatements(file: File, customerId: string) 
   // Salva o link na tabela customer_forms
   const { error: dbError } = await supabase
     .from("customer_forms")
-    .update({ financial_statements: signedUrl })// 🆕 novo campo
+    .update({financial_statements: signedUrl })// 🆕 novo campo
     .eq("id", customerId)
 
   if (dbError) {

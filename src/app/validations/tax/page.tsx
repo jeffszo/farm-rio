@@ -30,7 +30,7 @@ export default function Page() {
     const fetchPendingCustomers = async () => {
       try {
         setLoading(true);
-        const { data, error, count } = await api.getPendingCSCValidations(currentPage, itemsPerPage);
+        const { data, error, count } = await api.getPendingTaxValidations(currentPage, itemsPerPage);
         if (error) throw new Error(error.message);
 
         setCustomers(data as Customer[]);
@@ -53,13 +53,16 @@ export default function Page() {
 
   return (
   
+
+
+    
       <PendingCustomersTable
       customers={customers}
       totalCount={totalCount}
       currentPage={currentPage}
       totalPages={totalPages}
       setCurrentPage={setCurrentPage}
-      onViewDetails={(id) => router.push(`/validations/csc/${id}`)}
+      onViewDetails={(id) => router.push(`/validations/tax/${id}`)}
     />
     
     

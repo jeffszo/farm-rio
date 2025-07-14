@@ -74,7 +74,7 @@ export default function PendingCustomersTable({
     const customers = await api.getApprovedCustomers()
 
     // 🔹 Filtra apenas os clientes aprovados pelo CSC (caso o banco tenha inconsistências)
-    const approvedCustomers = customers.filter((customer) => customer.status === "approved by the CSC team")
+    const approvedCustomers = customers.filter((customer) => customer.status === "finished")
 
     if (approvedCustomers.length === 0) {
       alert("No customers approved for export!")

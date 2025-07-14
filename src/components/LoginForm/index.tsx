@@ -44,6 +44,8 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
         } else {
           router.push("/customer/form");
         }
+      } else if (user.role === "tax") {
+        router.push("/validations/tax");
       } else if (user.role === "atacado") {
         router.push("/validations/wholesale");
       } else if (user.role === "credito") {

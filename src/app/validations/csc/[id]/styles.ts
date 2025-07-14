@@ -334,3 +334,59 @@ export const ActionButton = styled.button<{ color?: string }>`
     color: ${({ color }) => (color === 'red' ? '#e53e3e' : color === 'green' ? '#38a169' : '#1a202c')};
   }
 `;
+
+// New style for Photo Gallery
+export const PhotoGallery = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem; /* Space between links/images */
+  margin-top: 0.5rem;
+
+  a {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    background-color: #e2e8f0;
+    color: #2d3748;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #cbd5e0;
+    }
+  }
+
+  /* If you decide to display images directly, add styles for img tags */
+  img {
+    max-width: 100px; /* Example size */
+    max-height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+  }
+`;
+
+
+
+export const ValueWithCopy = styled.span`
+  display: flex; // Permite que o número e o ícone fiquem lado a lado
+  align-items: center;
+  gap: 4px; // Espaçamento entre o número e o ícone
+`;
+
+export const CopyButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #007bff; // Cor do ícone
+  padding: 0; // Remova o padding padrão do botão
+  margin-left: 5px; // Ajuste o espaçamento se necessário
+
+  &:hover {
+    color: #0056b3;
+  }
+`;

@@ -21,20 +21,22 @@ class SupabaseAPI implements AuthAPI {
   updateForm = forms.updateForm
 
   // Validation methods
-  validateCustomer = validations.validateCustomer
+  validateTaxCustomer = validations.validateTaxCustomer
   validateWholesaleCustomer = validations.validateWholesaleCustomer
   validateCreditCustomer = validations.validateCreditCustomer
-  validateCSCCustomer = validations.validateCSCCustomer
+  validateCSCInitialCustomer = validations.validateCSCInitialCustomer
+  validateCSCFinalCustomer = validations.validateCSCFinalCustomer
   finishCustomer = validations.finishCustomer
 
   // Query methods
   getPendingWholesaleValidations = queries.getPendingWholesaleValidations
   getPendingCreditValidations = queries.getPendingCreditValidations
-  getPendingCSCFirstValidations = queries.getPendingCSCFirstValidations
   getInvoicingCompanies = queries.getInvoicingCompanies
   getWarehousesByCompany = queries.getWarehousesByCompany
   getApprovedCustomers = queries.getApprovedCustomers
   getCustomerValidationDetails = queries.getCustomerValidationDetails
+  getPendingTaxValidations = queries.getPendingTaxValidations
+  getPendingCSCValidations = queries.getPendingCSCValidations
   resetFormStatus = queries.resetFormStatus
   
   

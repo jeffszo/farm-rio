@@ -1,4 +1,6 @@
 import { supabase } from "./client"
+// import { sendEmailToCustomer } from "../email/sendEmail"; // Importe a função de envio
+// import { getValidationEmailTemplate } from "../email/emailTemplates"; // Importe os templates
 
 // Helper function to determine the next status in the new flow
 function getNextStatus(teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final"): string {
@@ -106,16 +108,35 @@ export async function validateCustomer(
     .eq("id", customerId);
 
   if (updateError) throw new Error(`Erro ao validar cliente: ${updateError.message}`);
+
+  // REMOVIDO: A lógica de envio de e-mail foi movida para as funções de validação específicas.
 }
 
 
 // Nova função para validação inicial do CSC
 export async function validateCSCInitialCustomer(customerId: string, approved: boolean, feedback: string) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
+  const newStatus = approved ? getNextStatus("csc_initial") : "rejected by the CSC initial team";
+  // const statusMessageForEmail = approved ? "aprovado pela equipe CSC Inicial" : "rejeitado pela equipe CSC Inicial";
+
   const updateData = {
-    status: approved ? getNextStatus("csc_initial") : "rejected by the CSC initial team",
+    status: newStatus,
     csc_initial_status: approved ? "aprovado" : "reprovado",
     csc_initial_feedback: feedback || null,
-    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+    updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase
@@ -126,6 +147,23 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
   if (error) {
     throw new Error(`Erro ao validar cliente pelo CSC Inicial: ${error.message}`);
   }
+
+  // // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: statusMessageForEmail,
+  //     feedback: feedback || undefined
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // // -----------------------------------
 }
 
 // Nova função para validação Tributária (Tax)
@@ -136,11 +174,28 @@ interface TaxDetails {
 }
 
 export async function validateTaxCustomer(customerId: string, approved: boolean, taxDetails: TaxDetails) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
+  const newStatus = approved ? getNextStatus("tax") : "rejected by the tax team";
+  // const statusMessageForEmail = approved ? "aprovado pela equipe Fiscal" : "rejeitado pela equipe Fiscal";
+
   const updateData = {
-    status: approved ? getNextStatus("tax") : "rejected by the tax team",
+    status: newStatus,
     tax_status: taxDetails.tax_status,
     tax_notes: taxDetails.tax_notes ?? null,
-    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+    updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase
@@ -151,6 +206,23 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
   if (error) {
     throw new Error(`Erro ao validar cliente pelo time de Tributário (Tax): ${error.message}`);
   }
+
+  // // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: statusMessageForEmail,
+  //     feedback: taxDetails.tax_notes || undefined
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // -----------------------------------
 }
 
 // Existing function, now reflecting the new flow's status update
@@ -164,10 +236,28 @@ export async function validateWholesaleCustomer(
     wholesale_terms?: string | string[];
     wholesale_credit: number;
     wholesale_discount: number;
+    feedback?: string; // Adicionado para passar feedback ao e-mail
   }
 ) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
+  const newStatus = approved ? getNextStatus("wholesale") : "rejected by the wholesale team";
+  // const statusMessageForEmail = approved ? "aprovado pela equipe Atacado" : "rejeitado pela equipe Atacado";
+
   const updateData = {
-    status: approved ? getNextStatus("wholesale") : "rejected by the wholesale team", // Updated status
+    status: newStatus,
     wholesale_status: approved ? "aprovado" : "reprovado",
     wholesale_invoicing_company: terms.wholesale_invoicing_company,
     wholesale_warehouse: terms.wholesale_warehouse,
@@ -177,7 +267,7 @@ export async function validateWholesaleCustomer(
       : terms.wholesale_terms ?? null,
     wholesale_credit: terms.wholesale_credit,
     wholesale_discount: terms.wholesale_discount,
-    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+    updated_at: new Date().toISOString()
   };
 
   const { error, data } = await supabase
@@ -191,6 +281,23 @@ export async function validateWholesaleCustomer(
   if (error) {
     throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
   }
+
+  // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: statusMessageForEmail,
+  //     feedback: terms.feedback || undefined
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // -----------------------------------
 }
 
 // Existing function, now reflecting the new flow's status update
@@ -201,11 +308,29 @@ interface CreditTerms {
   credit_credit: number;
   credit_discount: number;
   credit_terms?: string;
+  feedback?: string; // Adicionado para passar feedback ao e-mail
 }
 
 export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
+  const newStatus = approved ? getNextStatus("credit") : "rejected by credit team";
+  // const statusMessageForEmail = approved ? "aprovado pela equipe de Crédito" : "rejeitado pela equipe de Crédito";
+
   const updateData = {
-    status: approved ? getNextStatus("credit") : "rejected by credit team", // Updated status
+    status: newStatus,
     credit_status: approved ? "aprovado" : "reprovado",
     credit_invoicing_company: creditTerms.credit_invoicing_company,
     credit_warehouse: creditTerms.credit_warehouse,
@@ -213,7 +338,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     credit_terms: creditTerms.credit_terms ?? null,
     credit_credit: creditTerms.credit_credit,
     credit_discount: creditTerms.credit_discount,
-    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+    updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase
@@ -224,15 +349,49 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   if (error) {
     throw new Error(`Erro ao validar cliente pelo time de crédito: ${error.message}`);
   }
+
+  // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: statusMessageForEmail,
+  //     feedback: creditTerms.feedback || undefined
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // -----------------------------------
 }
 
 // Existing function, now for the final CSC review
 export async function validateCSCFinalCustomer(customerId: string, approved: boolean, feedback: string) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
+  const newStatus = approved ? getNextStatus("csc_final") : "rejected by the CSC final team";
+  // const statusMessageForEmail = approved ? "finalizado e aprovado" : "rejeitado pela equipe CSC Final";
+
   const updateData = {
-    status: approved ? getNextStatus("csc_final") : "rejected by the CSC final team", // Updated status
+    status: newStatus,
     csc_final_status: approved ? "aprovado" : "reprovado", // New field for final CSC
     csc_final_feedback: feedback || null,
-    updated_at: new Date().toISOString() // Adiciona o timestamp de atualização
+    updated_at: new Date().toISOString()
   };
 
   const { error } = await supabase
@@ -243,16 +402,64 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   if (error) {
     throw new Error(`Erro ao validar cliente pelo CSC Final: ${error.message}`);
   }
+
+  // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: statusMessageForEmail,
+  //     feedback: feedback || undefined
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // -----------------------------------
 }
 
 // Finaliza o cliente na customer_forms (This might be redundant if validateCSCFinalCustomer sets status to "finished")
 export async function finishCustomer(customerId: string) {
+  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+  const { data: customerData, error: fetchError } = await supabase
+    .from("customer_forms")
+    .select("email, customer_name")
+    .eq("id", customerId)
+    .single();
+
+  if (fetchError || !customerData) {
+    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+  }
+
+  // const customerEmail = customerData.email;
+  // const customerName = customerData.customer_name;
+
   const { error: customerError } = await supabase
     .from("customer_forms")
-    .update({ status: "finished", updated_at: new Date().toISOString() }) // Adiciona o timestamp de atualização
+    .update({ status: "finished", updated_at: new Date().toISOString() })
     .eq("id", customerId);
 
   if (customerError) {
     throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
   }
+
+  // ---- Lógica de Envio de E-mail ----
+  // if (customerEmail && customerName) {
+  //   const { subject, html } = getValidationEmailTemplate({
+  //     customerName: customerName,
+  //     status: "finalizado", // Status específico para "finished"
+  //     feedback: "Seu processo de cadastro foi concluído com sucesso."
+  //   });
+  //   await sendEmailToCustomer({
+  //     to: customerEmail,
+  //     subject: subject,
+  //     html: html
+  //   });
+  // } else {
+  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
+  // }
+  // -----------------------------------
 }

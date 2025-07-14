@@ -438,3 +438,34 @@ export const AddressTitle = styled.span`
   margin-bottom: 0.25rem;
   display: block; /* Make title take full width for better separation */
 `;
+
+export const PhotoGallery = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem; /* Space between links/images */
+  margin-top: 0.5rem;
+
+  a {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    background-color: #e2e8f0;
+    color: #2d3748;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #cbd5e0;
+    }
+  }
+
+  /* If you decide to display images directly, add styles for img tags */
+  img {
+    max-width: 100px; /* Example size */
+    max-height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+  }
+`;

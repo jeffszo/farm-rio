@@ -34,25 +34,37 @@ export async function getApprovedCustomers() {
   return data || [];
 }
 
-// Fetches customers pending initial CSC validation (new name)
-export async function getPendingCSCFirstValidations(page = 1, itemsPerPage = 10) {
+export async function getPendingCSCValidations(
+  page = 1, // validationType foi removido
+  itemsPerPage = 10
+) {
   const from = (page - 1) * itemsPerPage
   const to = from + itemsPerPage - 1
+
+  // Todos os status combinados
+  const statuses = [
+    "pending",
+    "rejected by the CSC initial team",
+    "approved by the credit team",
+    "rejected by the tax team",
+    "finished"
+    // Adicione outros status se houver mais que você deseja buscar nesta visão geral
+  ];
 
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["pending", "rejected by the CSC initial team"]) // Added rejection status
+    .in("status", statuses) // Usa o array de status combinado
     .range(from, to)
     .order("created_at", { ascending: true })
 
   if (error) {
-    console.error("❌ Erro ao buscar clientes pendentes (CSC Inicial):", error.message)
-    return { data: [], error, count: 0 }
+    console.error("❌ Erro ao buscar todos os clientes pendentes:", error.message);
+    return { data: [], error, count: 0 };
   }
 
-  console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count)
-  return { data, error: null, count }
+  console.log(`✅ Página ${page} | Clientes retornados (Todos os Pendentes):`, data.length, "| Total:", count);
+  return { data, error: null, count };
 }
 
 // New function to get customers for Tax validation
@@ -63,7 +75,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the CSC team initial", "rejected by the tax team"]) // From CSC initial or rejected by tax
+    .in("status", ["approved by the CSC team initial", "rejected by the wholesale team"]) // From CSC initial or rejected by tax
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -85,7 +97,7 @@ export async function getPendingWholesaleValidations(page = 1, itemsPerPage = 10
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the tax team", "rejected by the wholesale team"]) // From Tax or rejected by wholesale
+    .in("status", ["approved by the tax team", "rejected by the credit team"]) // From Tax or rejected by wholesale
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -107,7 +119,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the wholesale team", "rejected by credit team"]) // From Wholesale or rejected by credit
+    .in("status", ["approved by the wholesale team", "rejected by the CSC final team"]) // From Wholesale or rejected by credit
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -121,25 +133,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
 }
 
 // Renamed and updated for final CSC validation
-export async function getPendingCSCFinalValidations(page = 1, itemsPerPage = 10) {
-  const from = (page - 1) * itemsPerPage
-  const to = from + itemsPerPage - 1
 
-  const { data, error, count } = await supabase
-    .from("customer_forms")
-    .select("*", { count: "exact" })
-    .in("status", ["approved by the credit team", "rejected by the CSC final team"]) // From Credit or rejected by final CSC
-    .range(from, to)
-    .order("created_at", { ascending: true })
-
-  if (error) {
-    console.error("❌ Erro ao buscar clientes pendentes (CSC Final):", error.message)
-    return { data: [], error, count: 0 }
-  }
-
-  console.log(`✅ Página ${page} | Clientes retornados:`, data.length, "| Total:", count)
-  return { data, error: null, count }
-}
 
 
 export async function getInvoicingCompanies() {
@@ -177,10 +171,6 @@ export async function getCustomerValidationDetails(id: string) {
       resale_certificate,
       billing_address,
       shipping_address,
-      csc_initial_status,
-      csc_initial_feedback,
-      tax_status,
-      tax_notes,
       wholesale_status,
       wholesale_invoicing_company,
       wholesale_warehouse,
@@ -194,12 +184,10 @@ export async function getCustomerValidationDetails(id: string) {
       credit_currency,
       credit_terms,
       credit_credit,
-      credit_discount,
-      csc_final_status,
-      csc_final_feedback
+      credit_discount
     `)
     .eq("id", id)
-    .single(); // Use .single() para buscar um único registro
+    .single();
 
   if (error) {
     console.error("Erro ao buscar detalhes do cliente:", error.message);
@@ -265,3 +253,5 @@ export async function resetFormStatus(id: string) {
     throw err
   }
 }
+
+

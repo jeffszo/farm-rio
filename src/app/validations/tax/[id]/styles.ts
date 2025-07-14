@@ -4,20 +4,22 @@ export const ContainerMain = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  /* height: 100vh; */
-
+  margin-top: 5rem;
 `
 
 export const Container = styled.div`
-  max-width: 1200px;
-  width: 100%;
-  margin: 3rem auto;
+  width: 1200px;
   padding: 1.8rem;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   background-color: #ffffff;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
 
 `
 
@@ -26,6 +28,11 @@ export const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+
 `
 
 export const Title = styled.h2`
@@ -47,8 +54,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  /* MODIFICAÇÃO AQUI: A coluna do meio (endereços) agora é 2x mais larga */
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 
@@ -76,15 +82,20 @@ export const SectionTitle = styled.h3`
 `
 
 export const FormRow = styled.div`
+  display: flex; /* Certifique-se que o FormRow é um flex container */
+  align-items: center; /* Centraliza verticalmente o conteúdo */
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.25rem 0;
+  padding: 0.20rem 0;
 
   strong {
     font-weight: 600;
     color: #2d3748;
+    margin-right: 8px; /* Adicionado para espaçar o label do valor */
+    white-space: nowrap; /* Evita quebra de linha no label */
   }
-`
+`;
+
 
 export const TermsContainer = styled.div`
   margin-top: 1rem;
@@ -196,205 +207,137 @@ export const ModalDescription = styled.p`
 `
 
 export const ModalButton = styled.button`
-  background-color: #18181b;
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-`
-
-export const Select = styled.select`
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.875rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background-color: white;
-  color: #4a5568;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: #1a202c;
-    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.1);
-  }
-
-  &:disabled {
-    background-color: #f7fafc;
-    cursor: not-allowed;
-  }
-`
-
-export const NumericInput = styled.input.attrs({ type: "number" })`
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.875rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background-color: white;
-  color: #4a5568;
-
-  &:focus {
-    outline: none;
-    border-color: #1a202c;
-    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.1);
-  }
-
-  &::-webkit-inner-spin-button,
-  &::-webkit-outer-spin-button {
-    opacity: 1;
-  }
-`
-
-export const TermsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
-`
-
-export const TermsSection = styled.div`
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-
-  label {
-    display: flex;
-    justify-content: 'center';
-    gap: 0.25rem;
-    font-size: 0.875rem;
+    background-color: #18181b;
+    color: white;
+    font-size: 1rem;
     font-weight: 500;
-    color: #4a5568;
-    margin-bottom: 0.5rem;
-  }
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 `
 
-export const IconButton = styled.button`
-  background: none;
-  border: none;
-  padding: 2px;
-  margin-left: 2px;
-  cursor: pointer;
-  color: #555;
-
-  &:hover {
-    color: #000;
-  }
-
-  &:disabled {
-    color: #aaa;
-    cursor: not-allowed;
-  }
-`
-export const EditWrapper = styled.div`
+export const TermsCardsContainer = styled.div`
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 5rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
 `
 
-export const InlineEditWrapper = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-`
-
-export const SmallInput = styled.input`
-  padding: 4px 8px;
-  font-size: 14px;
-  width: 120px;
-  border: 1px solid #ccc;
+export const TermsCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #f8fafc;
+  padding: 1rem;
   border-radius: 6px;
-`
-
-export const CheckButton = styled.button`
-  background: none;
-  border: none;
-  color: green;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  flex-direction: column;
-  margin-left: 4px;
-
-
-  &:hover {
-    background-color: rgba(0, 128, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  @media (max-width: 768px) {
+    max-width: 90%;
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`
-
-export const CancelButton = styled.button`
-  background: none;
-  border: none;
-  color: #e53e3e;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  flex-direction: column;
-  margin-left: 8px;
-
-  &:hover {
-    background-color: rgba(229, 62, 62, 0.1);
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  p {
+    font-size: 0.875rem;
+    color: #4a5568;
+    padding: 0.25rem 0;
   }
 `
+export const FeedbackGroup = styled.div`
+  margin-top: 2rem;
+`;
 
-export const EditIcon = styled.span`
-  margin-left: 8px;
-  cursor: pointer;
-  color: #555;
-  display: inline-flex;
-  align-items: center;
+export const Textarea = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e0;
+  resize: vertical;
+`;
 
-  &:hover {
-    color: #000;
-  }
-`
-export const ContainerCheck = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-`
+export const Label = styled.label`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+`;
 
 export const AddressBlock = styled.div`
   background: #f0f4f8;
-  padding: 0.8rem;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border-radius: 6px;
   margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
   color: #2d3748;
+  line-height: 1.4;
+`;
 
-  div {
-    font-size: 0.875rem;
-    padding: 0.1rem 0;
-  }
+export const AddressTitle = styled.span`
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+  display: block; /* Make title take full width for better separation */
+`;
 
-  strong {
-    font-weight: 600;
-    color: #2d3748;
+// New styles for editable fields
+export const EditableValueContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+`;
+
+export const EditIcon = styled.span`
+  cursor: pointer;
+  color: #606060;
+  &:hover {
+    color: #1a202c;
   }
 `;
 
-export const AddressTitle = styled.h4`
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #1a202c;
+export const EditInput = styled.input`
+  flex-grow: 1;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #2d3748;
+  &:focus {
+    outline: none;
+    border-color: #4a5568;
+    box-shadow: 0 0 0 1px #4a5568;
+  }
+`;
+
+export const EditButtonContainer = styled.div`
+  display: flex;
+  gap: 0.25rem;
+`;
+
+export const ActionButton = styled.button<{ color?: string }>`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ color }) => color || '#4a5568'};
+
+  &:hover {
+    color: ${({ color }) => (color === 'red' ? '#e53e3e' : color === 'green' ? '#38a169' : '#1a202c')};
+  }
 `;
 
 export const PhotoGallery = styled.div`
@@ -425,5 +368,27 @@ export const PhotoGallery = styled.div`
     border-radius: 4px;
     object-fit: cover;
     border: 1px solid #e2e8f0;
+  }
+`;
+
+export const ValueWithCopy = styled.span`
+  display: flex; /* Permite que o número e o ícone fiquem lado a lado */
+  align-items: center; /* Alinha os itens verticalmente */
+  gap: 4px; /* Espaçamento entre o número/texto e o ícone */
+`;
+
+export const CopyButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #007bff; /* Cor do ícone */
+  padding: 0; /* Remova o padding padrão do botão */
+  margin-left: 5px; /* Ajuste o espaçamento se necessário */
+
+  &:hover {
+    color: #0056b3;
   }
 `;
