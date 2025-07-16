@@ -616,7 +616,7 @@ export default function ValidationDetailsPage() {
               <Mail size={16} /> Contacts
             </S.SectionTitle>
             <S.FormRow>
-              <strong>AP Contact:</strong> {customerForm.ap_contact_name}
+              <strong>Billing Contact:</strong> {customerForm.ap_contact_name}
             </S.FormRow>
             <S.FormRow>
               <strong>AP Email:</strong> {customerForm.ap_contact_email}

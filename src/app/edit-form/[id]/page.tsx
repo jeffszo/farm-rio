@@ -592,7 +592,7 @@ export default function EditFormPage() {
               <S.SectionTitle>Accounts Payable Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="apFirstName">AP Contact First Name</S.Label>
+                  <S.Label htmlFor="apFirstName">Billing Contact First Name</S.Label>
                   <S.Input
                     id="apFirstName"
                     {...register("apContact.firstName", {
@@ -603,7 +603,7 @@ export default function EditFormPage() {
                   {errors.apContact?.firstName && <S.ErrorMessage>{errors.apContact.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apLastName">AP Contact Last Name</S.Label>
+                  <S.Label htmlFor="apLastName">Billing Contact Last Name</S.Label>
                   <S.Input
                     id="apLastName"
                     {...register("apContact.lastName", {
@@ -614,7 +614,7 @@ export default function EditFormPage() {
                   {errors.apContact?.lastName && <S.ErrorMessage>{errors.apContact.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apEmail">AP Contact E-mail</S.Label>
+                  <S.Label htmlFor="apEmail">Billing Contact E-mail</S.Label>
                   <S.Input
                     id="apEmail"
                     type="email"
@@ -631,7 +631,7 @@ export default function EditFormPage() {
                   {errors.apContact?.email && <S.ErrorMessage>{errors.apContact.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apCountryCode">AP Contact Country Code</S.Label>
+                  <S.Label htmlFor="apCountryCode">Billing Contact Country Code</S.Label>
                   <S.Input
                     id="apCountryCode"
                     type="number"
@@ -647,7 +647,7 @@ export default function EditFormPage() {
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apContactNumber">AP Contact Number:</S.Label>
+                  <S.Label htmlFor="apContactNumber">Billing Contact Number:</S.Label>
                   <S.Input
                     id="apContactNumber"
                     type="number"
