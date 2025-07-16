@@ -1,3 +1,4 @@
+// src/app/validations/csc/[id]/styles.ts
 import styled from "styled-components"
 
 export const ContainerMain = styled.div`
@@ -389,4 +390,40 @@ export const CopyButton = styled.button`
   &:hover {
     color: #0056b3;
   }
+`;
+
+// New styles for terms display from page.tsx and page1.tsx
+export const TermsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+`;
+
+export const TermsSection = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  label {
+    font-size: 0.85rem;
+    color: #6a768c;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+`;
+
+export const InfoText = styled.p`
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 500;
+  padding: 0.375rem 0;
+`;
+
+export const AddressContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
 `;
