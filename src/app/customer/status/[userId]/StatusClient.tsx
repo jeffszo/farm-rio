@@ -93,7 +93,7 @@ export default function StatusClient({
           </div>
         )}
 
-        {formStatus === "rejected by the CSC team" && (
+        {formStatus === "rejected by the CSC final team" && (
           <div>
             <p>
               Your registration was rejected by our team. Please correct the
@@ -125,10 +125,20 @@ export default function StatusClient({
           </div>
         )}
 
-        {formStatus === "rejected by the team wholesale" && (
+        {formStatus === "rejected by the wholesale team" && (
           <div>
             Your form has already been rejected by the wholesale team
           </div>
+        )}
+
+              {formStatus === "rejected by the tax team" && (
+          <div>
+            Your form has already been rejected by the wholesale team
+          </div>
+        )}
+
+                {formStatus === "rejected by the CSC initial team" && (
+          <div>Your changed data is awaiting validation by the CSC team.</div>
         )}
 
         {formStatus === "data corrected by the client" && (
@@ -136,7 +146,7 @@ export default function StatusClient({
         )}
       </S.ReviewSubtitle>
 
-      {(formStatus === "rejected by the CSC team" || formStatus === "rejected by the team wholesale") && (
+      {(formStatus === "rejected by the CSC final team" || formStatus === "rejected by the team wholesale") && (
         <S.EditButton
           onClick={() => router.push(`/edit-form/${initialUserId}`)}
         >

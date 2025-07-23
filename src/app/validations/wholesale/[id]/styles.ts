@@ -94,15 +94,41 @@ export const TermsContainer = styled.div`
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 `
 
+export const TermsHeader = styled.div` // NEW
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+`;
+
 export const TermsTitle = styled.h3`
   font-size: 0.9rem;
   font-weight: 600;
   color: #2d3748;
-  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
 `
+
+export const EditButton = styled.button` // NEW
+  background-color: #e2e8f0;
+  color: #2d3748;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background-color: #cbd5e0;
+  }
+`;
+
 
 export const CheckboxWrapper = styled.div`
   display: grid;
@@ -248,6 +274,15 @@ export const NumericInput = styled.input.attrs({ type: "number" })`
   &::-webkit-outer-spin-button {
     opacity: 1;
   }
+
+&:disabled {
+  background-color: #F8FAFC;    /* fundo branco */
+  color: #6b7280;             /* cinza escuro parecido com o da imagem */
+  cursor: not-allowed;
+  border-color: #e5e7eb;      /* borda cinza clara */
+  opacity: 0.7;                 /* sem transparência */
+}
+
 `
 
 export const TermsGrid = styled.div`
@@ -426,4 +461,70 @@ export const PhotoGallery = styled.div`
     object-fit: cover;
     border: 1px solid #e2e8f0;
   }
+`;
+
+
+export const TermsCardsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+`;
+
+
+export const TermsCard = styled.div`
+  background-color: #e6fffa; /* Light teal for terms card */
+  padding: 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #81e6d9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c7a7b; /* Darker teal */
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #b2f5ea;
+    padding-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #38b2ac; /* Medium teal */
+    margin-bottom: 0.4rem;
+
+    strong {
+      color: #2c7a7b;
+    }
+  }
+`;
+
+
+
+export const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+`;
+
+
+export const FeedbackGroup = styled.div`
+  margin-top: 2rem;
+`;
+
+
+export const Label = styled.label`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+`;
+
+export const Textarea = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e0;
+  resize: vertical;
 `;

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index"; // Ensure `api` imports your validation functions
 import * as S from "./styles"; // Assuming you have specific or global styles for this page
-import { User, MapPin, Mail, CircleCheck, Copy, Check   } from "lucide-react"; // Import only necessary icons
+import { User, MapPin, Mail, CircleCheck, Copy, Check, MessageSquare} from "lucide-react"; // Import only necessary icons
 
 interface Address {
   street: string;
@@ -39,7 +39,7 @@ interface CustomerForm {
   branding_mix: string;
   // Add Tax-specific fields here if any, e.g., tax_status, tax_notes
   tax_status?: string;
-  tax_notes?: string;
+  css_initial_feedback?: string;
 }
 
 export default function TaxValidationDetailsPage() {
@@ -66,7 +66,7 @@ export default function TaxValidationDetailsPage() {
           const data = await api.getCustomerFormById(id); // Ensure this function fetches all relevant data
           if (!data) throw new Error("Form not found.");
           setCustomerForm(data);
-          setFeedback(data.tax_notes || ""); // Initialize feedback with existing notes if any
+          setFeedback(data.css_initial_feedback || ""); // Initialize feedback with existing notes if any
           setTaxStatus(data.tax_status || "approved"); // Initialize status with existing
         }
       } catch (err) {
@@ -99,7 +99,7 @@ export default function TaxValidationDetailsPage() {
       // Call the new validation function specific to Tax
       await api.validateTaxCustomer(id, approved, {
         tax_status: approved ? "approved" : "rejected",
-        tax_notes: feedback.trim() === "" ? undefined : feedback, // Send notes if any
+        css_initial_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
       });
 
       setModalContent({
@@ -256,9 +256,12 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               <strong>D-U-N-S:</strong>{" "}
               {customerForm.duns_number || "Not provided"}
             </S.FormRow>
+
             <S.FormRow>
               <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
+
+               
 
             <S.FormRow>
               <strong>Financial Statements: </strong>{" "}
@@ -358,19 +361,28 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
-              <Mail size={16} /> Contacts
+              <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            <S.FormRow>
+            {/* <S.FormRow>
               <strong>AP:</strong> {customerForm.ap_contact_name}
             </S.FormRow>
             <S.FormRow>
               <strong>AP Email:</strong> {customerForm.ap_contact_email}
-            </S.FormRow>
+            </S.FormRow> */}
             <S.FormRow>
-              <strong>Buyer:</strong> {customerForm.buyer_name}
+              <strong>Buyer Name:</strong> {customerForm.buyer_name}
             </S.FormRow>
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
+            </S.FormRow>
+
+                        <S.Divider /> 
+
+                        <S.SectionTitle>
+              <MessageSquare  size={16} /> CSC Team Feedback
+            </S.SectionTitle>
+                                   <S.FormRow>
+              <strong>Feedback:</strong> {customerForm.css_initial_feedback || "No feedback provided by CSC Team."}
             </S.FormRow>
           </S.FormSection>
         </S.FormDetails>
@@ -380,13 +392,13 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
           customerForm.status === "rejected by the tax team") && (
           <S.FeedbackGroup>
             <S.Label htmlFor="feedback">
-              Tax Notes (required if rejected)
+              Observation
             </S.Label>
             <S.Textarea
               id="feedback"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Explain the reason for rejection or add relevant tax notes..."
+              placeholder="Explain the reason for rejection or add relevant..."
             />
           </S.FeedbackGroup>
         )}

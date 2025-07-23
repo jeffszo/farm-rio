@@ -13,7 +13,13 @@ import {
   Pencil,
   Check,
   X,
-  Copy
+  Copy,
+  Building2, // Adicionado para icones de termos
+  Warehouse, // Adicionado para icones de termos
+  CreditCard, // Adicionado para icones de termos
+  Calendar, // Adicionado para icones de termos
+  DollarSign, // Adicionado para icones de termos
+  Percent // Adicionado para icones de termos
 } from "lucide-react"; // Import Pencil, Check, X
 
 interface Address {
@@ -45,6 +51,22 @@ interface CustomerForm {
   buyer_email: string;
   status: string;
   created_at: string;
+  
+}
+
+interface ValidationDetails {
+  wholesale_invoicing_company: string;
+  wholesale_warehouse: string;
+  wholesale_currency: string;
+  wholesale_terms: string;
+  wholesale_credit: number;
+  wholesale_discount: number;
+  credit_invoicing_company: string;
+  credit_warehouse: string;
+  credit_currency: string;
+  credit_terms: string;
+  credit_credit: number;
+  credit_discount: number;
 }
 
 export default function ValidationDetailsPage() {
@@ -63,21 +85,6 @@ export default function ValidationDetailsPage() {
   // States for editable DUNS field ONLY
   const [editingDuns, setEditingDuns] = useState(false);
   const [editedDuns, setEditedDuns] = useState("");
-
-  interface ValidationDetails {
-    wholesale_invoicing_company: string;
-    wholesale_warehouse: string;
-    wholesale_currency: string;
-    wholesale_terms: string;
-    wholesale_credit: string;
-    wholesale_discount: number;
-    credit_invoicing_company: string;
-    credit_warehouse: string;
-    credit_currency: string;
-    credit_terms: string;
-    credit_credit: string;
-    credit_discount: number;
-  }
 
   const [validation, setValidation] = useState<ValidationDetails | null>(null);
 
@@ -102,17 +109,17 @@ export default function ValidationDetailsPage() {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchValidationDetails = async () => {
-  //     // Ensure id is a string before passing to API
-  //     if (typeof id === 'string') {
-  //       const validationData = await api.getCustomerValidationDetails(id);
-  //       if (validationData) setValidation(validationData);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchValidationDetails = async () => {
+      // Ensure id is a string before passing to API
+      if (typeof id === 'string') {
+        const validationData = await api.getCustomerValidationDetails(id);
+        if (validationData) setValidation(validationData);
+      }
+    };
 
-  //   if (id) fetchValidationDetails();
-  // }, [id]);
+    if (id) fetchValidationDetails();
+  }, [id]);
 
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -296,21 +303,22 @@ export default function ValidationDetailsPage() {
 
   const handleCopyToClipboard = async (text: string) => {
     try {
-        await navigator.clipboard.writeText(text);
-        setModalContent({
-            title: "Sucesso!",
-            description: "Número de Tax ID copiado para a área de transferência!",
-        });
-        setShowModal(true);
+      await navigator.clipboard.writeText(text);
+      setModalContent({
+        title: "Sucesso!",
+        description: "Número de Tax ID copiado para a área de transferência!",
+      });
+      setShowModal(true);
     } catch (err) {
-        console.error("Erro ao copiar: ", err);
-        setModalContent({
-            title: "Erro!",
-            description: "Falha ao copiar o número de Tax ID.",
-        });
-        setShowModal(true);
+      console.error("Erro ao copiar: ", err);
+      setModalContent({
+        title: "Erro!",
+        description: "Falha ao copiar o número de Tax ID.",
+      });
+      setShowModal(true);
     }
-};
+  };
+
 
   return (
     <S.ContainerMain>
@@ -321,7 +329,9 @@ export default function ValidationDetailsPage() {
             {customerForm.status}
           </S.StatusBadge>
         </S.Header>
+
         <S.FormDetails>
+          {/* Customer Information Section */}
           <S.FormSection>
             <S.SectionTitle>
               <User size={16} /> Customer Information
@@ -329,32 +339,38 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Legal Name:</strong> {customerForm.customer_name}
             </S.FormRow>
-<S.FormRow>
-  <strong>Tax ID:</strong>
-  <S.ValueWithCopy> {/* Novo Styled Component para alinhar valor e botão */}
-    {customerForm.sales_tax_id}
-    {customerForm.sales_tax_id && (
-      <S.CopyButton onClick={() => handleCopyToClipboard(customerForm.sales_tax_id)}>
-        <Copy size={16} />
-      </S.CopyButton>
-    )}
-  </S.ValueWithCopy>
-</S.FormRow>
+            <S.FormRow>
+              <strong>Tax ID:</strong>{" "}
+              <S.ValueWithCopy>
+                {/* Novo Styled Component para alinhar valor e botão */}
+                {customerForm.sales_tax_id}
+                {customerForm.sales_tax_id && (
+                  <S.CopyButton onClick={() => handleCopyToClipboard(customerForm.sales_tax_id)}>
+                    <Copy size={16} />
+                  </S.CopyButton>
+                )}
+              </S.ValueWithCopy>
+            </S.FormRow>
 
             {/* D-U-N-S Number (Editable) */}
-            <S.FormRow>
-              <strong>D-U-N-S:</strong>
+            <S.FormRow style={{
+              alignItens: "center"
+            }}>
+              <strong>D-U-N-S:</strong>{" "}
               {editingDuns ? (
                 <S.EditableValueContainer>
+                  
                   <S.EditInput
                     type="text"
                     value={editedDuns}
                     onChange={(e) => setEditedDuns(e.target.value)}
                   />
+                  
                   <S.EditButtonContainer>
                     <S.ActionButton onClick={handleSaveDuns} color="green">
                       <Check size={16} />
                     </S.ActionButton>
+                    
                     <S.ActionButton
                       onClick={() => {
                         setEditingDuns(false);
@@ -368,34 +384,49 @@ export default function ValidationDetailsPage() {
                 </S.EditableValueContainer>
               ) : (
                 <S.EditableValueContainer>
-                  {/* The className "flex items-center ml-1" seems like Tailwind, ensure it's compatible or remove if not needed */}
-                  <span className="flex items-center ml-1">
-                    {customerForm.duns_number || "Not provided"}
-                    <S.EditIcon onClick={() => setEditingDuns(true)}>
-                      <Pencil size={16} />
-                    </S.EditIcon>
-                  </span>
+                  {/* The className "flex items-center ml-1" seems like Tailwind, ensure it's compatible or remove if necessary */}
+                  {customerForm.duns_number || "N/A"}
+                  <S.ActionButton onClick={() => setEditingDuns(true)}>
+                    <Pencil size={16} />
+                  </S.ActionButton>
                 </S.EditableValueContainer>
               )}
             </S.FormRow>
 
-            {/* DBA Number (NOT Editable - Simple Display) */}
-            <S.FormRow>
-              <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
-            </S.FormRow>
+                        {/* <S.FormRow>
+              <strong>Branding Mix:</strong> {customerForm.branding_mix || "N/A"}
+            </S.FormRow> */}
+
 
             <S.FormRow>
-              <strong>Financial Statements: </strong>{" "}
-              {customerForm.financial_statements ? (
+              <strong>DBA:</strong> {customerForm.dba_number || "N/A"}
+            </S.FormRow>
+                    <S.FormRow>
+              <strong>Instagram:</strong>{" "}
+              {customerForm.instagram ? (
                 <a
-                  href={customerForm.financial_statements}
+                  href={customerForm.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View PDF
+                  Access Instagram
                 </a>
               ) : (
-                "Not sent"
+                "N/A"
+              )}
+            </S.FormRow>
+<S.FormRow>
+              <strong>Instagram:</strong>{" "}
+              {customerForm.website ? (
+                <a
+                  href={customerForm.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Website
+                </a>
+              ) : (
+                "N/A"
               )}
             </S.FormRow>
 
@@ -410,36 +441,34 @@ export default function ValidationDetailsPage() {
                   View PDF
                 </a>
               ) : (
-                "Not sent"
+                "N/A"
               )}
             </S.FormRow>
 
+    
+
+
             <S.FormRow>
-              <strong>Instagram: </strong>
-              <a target="_blank" href={customerForm.instagram}>
-                {customerForm.instagram}
-              </a>
+              <strong>Financial Statements:</strong>{" "}
+              {customerForm.financial_statements ? (
+                <a
+                  href={customerForm.financial_statements}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View PDF
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
             <S.FormRow>
-              <strong>Website: </strong>
-              <a target="_blank" href={customerForm.website}>
-                {customerForm.website}
-              </a>
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Photos:</strong>{" "}
+               <strong>Photos:</strong>{" "}
               {parsedPhotoUrls.length > 0 ? (
-                <S.PhotoGallery>
-                  {" "}
-                  {/* Assuming you have a styled component for a gallery */}
+                <S.PhotoGallery> {/* Assuming you have a styled component for a gallery */}
                   {parsedPhotoUrls.map((url, index) => (
-                    <a
-                      key={index}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ""}
+                    <a key={index} href={url} target="_blank" rel="noopener noreferrer">
+                      View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ''}
                       {/* Or an image tag: <img src={url} alt={`Customer Photo ${index + 1}`} style={{ maxWidth: '100px', maxHeight: '100px', margin: '5px' }} /> */}
                     </a>
                   ))}
@@ -447,117 +476,188 @@ export default function ValidationDetailsPage() {
               ) : (
                 "Not sent"
               )}
+
             </S.FormRow>
           </S.FormSection>
+
+                    {/* Addresses Section */}
           <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
-            {/* Display Billing Addresses */}
-            {parsedBillingAddresses.length > 0 ? (
-              parsedBillingAddresses.map((address, index) => (
-                <S.AddressBlock key={`billing-${index}`}>
-                  <S.AddressTitle>
-                    Billing Address{" "}
-                    {parsedBillingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No billing address provided.</S.AddressBlock>
-            )}{" "}
-            {/* Fallback for no addresses */}
-            {/* Display Shipping Addresses */}
-            {parsedShippingAddresses.length > 0 ? (
-              parsedShippingAddresses.map((address, index) => (
-                <S.AddressBlock key={`shipping-${index}`}>
-                  <S.AddressTitle>
-                    Shipping Address{" "}
-                    {parsedShippingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No shipping address provided.</S.AddressBlock>
-            )}{" "}
-            {/* Fallback for no addresses */}
+            <S.AddressContainer>
+              <S.AddressBlock>
+                <S.AddressTitle>Billing Address</S.AddressTitle>
+                {parsedBillingAddresses.length > 0 ? (
+                  parsedBillingAddresses.map((address, index) => (
+                    <div key={index}>{renderAddress(address)}</div>
+                  ))
+                ) : (
+                  <p>No billing address provided.</p>
+                )}
+              </S.AddressBlock>
+              <S.AddressBlock>
+                <S.AddressTitle>Shipping Address</S.AddressTitle>
+                {parsedShippingAddresses.length > 0 ? (
+                  parsedShippingAddresses.map((address, index) => (
+                    <div key={index}>{renderAddress(address)}</div>
+                  ))
+                ) : (
+                  <p>No shipping address provided.</p>
+                )}
+              </S.AddressBlock>
+            </S.AddressContainer>
           </S.FormSection>
+
+          {/* Contact Information Section */}
           <S.FormSection>
             <S.SectionTitle>
-              <Mail size={16} /> Contacts
+              <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            <S.FormRow>
-              <strong>AP:</strong> {customerForm.ap_contact_name}
+            {/* <S.FormRow>
+              <strong>AP Contact Name:</strong> {customerForm.ap_contact_name || "N/A"}
             </S.FormRow>
             <S.FormRow>
-              <strong>AP Email:</strong> {customerForm.ap_contact_email}
+              <strong>AP Contact Email:</strong> {customerForm.ap_contact_email || "N/A"}
+            </S.FormRow> */}
+            <S.FormRow>
+              <strong>Buyer Name:</strong> {customerForm.buyer_name || "N/A"}
             </S.FormRow>
             <S.FormRow>
-              <strong>Buyer:</strong> {customerForm.buyer_name}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Buyer Email:</strong> {customerForm.buyer_email}
+              <strong>Buyer Email:</strong> {customerForm.buyer_email || "N/A"}
             </S.FormRow>
           </S.FormSection>
+
+          
+
+
+         {/* Conditional Rendering for Wholesale and Credit Terms */}
+          {customerForm.status === "approved by the credit team" && validation && (
+            <>
+              {/* Wholesale Terms Section */}
+              <S.FormSection>
+                <S.SectionTitle>
+                  <DollarSign size={16} /> Wholesale Terms
+                </S.SectionTitle>
+                <S.TermsGrid>
+                  <S.TermsSection>
+                    <label>
+                      <Building2 size={16} /> Invoicing Company
+                    </label>
+                    <S.InfoText>{validation.wholesale_invoicing_company || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Warehouse size={16} /> Warehouse
+                    </label>
+                    <S.InfoText>{validation.wholesale_warehouse || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <CreditCard size={16} /> Currency
+                    </label>
+                    <S.InfoText>{validation.wholesale_currency || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Calendar size={16} /> Payment Terms
+                    </label>
+                    <S.InfoText>{validation.wholesale_terms || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <DollarSign size={16} /> Credit Limit
+                    </label>
+                    <S.InfoText>
+                      {validation.wholesale_credit !== undefined && validation.wholesale_credit !== null
+                        ? validation.wholesale_credit.toFixed(2)
+                        : "N/A"}
+                    </S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Percent size={16} /> Discount
+                    </label>
+                    <S.InfoText>
+                      {validation.wholesale_discount !== undefined && validation.wholesale_discount !== null
+                        ? validation.wholesale_discount.toFixed(1) + "%"
+                        : "N/A"}
+                    </S.InfoText>
+                  </S.TermsSection>
+                </S.TermsGrid>
+              </S.FormSection>
+
+              {/* Credit Terms Section */}
+              <S.FormSection>
+                <S.SectionTitle>
+                  <CreditCard size={16} /> Credit Terms
+                </S.SectionTitle>
+                <S.TermsGrid>
+                  <S.TermsSection>
+                    <label>
+                      <Building2 size={16} /> Invoicing Company
+                    </label>
+                    <S.InfoText>{validation.credit_invoicing_company || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Warehouse size={16} /> Warehouse
+                    </label>
+                    <S.InfoText>{validation.credit_warehouse || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <CreditCard size={16} /> Currency
+                    </label>
+                    <S.InfoText>{validation.credit_currency || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Calendar size={16} /> Payment Terms
+                    </label>
+                    <S.InfoText>{validation.credit_terms || "N/A"}</S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <DollarSign size={16} /> Credit Limit
+                    </label>
+                    <S.InfoText>
+                      {validation.credit_credit !== undefined && validation.credit_credit !== null
+                        ? validation.credit_credit.toFixed(2)
+                        : "N/A"}
+                    </S.InfoText>
+                  </S.TermsSection>
+
+                  <S.TermsSection>
+                    <label>
+                      <Percent size={16} /> Discount
+                    </label>
+                    <S.InfoText>
+                      {validation.credit_discount !== undefined && validation.credit_discount !== null
+                        ? validation.credit_discount.toFixed(1) + "%"
+                        : "N/A"}
+                    </S.InfoText>
+                  </S.TermsSection>
+                </S.TermsGrid>
+              </S.FormSection>
+            </>
+          )}
+
         </S.FormDetails>
 
-        {validation && (
-          <S.TermsCardsContainer>
-            <S.TermsCard>
-              <h3>Wholesale Team Validation</h3>
-              <p>
-                <strong>Invoicing Company:</strong>{" "}
-                {validation.wholesale_invoicing_company}
-              </p>
-              <p>
-                <strong>Warehouse:</strong> {validation.wholesale_warehouse}
-              </p>
-              <p>
-                <strong>Currency:</strong> {validation.wholesale_currency}
-              </p>
-              <p>
-                <strong>Terms:</strong> {validation.wholesale_terms}
-              </p>
-              <p>
-                <strong>Credit Limit:</strong> {validation.wholesale_credit}
-              </p>
-              <p>
-                <strong>Discount:</strong> {validation.wholesale_discount}%
-              </p>
-            </S.TermsCard>
-
-            <S.TermsCard>
-              <h3>Credit Team Validation</h3>
-              <p>
-                <strong>Invoicing Company:</strong>{" "}
-                {validation.credit_invoicing_company}
-              </p>
-              <p>
-                <strong>Warehouse:</strong> {validation.credit_warehouse}
-              </p>
-              <p>
-                <strong>Currency:</strong> {validation.credit_currency}
-              </p>
-              <p>
-                <strong>Terms:</strong> {validation.credit_terms}
-              </p>
-              <p>
-                <strong>Credit Limit:</strong> {validation.credit_credit}
-              </p>
-              <p>
-                <strong>Discount:</strong> {validation.credit_discount}%
-              </p>
-            </S.TermsCard>
-          </S.TermsCardsContainer>
-        )}
-
-        {(customerForm.status === "approved by the credit team" ||
-          customerForm.status === "data corrected by the client") && (
+     
           <S.FeedbackGroup>
             <S.Label htmlFor="feedback">
-              Feedback (required if rejected)
+              Observation
             </S.Label>
             <S.Textarea
               id="feedback"
@@ -566,7 +666,7 @@ export default function ValidationDetailsPage() {
               placeholder="Explain the reason for rejection..."
             />
           </S.FeedbackGroup>
-        )}
+      
 
         <S.ButtonContainer>
           {customerForm.status === "approved by the CSC team" ? (
@@ -587,6 +687,7 @@ export default function ValidationDetailsPage() {
             </>
           )}
         </S.ButtonContainer>
+
 
         {showModal && (
           <S.Modal>

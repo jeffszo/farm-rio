@@ -75,7 +75,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the CSC team initial", "rejected by the wholesale team"]) // From CSC initial or rejected by tax
+    .in("status", ["approved by the CSC team initial"]) // From CSC initial or rejected by tax
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -119,7 +119,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the wholesale team", "rejected by the CSC final team"]) // From Wholesale or rejected by credit
+    .in("status", ["approved by the wholesale team"]) // From Wholesale or rejected by credit
     .range(from, to)
     .order("created_at", { ascending: true })
 

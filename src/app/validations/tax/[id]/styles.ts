@@ -392,3 +392,11 @@ export const CopyButton = styled.button`
     color: #0056b3;
   }
 `;
+
+
+export const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+`;
+

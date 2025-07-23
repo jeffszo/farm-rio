@@ -18,6 +18,8 @@ import {
   Pencil,
   Check,
   X,
+  MessageSquare,
+  Blend // Icone para Branding Mix
 } from "lucide-react";
 
 // Interface definition for a single address (AddressDetail)
@@ -53,10 +55,11 @@ interface CustomerForm {
   shipping_address: AddressDetail[]; // Updated to AddressDetail[]
   ap_contact_name: string;
   ap_contact_email: string;
+  estimated_purchase_amount: string; // O CAMPO AGORA SERÁ USADO PARA INICIALIZAR O CREDIT LIMIT
   photo_urls: string[]; // Changed to array of strings
   instagram: string;
   website: string;
-  branding_mix: string;
+  branding_mix: string; // O campo de Branding Mix
   buyer_name: string;
   buyer_email: string;
   status: string;
@@ -67,6 +70,9 @@ interface CustomerForm {
   atacado_terms?: string;
   atacado_credit?: number;
   atacado_discount?: number;
+  tax_feedback: string;
+  terms: string;
+  currency: string;
 }
 
 type WholesaleTerms = {
@@ -74,20 +80,17 @@ type WholesaleTerms = {
   wholesale_warehouse: string;
   wholesale_currency: string;
   wholesale_terms: string;
-  wholesale_credit: number;
+  wholesale_credit: number; // Este agora será o Credit Limit
   wholesale_discount: number;
+  wholesale_feedback: string;
 };
 
-// Dados de empresas de faturamento que possuem armazéns, associados a moedas.
-// Assumimos que esta informação viria do backend, mas para o exemplo, é estática.
-// Mapeamento de moeda para empresas de faturamento relevantes.
 const INVOICING_COMPANIES_BY_CURRENCY: Record<string, string[]> = {
     "USD": [
         "Plantage Rio Inc - United States"
     ],
     "EUR": [
         "Soma Brands International - European Union",
-        // "Soma Brands France - France" // Adicionei Soma Brands France com base no seu código original
     ],
     "GBP": [
         "Soma Brands International"
@@ -102,12 +105,8 @@ const PAYMENT_TERMS = [
   "Net 30 Days",
 ];
 
-// Helper function to format an address object into a single string
 const formatAddress = (address: AddressDetail): string => {
   const parts = [];
-
-  // Check for defined keys in the interface and also common variations
-  // Based on your console.log, keys are in camelCase.
   const street = address.street || address.street_name || '';
   const city = address.city || address.address_city || '';
   const state = address.state || address.state_province || '';
@@ -125,11 +124,13 @@ const formatAddress = (address: AddressDetail): string => {
   return parts.join(', ') || 'Not provided';
 };
 
+
 export default function ValidationDetailsPage() {
   const { id } = useParams();
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -139,6 +140,15 @@ export default function ValidationDetailsPage() {
   const [newDuns, setNewDuns] = useState("");
   const [editingDuns, setEditingDuns] = useState(false);
   const [savingDuns, setSavingDuns] = useState(false);
+  const [editingValidationTerms, setEditingValidationTerms] = useState(false);
+  const [initialTerms, setInitialTerms] = useState<WholesaleTerms>({
+    wholesale_invoicing_company: "",
+    wholesale_warehouse: "",
+    wholesale_currency: "",
+    wholesale_terms: "",
+    wholesale_credit: 0,
+    wholesale_discount: 0,
+  });
 
   useEffect(() => {
     if (customerForm?.duns_number) {
@@ -156,7 +166,7 @@ export default function ValidationDetailsPage() {
   });
 
   const [warehouses, setWarehouses] = useState<string[]>([]);
-  const [availableInvoicingCompanies, setAvailableInvoicingCompanies] = useState<string[]>([]); // Novo estado para empresas de faturamento disponíveis
+  const [availableInvoicingCompanies, setAvailableInvoicingCompanies] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -168,22 +178,17 @@ export default function ValidationDetailsPage() {
 
         if (!data) throw new Error("Form not found.");
 
-        // Function to process and ensure address data are arrays of objects
         const processAddressArray = (addrData: unknown): AddressDetail[] => {
-          if (!addrData) return []; // Return empty array if no data
-
-          // If it's a single JSON string (scenario from your console.log)
+          if (!addrData) return [];
           if (typeof addrData === 'string') {
               try {
                   const parsed = JSON.parse(addrData);
-                  // If the parsed JSON is an array, return it; otherwise, wrap the object in an array
                   return Array.isArray(parsed) ? parsed : [parsed];
               } catch (e) {
                   console.error("Error parsing address string JSON:", e);
-                  return []; // Return empty array in case of parsing error
+                  return [];
               }
           }
-          // If it's already an array, iterate over it to ensure all items are objects
           if (Array.isArray(addrData)) {
               return addrData.map(item => {
                   if (typeof item === 'string') {
@@ -191,27 +196,36 @@ export default function ValidationDetailsPage() {
                           return JSON.parse(item);
                       } catch (e) {
                           console.error("Error parsing address item in array:", e);
-                          return {}; // Return empty object if an item fails parsing
+                          return {};
                       }
                   }
-                  return item; // Item is already an object
+                  return item;
               });
           }
-          // If it's a single object (not a string and not an array), wrap it in an array
           return [addrData];
         };
 
         const processedData: CustomerForm = {
           ...data,
-          // Apply the processing function for billing_address and shipping_address
           billing_address: processAddressArray(data.billing_address),
           shipping_address: processAddressArray(data.shipping_address),
         };
 
         setCustomerForm(processedData);
-        // Log processed address data for debugging
         console.log("Processed Billing Addresses (after parse):", processedData.billing_address);
         console.log("Processed Shipping Addresses (after parse):", processedData.shipping_address);
+
+        const fetchedTerms: WholesaleTerms = {
+          wholesale_invoicing_company: data.atacado_invoicing_company || "",
+          wholesale_warehouse: data.atacado_warehouse || "",
+          wholesale_currency: data.currency || "",
+          wholesale_terms: data.terms || "",
+          // CORREÇÃO: Inicializa wholesale_credit com estimated_purchase_amount
+          wholesale_credit: Number(data.estimated_purchase_amount) || data.atacado_credit || 0,
+          wholesale_discount: data.atacado_discount || 0,
+        };
+        setTerms(fetchedTerms);
+        setInitialTerms(fetchedTerms); // Define initialTerms aqui
 
       } catch (err) {
         console.error("Error fetching customer details:", err);
@@ -231,7 +245,6 @@ export default function ValidationDetailsPage() {
       try {
         const currentUser = await api.getCurrentUser();
         if (!currentUser) return;
-        // setUser({ email: currentUser.email, role: currentUser.userType });
       } catch (err) {
         console.error("Error getting user:", err);
       }
@@ -240,7 +253,6 @@ export default function ValidationDetailsPage() {
     fetchUser();
   }, []);
 
-  // Novo useEffect para atualizar as empresas de faturamento disponíveis com base na moeda selecionada
   useEffect(() => {
     const selectedCurrency = terms.wholesale_currency;
     if (selectedCurrency && INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]) {
@@ -248,17 +260,16 @@ export default function ValidationDetailsPage() {
     } else {
       setAvailableInvoicingCompanies([]);
     }
-    // Resetar empresa de faturamento e armazém quando a moeda muda
-    setTerms((prev) => ({
-      ...prev,
-      wholesale_invoicing_company: "",
-      wholesale_warehouse: "",
-    }));
-    // Limpar armazéns também
-    setWarehouses([]); // Adicionado para limpar os armazéns imediatamente
-  }, [terms.wholesale_currency]);
+    if (!editingValidationTerms) {
+      setTerms((prev) => ({
+        ...prev,
+        wholesale_invoicing_company: "",
+        wholesale_warehouse: "",
+      }));
+      setWarehouses([]);
+    }
+  }, [terms.wholesale_currency, editingValidationTerms]);
 
-  // useEffect existente para buscar armazéns quando a empresa de faturamento muda
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.wholesale_invoicing_company) {
@@ -280,7 +291,7 @@ export default function ValidationDetailsPage() {
     };
 
     fetchWarehouses();
-  }, [terms.wholesale_invoicing_company]); // A dependência permanece na empresa de faturamento
+  }, [terms.wholesale_invoicing_company]);
 
   const handleTermChange = (
     field: keyof WholesaleTerms,
@@ -300,14 +311,11 @@ export default function ValidationDetailsPage() {
   const handleApproval = async (approved: boolean) => {
     console.log("Starting handleApproval. approved =", approved);
 
-    // 🚫 REMOVED: authenticated user check
-
     try {
       setLoading(true);
       console.log("Loading true");
 
       if (approved) {
-        // Specific validations for approval
         const requiredFields: (keyof WholesaleTerms)[] = [
           "wholesale_invoicing_company",
           "wholesale_warehouse",
@@ -324,15 +332,15 @@ export default function ValidationDetailsPage() {
           throw new Error("⚠️ Credit limit and discount must be non-negative!");
         }
       }
-
     
       await api.validateWholesaleCustomer(id as string, approved, {
         wholesale_invoicing_company: terms.wholesale_invoicing_company,
         wholesale_warehouse: terms.wholesale_warehouse,
         wholesale_currency: terms.wholesale_currency,
         wholesale_terms: terms.wholesale_terms,
-        wholesale_credit: terms.wholesale_credit,
+        wholesale_credit: terms.wholesale_credit, // O valor de Credit Limit será salvo aqui
         wholesale_discount: terms.wholesale_discount,
+        wholesale_feedback: terms.wholesale_feedback,
       });
 
       console.log("Validation completed successfully");
@@ -369,7 +377,6 @@ export default function ValidationDetailsPage() {
       setSavingDuns(true);
       await api.updateDunsNumber(id as string, newDuns);
 
-      // Update the local state to reflect the change
       if (customerForm) {
         setCustomerForm({
           ...customerForm,
@@ -380,14 +387,12 @@ export default function ValidationDetailsPage() {
       setEditingDuns(false);
     } catch (error) {
       console.error("Error updating DUNS number:", error);
-      // Optionally show an error message to the user
     } finally {
       setSavingDuns(false);
     }
   };
 
   const handleCancelEdit = () => {
-    // Reset to original value and exit edit mode
     if (customerForm) {
       setNewDuns(customerForm.duns_number || "");
     }
@@ -403,17 +408,16 @@ export default function ValidationDetailsPage() {
   if (error) return <S.Message>Error: {error}</S.Message>;
   if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
-  
   let parsedPhotoUrls: string[] = [];
   try {
     if (customerForm.photo_urls && typeof customerForm.photo_urls === 'string') {
         parsedPhotoUrls = JSON.parse(customerForm.photo_urls);
-    } else if (Array.isArray(customerForm.photo_urls)) { // Handle case if already an array
+    } else if (Array.isArray(customerForm.photo_urls)) {
         parsedPhotoUrls = customerForm.photo_urls;
     }
   } catch (e) {
     console.error("Error parsing photo_urls JSON:", e);
-    parsedPhotoUrls = []; // Fallback to empty array on error
+    parsedPhotoUrls = [];
   }
 
   return (
@@ -476,9 +480,19 @@ export default function ValidationDetailsPage() {
                 </span>
               )}
             </S.FormRow>
+
+            {/* SEÇÃO DO BRANDING MIX - CONFORME SOLICITADO PARA USAR FORMROW */}
             <S.FormRow>
-               
-                           <S.FormRow>
+              <strong>Branding Mix:</strong>{" "}
+              {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
+                String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
+                "Not provided"
+              }
+            </S.FormRow>
+
+
+            <S.FormRow>
+               <S.FormRow>
               <strong>Financial Statements: </strong>{" "}
               {customerForm.financial_statements ? (
                 <a
@@ -507,27 +521,40 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
                                   <S.FormRow>
-              <strong>Instagram: </strong>
-              <a target="_blank"  href={customerForm.instagram}>
-                {customerForm.instagram}
-              </a>
-
+              <strong>Instagram:</strong>{" "}
+              {customerForm.instagram ? (
+                <a
+                  href={customerForm.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Instagram
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
                         <S.FormRow>
-              <strong>Website: </strong>
-              <a target="_blank"  href={customerForm.website}>
-                {customerForm.website}
-              </a>
-
+              <strong>Website:</strong>{" "}
+              {customerForm.website ? (
+                <a
+                  href={customerForm.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Website
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
             <S.FormRow>
                <strong>Photos:</strong>{" "}
               {parsedPhotoUrls.length > 0 ? (
-                <S.PhotoGallery> {/* Assuming you have a styled component for a gallery */}
+                <S.PhotoGallery>
                   {parsedPhotoUrls.map((url, index) => (
                     <a key={index} href={url} target="_blank" rel="noopener noreferrer">
                       View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ''}
-                      {/* Or an image tag: <img src={url} alt={`Customer Photo ${index + 1}`} style={{ maxWidth: '100px', maxHeight: '100px', margin: '5px' }} /> */}
                     </a>
                   ))}
                 </S.PhotoGallery>
@@ -570,43 +597,56 @@ export default function ValidationDetailsPage() {
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
-              <Mail size={16} /> Contacts
+              <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
             <S.FormRow>
-              <strong>AP Contact:</strong> {customerForm.ap_contact_name}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>AP Email:</strong> {customerForm.ap_contact_email}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Buyer:</strong> {customerForm.buyer_name}
+              <strong>Buyer Name:</strong> {customerForm.buyer_name}
             </S.FormRow>
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
+
+            <S.Divider /> 
+
+            <S.SectionTitle>
+              <MessageSquare  size={16} /> Tax Team Feedback
+            </S.SectionTitle>
+            <S.FormRow>
+              <strong>Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
+            </S.FormRow>
+
           </S.FormSection>
         </S.FormDetails>
 
+        
         <S.TermsContainer>
-          <S.TermsTitle>Validation Terms (Wholesale Team)</S.TermsTitle>
+          <S.TermsHeader>
+            <S.TermsTitle>Validation Terms (Wholesale Team)</S.TermsTitle>
+            <S.EditButton onClick={() => setEditingValidationTerms(!editingValidationTerms)}>
+              {editingValidationTerms ? <X size={16} /> : <Pencil size={16} />}
+              {editingValidationTerms ? "Cancel" : "Edit"}
+            </S.EditButton>
+          </S.TermsHeader>
           <S.TermsGrid>
             <S.TermsSection>
               <label>
                 <CreditCard size={16} /> Currency
               </label>
-              <S.Select
-                value={terms.wholesale_currency}
-                onChange={(e) =>
-                  handleTermChange("wholesale_currency", e.target.value)
-                }
-              >
-                <option value="">Select currency</option>
-                {CURRENCIES.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
-              </S.Select>
+             
+<S.Select
+  value={terms.wholesale_currency}
+  onChange={(e) =>
+    handleTermChange("wholesale_currency", e.target.value)
+  }
+  disabled={!editingValidationTerms}
+>
+  <option value="">Select currency</option>
+  {CURRENCIES.map((currency) => (
+    <option key={currency} value={currency}>
+      {currency}
+    </option>
+  ))}
+</S.Select> 
             </S.TermsSection>
 
             <S.TermsSection>
@@ -618,10 +658,10 @@ export default function ValidationDetailsPage() {
                 onChange={(e) =>
                   handleTermChange("wholesale_invoicing_company", e.target.value)
                 }
-                disabled={!terms.wholesale_currency} // Desabilita até que uma moeda seja selecionada
+                disabled={!editingValidationTerms || !terms.wholesale_currency}
               >
                 <option value="">Select company</option>
-                {availableInvoicingCompanies.map((company) => ( // Renderiza opções baseadas no estado availableInvoicingCompanies
+                {availableInvoicingCompanies.map((company) => (
                   <option key={company} value={company}>
                     {company}
                   </option>
@@ -629,6 +669,7 @@ export default function ValidationDetailsPage() {
               </S.Select>
             </S.TermsSection>
 
+            
             <S.TermsSection>
               <label>
                 <Warehouse size={16} /> Warehouse
@@ -638,12 +679,9 @@ export default function ValidationDetailsPage() {
                 onChange={(e) =>
                   handleTermChange("wholesale_warehouse", e.target.value)
                 }
-                // HABILITA AQUI APÓS A SELEÇÃO DA MOEDA
-                // MAS AINDA EXIBIRÁ OPÇÕES VAZIAS ATÉ QUE A EMPRESA DE FATURAMENTO SEJA ESCOLHIDA
-                disabled={!terms.wholesale_currency} // Agora depende apenas da moeda para ser habilitado
+                disabled={!editingValidationTerms || !terms.wholesale_invoicing_company}
               >
                 <option value="">Select warehouse</option>
-                {/* Se não houver invoicing_company selecionada, warehouses estará vazio */}
                 {warehouses.length > 0 ? (
                     warehouses.map((warehouse) => (
                         <option key={warehouse} value={warehouse}>
@@ -658,25 +696,29 @@ export default function ValidationDetailsPage() {
               </S.Select>
             </S.TermsSection>
 
+            
             <S.TermsSection>
               <label>
                 <Calendar size={16} /> Payment Terms
               </label>
-              <S.Select
-                value={terms.wholesale_terms}
-                onChange={(e) =>
-                  handleTermChange("wholesale_terms", e.target.value)
-                }
-              >
-                <option value="">Select terms</option>
-                {PAYMENT_TERMS.map((term, index) => (
-                  <option key={`${term}-${index}`} value={term}>
-                    {term}
-                  </option>
-                ))}
-              </S.Select>
+              
+<S.Select
+  value={terms.wholesale_terms}
+  onChange={(e) =>
+    handleTermChange("wholesale_terms", e.target.value)
+  }
+  disabled={!editingValidationTerms}
+>
+  <option value="">Select payment terms</option>
+  {PAYMENT_TERMS.map((term, index) => (
+    <option key={`${term}-${index}`} value={term}>
+      {term}
+    </option>
+  ))}
+</S.Select>
             </S.TermsSection>
 
+            {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
             <S.TermsSection>
               <label>
                 <DollarSign size={16} /> Credit Limit
@@ -687,7 +729,8 @@ export default function ValidationDetailsPage() {
                   handleTermChange("wholesale_credit", e.target.value)
                 }
                 min="0"
-                step="0.01"
+                step="0.01" // Ajuste o passo conforme a precisão desejada para o valor monetário
+                disabled={!editingValidationTerms}
               />
             </S.TermsSection>
 
@@ -703,10 +746,28 @@ export default function ValidationDetailsPage() {
                 min="0"
                 max="100"
                 step="0.1"
+                disabled={!editingValidationTerms}
               />
             </S.TermsSection>
+            
           </S.TermsGrid>
         </S.TermsContainer>
+
+        {(customerForm.status === "approved by the tax team" ||
+                  customerForm.status === "rejected by the tax team") && (
+                  <S.FeedbackGroup>
+                    <S.Label htmlFor="feedback">
+                      Observation
+                    </S.Label>
+                    <S.Textarea
+                      id="feedback"
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      placeholder="Explain the reason for rejection or add relevant..."
+                    />
+                  </S.FeedbackGroup>
+                )}
+
 
         <S.ButtonContainer>
           <S.Button onClick={() => handleApproval(false)} variant="secondary">

@@ -77,7 +77,7 @@ export const SectionTitle = styled.h3`
 export const FormRow = styled.div`
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.25rem 0;
+  padding: 0.30rem 0;
 
   strong {
     font-weight: 600;
@@ -468,4 +468,32 @@ export const PhotoGallery = styled.div`
     object-fit: cover;
     border: 1px solid #e2e8f0;
   }
+`;
+
+export const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+`;
+
+
+export const FeedbackGroup = styled.div`
+  margin-top: 2rem;
+`;
+
+
+export const Label = styled.label`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2d3748;
+`;
+
+export const Textarea = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e0;
+  resize: vertical;
 `;

@@ -1,6 +1,6 @@
+// validations.ts
 import { supabase } from "./client"
-// import { sendEmailToCustomer } from "../email/sendEmail"; // Importe a função de envio
-// import { getValidationEmailTemplate } from "../email/emailTemplates"; // Importe os templates
+
 
 // Helper function to determine the next status in the new flow
 function getNextStatus(teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final"): string {
@@ -40,20 +40,7 @@ export async function validateCustomer(
   if (teamRole === "wholesale" && userEmail !== "wholesale@farm.com") {
     throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.");
   }
-  // Exemplo para a equipe de Tax:
-  // if (teamRole === "tax" && userEmail !== "tax@farm.com") {
-  //   throw new Error("Usuário não autorizado para validar os clientes do time de Tributário.");
-  // }
-  // Exemplo para a equipe de Crédito:
-  // if (teamRole === "credit" && userEmail !== "credit@farm.com") {
-  //   throw new Error("Usuário não autorizado para validar os clientes do time de Crédito.");
-  // }
-  // Exemplo para a equipe CSC Inicial/Final:
-  // if ((teamRole === "csc_initial" || teamRole === "csc_final") && userEmail !== "csc@farm.com") {
-  //   throw new Error("Usuário não autorizado para validar os clientes do time de CSC.");
-  // }
 
-  // 3. Verificação de team_users table (assumindo 'team_role' matches the new flow)
   const { data: teamUser, error: teamError } = await supabase
     .from("team_users")
     .select("id")
@@ -148,28 +135,13 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
     throw new Error(`Erro ao validar cliente pelo CSC Inicial: ${error.message}`);
   }
 
-  // // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: statusMessageForEmail,
-  //     feedback: feedback || undefined
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // // -----------------------------------
+
 }
 
 // Nova função para validação Tributária (Tax)
 interface TaxDetails {
   tax_status: string; // "aprovado" ou "reprovado"
-  tax_notes?: string;
+  tax_feedback?: string;
   // Adicione quaisquer outros campos específicos para validação fiscal (por exemplo, tax IDs, certificates, etc.)
 }
 
@@ -194,7 +166,7 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
   const updateData = {
     status: newStatus,
     tax_status: taxDetails.tax_status,
-    tax_notes: taxDetails.tax_notes ?? null,
+    tax_feedback: taxDetails.tax_feedback ?? null,
     updated_at: new Date().toISOString()
   };
 
@@ -207,22 +179,6 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
     throw new Error(`Erro ao validar cliente pelo time de Tributário (Tax): ${error.message}`);
   }
 
-  // // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: statusMessageForEmail,
-  //     feedback: taxDetails.tax_notes || undefined
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // -----------------------------------
 }
 
 // Existing function, now reflecting the new flow's status update
@@ -282,22 +238,6 @@ export async function validateWholesaleCustomer(
     throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
   }
 
-  // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: statusMessageForEmail,
-  //     feedback: terms.feedback || undefined
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // -----------------------------------
 }
 
 // Existing function, now reflecting the new flow's status update
@@ -326,7 +266,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("credit") : "rejected by credit team";
+  const newStatus = approved ? getNextStatus("credit") : "rejected by the wholesale team"; // MODIFICAÇÃO AQUI
   // const statusMessageForEmail = approved ? "aprovado pela equipe de Crédito" : "rejeitado pela equipe de Crédito";
 
   const updateData = {
@@ -350,22 +290,6 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     throw new Error(`Erro ao validar cliente pelo time de crédito: ${error.message}`);
   }
 
-  // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: statusMessageForEmail,
-  //     feedback: creditTerms.feedback || undefined
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // -----------------------------------
 }
 
 // Existing function, now for the final CSC review
@@ -402,23 +326,6 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   if (error) {
     throw new Error(`Erro ao validar cliente pelo CSC Final: ${error.message}`);
   }
-
-  // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: statusMessageForEmail,
-  //     feedback: feedback || undefined
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // -----------------------------------
 }
 
 // Finaliza o cliente na customer_forms (This might be redundant if validateCSCFinalCustomer sets status to "finished")
@@ -434,8 +341,6 @@ export async function finishCustomer(customerId: string) {
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // const customerEmail = customerData.email;
-  // const customerName = customerData.customer_name;
 
   const { error: customerError } = await supabase
     .from("customer_forms")
@@ -446,20 +351,5 @@ export async function finishCustomer(customerId: string) {
     throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
   }
 
-  // ---- Lógica de Envio de E-mail ----
-  // if (customerEmail && customerName) {
-  //   const { subject, html } = getValidationEmailTemplate({
-  //     customerName: customerName,
-  //     status: "finalizado", // Status específico para "finished"
-  //     feedback: "Seu processo de cadastro foi concluído com sucesso."
-  //   });
-  //   await sendEmailToCustomer({
-  //     to: customerEmail,
-  //     subject: subject,
-  //     html: html
-  //   });
-  // } else {
-  //   console.warn(`Aviso: Não foi possível enviar e-mail para o cliente ${customerId}. E-mail ou nome não encontrados.`);
-  // }
-  // -----------------------------------
+
 }

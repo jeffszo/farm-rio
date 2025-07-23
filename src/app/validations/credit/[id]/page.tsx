@@ -18,6 +18,7 @@ import {
   Pencil,
   Check,
   X,
+  MessageSquare  
 } from "lucide-react";
 
 // Interface definition for a single address (AddressDetail)
@@ -61,6 +62,7 @@ interface CustomerForm {
   instagram: string;
   website: string;
   branding_mix: string;
+  wholesale_feedback: string;
   // Campos relacionados ao crédito
   credit_invoicing_company?: string;
   credit_warehouse?: string;
@@ -68,6 +70,7 @@ interface CustomerForm {
   credit_terms?: string;
   credit_credit?: number;
   credit_discount?: number;
+  credit_feedback?: string; // Added new field for credit feedback
   // Campos relacionados ao atacado (mantidos para referência se ambos os fluxos estiverem na mesma página)
   atacado_invoicing_company?: string;
   atacado_warehouse?: string;
@@ -158,6 +161,8 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+    const [feedback, setFeedback] = useState("");
+
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
@@ -171,6 +176,10 @@ export default function ValidationDetailsPage() {
   useEffect(() => {
     if (customerForm?.duns_number) {
       setNewDuns(customerForm.duns_number);
+    }
+    // Initialize creditFeedback when customerForm is available
+    if (customerForm?.credit_feedback) {
+      setCreditFeedback(customerForm.credit_feedback);
     }
   }, [customerForm]);
 
@@ -354,6 +363,9 @@ export default function ValidationDetailsPage() {
     setEditingDuns(false);
   };
 
+  // Handler for credit feedback save
+  
+
   // Handler para as mudanças nos termos do CRÉDITO
   const handleCreditTermChange = (
     field: keyof CreditTerms,
@@ -517,6 +529,15 @@ export default function ValidationDetailsPage() {
                 </span>
               )}
             </S.FormRow>
+
+<S.FormRow>
+  <strong>Branding Mix:</strong>{" "}
+  {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
+    String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
+    "Not provided"
+  }
+</S.FormRow>
+
             <S.FormRow>
 
                           <S.FormRow>
@@ -549,19 +570,34 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-                                     <S.FormRow>
-              <strong>Instagram: </strong>
-              <a target="_blank"  href={customerForm.instagram}>
-                {customerForm.instagram}
-              </a>
-
+                                     
+                        <S.FormRow>
+              <strong>Instagram:</strong>{" "}
+              {customerForm.instagram ? (
+                <a
+                  href={customerForm.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Instagram
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
                         <S.FormRow>
-              <strong>Website: </strong>
-              <a target="_blank"  href={customerForm.website}>
-                {customerForm.website}
-              </a>
-
+              <strong>Website:</strong>{" "}
+              {customerForm.website ? (
+                <a
+                  href={customerForm.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Website
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
             <S.FormRow>
                <strong>Photos:</strong>{" "}
@@ -613,20 +649,21 @@ export default function ValidationDetailsPage() {
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
-              <Mail size={16} /> Contacts
+              <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            <S.FormRow>
+            {/* <S.FormRow>
               <strong>AP Contact:</strong> {customerForm.ap_contact_name}
             </S.FormRow>
             <S.FormRow>
               <strong>AP Email:</strong> {customerForm.ap_contact_email}
-            </S.FormRow>
+            </S.FormRow> */}
             <S.FormRow>
-              <strong>Buyer:</strong> {customerForm.buyer_name}
+              <strong>Buyer Name:</strong> {customerForm.buyer_name}
             </S.FormRow>
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
+             
           </S.FormSection>
 
                     {validation && (
@@ -652,6 +689,15 @@ export default function ValidationDetailsPage() {
                   <strong>Discount:</strong> {validation.wholesale_discount}%
                 </p>
               </S.TermsCard>
+
+              <S.Divider /> 
+
+                        <S.SectionTitle>
+              <MessageSquare  size={16} /> Wholesale Team Feedback
+            </S.SectionTitle>
+                                   <S.FormRow>
+              <strong>Feedback:</strong> {customerForm.wholesale_feedback || "No feedback provided by Wholesale Team."}
+            </S.FormRow>
             </S.TermsCardsContainer>
           )}
         </S.FormDetails>
@@ -661,6 +707,8 @@ export default function ValidationDetailsPage() {
 
         <S.TermsContainer>
           <S.TermsTitle>Validation Terms (Credit Team)</S.TermsTitle>
+
+
           <S.TermsGrid>
             <S.TermsSection>
               <label>
@@ -765,6 +813,23 @@ export default function ValidationDetailsPage() {
             </S.TermsSection>
           </S.TermsGrid>
         </S.TermsContainer>
+
+        
+                {(customerForm.status === "approved by the wholesale team" ||
+                          customerForm.status === "rejected by the tax team") && (
+                          <S.FeedbackGroup>
+                            <S.Label htmlFor="feedback">
+                              Observation
+                            </S.Label>
+                            <S.Textarea
+                              id="feedback"
+                              value={feedback}
+                              onChange={(e) => setFeedback(e.target.value)}
+                              placeholder="Explain the reason for rejection or add relevant..."
+                            />
+                          </S.FeedbackGroup>
+                        )}
+        
 
         <S.ButtonContainer>
           <S.Button onClick={() => handleApproval(false)} variant="secondary">

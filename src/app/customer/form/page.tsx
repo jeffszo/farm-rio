@@ -158,9 +158,9 @@ export default function OnboardingForm() {
 
       const currentUser = user || (await api.getCurrentUser());
       if (!currentUser || !currentUser.id) {
-        console.error("Usuário não autenticado. Redirecionando para login.");
+        console.error("User not authenticated. Redirecting to login.");
         setApiError(
-          "Sua sessão expirou ou você não está logado. Faça login novamente."
+          "Your session has expired or you are not logged in. Please log in again.."
         );
         router.push("/");
         setIsUploading(false);
@@ -309,7 +309,10 @@ export default function OnboardingForm() {
         buyer_number: formData.buyerInfo?.buyerNumber || null,
         status: "pending",
         photo_urls: photoUrls,
-        branding_mix: formData.brandingMix || null,
+        branding_mix: formData.brandingMix
+  ? formData.brandingMix.split(",").map((s) => s.trim())
+  : null,
+
         instagram: formData.instagram || null,
         website: formData.website || null,
         terms: termsValue, // Usando o valor tratado
@@ -572,7 +575,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
+                  <S.Label htmlFor="dunNumber">D-U-N-S</S.Label>
                   <S.Input
                     id="dunNumber"
                     type="number"
@@ -590,7 +593,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="instagram">Instagram Link</S.Label>
+                  <S.Label htmlFor="instagram">Instagram</S.Label>
                   <S.Input
                     id="instagram"
                     type="url"
@@ -612,7 +615,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="website">Website Link</S.Label>
+                  <S.Label htmlFor="website">Website</S.Label>
                   <S.Input
                     id="website"
                     type="url"
@@ -681,7 +684,7 @@ export default function OnboardingForm() {
                       alignItems:"center",
                       
                     }}>
-                  <S.Label htmlFor="brandingMix">Brand/Branding Mix</S.Label>
+                  <S.Label htmlFor="brandingMix">Branding Mix</S.Label>
                   <S.InfoButton
                     style={{textAlign:"center"}}
                     type="button"
@@ -691,6 +694,10 @@ export default function OnboardingForm() {
                   </S.InfoButton>
                   </div>
                   <S.Input
+                    style={{
+                      width:"500px",
+                     
+                    }}
                     id="brandingMix"
                     {...register("brandingMix" as any, {
                       required: "Brand/Branding Mix is required",
