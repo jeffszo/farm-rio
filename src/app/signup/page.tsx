@@ -1,10 +1,9 @@
 "use client"
-
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { CircleCheck } from "lucide-react"
 import * as S from "./styles"
-import { api } from "../../lib/supabase/index";
+import { api } from "../../lib/supabase/index"
 import { useRouter } from "next/navigation"
 
 interface SignUpFormData {
@@ -20,9 +19,8 @@ export default function SignUp() {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<SignUpFormData>({
-    mode: "onChange"
-  })
+  } = useForm<SignUpFormData>({ mode: "onChange" })
+
   const [apiError, setApiError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
@@ -34,6 +32,18 @@ export default function SignUp() {
 
       console.log("Conta criada! Abrindo modal...")
       setIsModalOpen(true)
+
+      // ✉️ Envia e-mail de confirmação
+      await fetch("/api/send-welcome-email", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: data.email,
+    name: data.name,
+  }),
+});
+
+
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Signup error:", error.message)
@@ -113,10 +123,10 @@ export default function SignUp() {
         <S.ModalOverlay>
           <S.ModalContent>
             <S.ModalTitle>
-            <CircleCheck  size={48}/>
+              <CircleCheck size={48} />
             </S.ModalTitle>
             <S.ModalMessage>
-            Your account has been created successfully!        
+              Your account has been created successfully!
             </S.ModalMessage>
             <S.ModalButton
               onClick={() => {
@@ -127,9 +137,8 @@ export default function SignUp() {
               OK
             </S.ModalButton>
           </S.ModalContent>
-        </S.ModalOverlay> // Modal para aprovação dos teams tbm
+        </S.ModalOverlay>
       )}
     </S.Container>
   )
 }
-

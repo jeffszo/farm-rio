@@ -87,7 +87,7 @@ export const FormRow = styled.div`
   align-items: center;
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.25rem 0;
+  padding: 0.30rem 0;
 
   strong {
     margin-right: 0.25rem;
@@ -295,7 +295,7 @@ export const EditableValueContainer = styled.div`
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0;
+  /* padding: 0.25rem 0; */
 `;
 
 export const EditIcon = styled.span`

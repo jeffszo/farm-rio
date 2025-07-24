@@ -1,3 +1,4 @@
+// src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -82,7 +83,7 @@ type WholesaleTerms = {
   wholesale_terms: string;
   wholesale_credit: number; // Este agora será o Credit Limit
   wholesale_discount: number;
-  wholesale_feedback: string;
+  wholesale_feedback?: string; // Made optional
 };
 
 const INVOICING_COMPANIES_BY_CURRENCY: Record<string, string[]> = {
@@ -163,6 +164,7 @@ export default function ValidationDetailsPage() {
     wholesale_terms: "",
     wholesale_credit: 0,
     wholesale_discount: 0,
+    wholesale_feedback: "",
   });
 
   const [warehouses, setWarehouses] = useState<string[]>([]);
@@ -223,9 +225,12 @@ export default function ValidationDetailsPage() {
           // CORREÇÃO: Inicializa wholesale_credit com estimated_purchase_amount
           wholesale_credit: Number(data.estimated_purchase_amount) || data.atacado_credit || 0,
           wholesale_discount: data.atacado_discount || 0,
+          wholesale_feedback: data.wholesale_feedback || "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
-        setInitialTerms(fetchedTerms); // Define initialTerms aqui
+        setInitialTerms(fetchedTerms); // Define initialTerms here
+
+        setFeedback(data.wholesale_feedback || ""); // Initialize the feedback state for the textarea
 
       } catch (err) {
         console.error("Error fetching customer details:", err);
@@ -331,6 +336,15 @@ export default function ValidationDetailsPage() {
         if (terms.wholesale_credit < 0 || terms.wholesale_discount < 0) {
           throw new Error("⚠️ Credit limit and discount must be non-negative!");
         }
+      } else { // If rejecting, feedback is required
+          if (!feedback.trim()) {
+              setModalContent({
+                  title: "Error!",
+                  description: "Feedback is required when rejecting a customer.",
+              });
+              setShowModal(true);
+              return;
+          }
       }
     
       await api.validateWholesaleCustomer(id as string, approved, {
@@ -340,10 +354,41 @@ export default function ValidationDetailsPage() {
         wholesale_terms: terms.wholesale_terms,
         wholesale_credit: terms.wholesale_credit, // O valor de Credit Limit será salvo aqui
         wholesale_discount: terms.wholesale_discount,
-        wholesale_feedback: terms.wholesale_feedback,
+        wholesale_feedback: feedback.trim() === "" ? undefined : feedback, // Use the separate feedback state
       });
 
       console.log("Validation completed successfully");
+
+      // --- NOVA ADIÇÃO: Enviar e-mail após a validação Wholesale ---
+      if (customerForm) {
+        try {
+          const emailResponse = await fetch("/api/send-wholesale-validation-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              customerId: id,
+              customerName: customerForm.customer_name,
+              customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
+              validationStatus: approved,
+              feedback: feedback, // Passa o feedback do textarea
+              currentStatus: customerForm.status,
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            const errorData = await emailResponse.json();
+            console.error("Falha ao enviar e-mail de validação Wholesale:", errorData);
+          } else {
+            console.log("E-mail de validação Wholesale enviado com sucesso.");
+          }
+        } catch (emailError) {
+          console.error("Erro ao enviar e-mail de validação Wholesale:", emailError);
+        }
+      }
+      // --- FIM DA NOVA ADIÇÃO ---
+
 
       if (customerForm) {
         setCustomerForm({

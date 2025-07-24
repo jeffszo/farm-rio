@@ -129,22 +129,21 @@ interface FormStatusData {
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {
   const { data, error } = await supabase
     .from("customer_forms")
-    .select("status, csc_feedback")
+    .select("status")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false }) // 🔽 Último formulário
-    .limit(1)
-    .maybeSingle() // 🔥 Retorna null se não houver dados
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   if (error) {
-    console.log("Erro ao buscar status do formulário:", error.message)
-    return null
+    console.log("Erro ao buscar status do formulário:", error.message);
+    return null;
   }
-  
-  // console.log("🔥 Dados brutos da query:", data); // ✅ Adicione esse log
 
+  if (!data || data.length === 0) return null;
 
-  return data
+  return data[0]; // ✅ retorna o formulário mais recente
 }
+
 
 
 

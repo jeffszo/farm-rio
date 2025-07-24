@@ -36,7 +36,9 @@ const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
 
       // ✅ Verifica se o usuário é um cliente ou parte do time de validação
       if (user.role === "cliente") {
-        const formStatus = await api.getFormStatus(user.id); // Você já buscou o status com user.id
+        const formStatus = await api.getFormStatus(user.id);
+console.log("📦 STATUS DO FORMULÁRIO:", formStatus); // 👈 Adicione isto
+
       
         if (formStatus?.status) {
           // CORREÇÃO: Passar o user.id para a rota dinâmica

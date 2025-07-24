@@ -40,82 +40,55 @@ export default function StatusClient({
     console.log(
       "CLIENT COMPONENT: Rendering: isLoading TRUE (should be false on initial render)"
     );
-    return <p>Loading your request status...</p>;
+    return <p>Loading...</p>;
   }
 
-  if (
-    formStatus === null ||
-    formStatus === "no_data_found" ||
-    formStatus === "error" ||
-    formStatus === "no_id_provided"
-  ) {
-    console.log(
-      "CLIENT COMPONENT: Rendering: Status not found or error. formStatus:",
-      formStatus
-    );
-    let message = "Could not load your request status.";
-    if (formStatus === "no_id_provided") {
-      message =
-        "No user ID was provided in the URL to fetch the status. Please ensure the URL is correct (e.g., /customer/status/YOUR_USER_ID).";
-    } else if (formStatus === "no_data_found") {
-      message = "No application status found for the provided user ID.";
-    } else if (formStatus === "error") {
-      message =
-        "An error occurred while fetching your status. Please try again later.";
-    }
-    return (
-      <S.ReviewContainer>
-        <S.ReviewHeader>
-          <S.ReviewTitle>Request Status</S.ReviewTitle>
-          <S.ReviewSubtitle>{message}</S.ReviewSubtitle>
-        </S.ReviewHeader>
-      </S.ReviewContainer>
-    );
-  }
+  // Determine se o formulário está em um status de rejeição que requer feedback
+  const isRejectedStatusWithFeedback =
+    formStatus === "rejected by the CSC initial team" ||
+    formStatus === "rejected by the CSC final team" ||
+    formStatus === "rejected by the tax team" ||
+    formStatus === "rejected by the wholesale team";
 
-  console.log("CLIENT COMPONENT: Rendering: Valid status:", formStatus);
+  // Determine se o formulário está em um status que permite edição
+  const canEditForm =
+    formStatus === "rejected by the CSC initial team" ||
+    formStatus === "rejected by the CSC final team" ||
+    formStatus === "rejected by the tax team" ||
+    formStatus === "rejected by the wholesale team";
 
   return (
     <S.ReviewContainer>
-      <S.ReviewTitle>Request Status</S.ReviewTitle>
+      <S.ReviewTitle>Your Request Status</S.ReviewTitle>
       <S.ReviewSubtitle>
         {formStatus === "pending" && (
-          <p>Your submission is under review.</p>
-        )}
-
-        {formStatus === "approved by the wholesale team" && (
-          <div>Your form has already been approved by the wholesale team.</div>
-        )}
-
-        {formStatus === "approved by the credit team" && (
           <div>
-            Your form has been approved by the wholesale and credit team.
-          </div>
-        )}
-
-        {formStatus === "rejected by the CSC final team" && (
-          <div>
-            <p>
-              Your registration was rejected by our team. Please correct the
-              data and submit again.
-            </p>
-
-            {/* Este inner includes ainda usa includes, que pode ser substituído por '===' também se 'formStatus' for apenas "rejected by the CSC team" */}
-            {formStatus === "rejected by the CSC team" && (
-              <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from CSC Team:</S.FeedbackTitle>
-                <S.FeedbackContent>
-                  {feedback ||
-                    "No specific feedback provided. Please contact support for more details."}
-                </S.FeedbackContent>
-              </S.FeedbackCard>
-            )}
+            Your form is currently <strong>pending review</strong>. We'll notify
+            you once it has been processed by the CSC team.
           </div>
         )}
 
         {formStatus === "approved by the CSC team" && (
           <div>
-            Your form has been <strong>approved by all teams!</strong>
+            Your form has been <strong>approved by the CSC team</strong> and is now under review by the Tax team.
+          </div>
+        )}
+
+        {formStatus === "approved by the tax team" && (
+          <div>
+            Your form has been <strong>approved by the Tax team</strong> and is now under review by the Wholesale team.
+          </div>
+        )}
+
+        {formStatus === "approved by the wholesale team" && (
+          <div>
+            Your form has been <strong>approved by the Wholesale team</strong> and is now under review by the Credit team.
+          </div>
+        )}
+
+        {formStatus === "approved by the credit team" && (
+          <div>
+            Your form has been <strong>approved by all teams!</strong> You're good to go!
           </div>
         )}
 
@@ -125,34 +98,52 @@ export default function StatusClient({
           </div>
         )}
 
+        {formStatus === "rejected by the CSC initial team" && (
+          <div>
+            Your form has been <strong>rejected by the CSC team</strong>. Please review the feedback and make the necessary corrections.
+          </div>
+        )}
+
+        {formStatus === "rejected by the CSC final team" && (
+          <div>
+            Your corrected form has been <strong>rejected by the CSC team</strong> again. Please review the feedback carefully.
+          </div>
+        )}
+
+        {formStatus === "rejected by the tax team" && (
+          <div>
+            Your form has been <strong>rejected by the Tax team</strong>. Please review the feedback and make the necessary corrections.
+          </div>
+        )}
+
         {formStatus === "rejected by the wholesale team" && (
           <div>
-            Your form has already been rejected by the wholesale team
+            Your form has been <strong>rejected by the Wholesale team</strong>. Please review the feedback and make the necessary corrections.
           </div>
-        )}
-
-              {formStatus === "rejected by the tax team" && (
-          <div>
-            Your form has already been rejected by the wholesale team
-          </div>
-        )}
-
-                {formStatus === "rejected by the CSC initial team" && (
-          <div>Your changed data is awaiting validation by the CSC team.</div>
         )}
 
         {formStatus === "data corrected by the client" && (
-          <div>Your changed data is awaiting validation by the CSC team.</div>
+          <div>Your corrected data is awaiting validation by the CSC team.</div>
+        )}
+
+        {/* Exibe o FeedbackCard apenas se houver feedback e for um status de rejeição */}
+        {isRejectedStatusWithFeedback && feedback && feedback.trim() !== "" && (
+          <S.FeedbackCard>
+            <S.FeedbackTitle>Feedback from the Team:</S.FeedbackTitle>
+            <S.FeedbackContent>
+              {feedback || "No specific feedback provided. Please contact support for more details."}
+            </S.FeedbackContent>
+          </S.FeedbackCard>
         )}
       </S.ReviewSubtitle>
 
-      {(formStatus === "rejected by the CSC final team" || formStatus === "rejected by the team wholesale") && (
+      {canEditForm && (
         <S.EditButton
           onClick={() => router.push(`/edit-form/${initialUserId}`)}
         >
           <FileEdit size={18} />
-Edit your information        
-</S.EditButton>
+          Edit your information
+        </S.EditButton>
       )}
     </S.ReviewContainer>
   );

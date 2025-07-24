@@ -46,7 +46,6 @@ export async function getPendingCSCValidations(
     "pending",
     "rejected by the CSC initial team",
     "approved by the credit team",
-    "rejected by the tax team",
     "finished"
     // Adicione outros status se houver mais que você deseja buscar nesta visão geral
   ];

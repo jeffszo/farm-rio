@@ -75,6 +75,7 @@ export const Grid = styled.div`
 export const InputGroup = styled.div`
   gap: 1rem;
   margin-bottom: 1rem;
+  
 `
 
 export const Label = styled.label`

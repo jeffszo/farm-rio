@@ -14,13 +14,13 @@ import {
   Check,
   X,
   Copy,
-  Building2, // Adicionado para icones de termos
-  Warehouse, // Adicionado para icones de termos
-  CreditCard, // Adicionado para icones de termos
-  Calendar, // Adicionado para icones de termos
-  DollarSign, // Adicionado para icones de termos
-  Percent // Adicionado para icones de termos
-} from "lucide-react"; // Import Pencil, Check, X
+  Building2,
+  Warehouse,
+  CreditCard,
+  Calendar,
+  DollarSign,
+  Percent,
+} from "lucide-react";
 
 interface Address {
   street: string;
@@ -38,20 +38,19 @@ interface CustomerForm {
   duns_number: string;
   dba_number: string;
   resale_certificate: string;
-  photo_urls: string[]; // Changed to array of strings
+  photo_urls: string[];
   instagram: string;
   website: string;
   branding_mix: string;
   financial_statements: string;
-  billing_address: string; // This is a JSON string of Address[]
-  shipping_address: string; // This is a JSON string of Address[]
+  billing_address: string;
+  shipping_address: string;
   ap_contact_name: string;
   ap_contact_email: string;
   buyer_name: string;
   buyer_email: string;
   status: string;
   created_at: string;
-  
 }
 
 interface ValidationDetails {
@@ -112,7 +111,7 @@ export default function ValidationDetailsPage() {
   useEffect(() => {
     const fetchValidationDetails = async () => {
       // Ensure id is a string before passing to API
-      if (typeof id === 'string') {
+      if (typeof id === "string") {
         const validationData = await api.getCustomerValidationDetails(id);
         if (validationData) setValidation(validationData);
       }
@@ -185,11 +184,46 @@ export default function ValidationDetailsPage() {
         return;
       }
 
+      let statusUpdated = false;
+
       if (customerForm?.status === "approved by the credit team") {
         await api.validateCSCFinalCustomer(id, approved, feedback); // Etapa 6
+        statusUpdated = true;
       } else {
         await api.validateCSCInitialCustomer(id, approved, feedback); // Etapa 2
+        statusUpdated = true;
       }
+
+      // --- NOVA ADIÇÃO: Enviar e-mail após a validação CSC ---
+      if (statusUpdated && customerForm) {
+        try {
+          const emailResponse = await fetch("/api/send-csc-validation-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              customerId: id,
+              customerName: customerForm.customer_name,
+              customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
+              validationStatus: approved,
+              feedback: feedback,
+              currentStatus: customerForm.status, // Envia o status atual para a rota para diferenciar os e-mails
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            const errorData = await emailResponse.json();
+            console.error("Falha ao enviar e-mail de validação CSC:", errorData);
+            // Você pode optar por mostrar um erro aqui ou apenas logar, dependendo da criticidade do e-mail
+          } else {
+            console.log("E-mail de validação CSC enviado com sucesso.");
+          }
+        } catch (emailError) {
+          console.error("Erro ao enviar e-mail de validação CSC:", emailError);
+        }
+      }
+      // --- FIM DA NOVA ADIÇÃO ---
 
       setModalContent({
         title: "Ok!",
@@ -319,7 +353,6 @@ export default function ValidationDetailsPage() {
     }
   };
 
-
   return (
     <S.ContainerMain>
       <S.Container>
@@ -345,7 +378,9 @@ export default function ValidationDetailsPage() {
                 {/* Novo Styled Component para alinhar valor e botão */}
                 {customerForm.sales_tax_id}
                 {customerForm.sales_tax_id && (
-                  <S.CopyButton onClick={() => handleCopyToClipboard(customerForm.sales_tax_id)}>
+                  <S.CopyButton
+                    onClick={() => handleCopyToClipboard(customerForm.sales_tax_id)}
+                  >
                     <Copy size={16} />
                   </S.CopyButton>
                 )}
@@ -353,24 +388,25 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
 
             {/* D-U-N-S Number (Editable) */}
-            <S.FormRow style={{
-              alignItens: "center"
-            }}>
+            <S.FormRow
+              style={{
+                alignItens: "center",
+              }}
+            >
               <strong>D-U-N-S:</strong>{" "}
               {editingDuns ? (
                 <S.EditableValueContainer>
-                  
                   <S.EditInput
                     type="text"
                     value={editedDuns}
                     onChange={(e) => setEditedDuns(e.target.value)}
                   />
-                  
+
                   <S.EditButtonContainer>
                     <S.ActionButton onClick={handleSaveDuns} color="green">
                       <Check size={16} />
                     </S.ActionButton>
-                    
+
                     <S.ActionButton
                       onClick={() => {
                         setEditingDuns(false);
@@ -393,15 +429,14 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-                        {/* <S.FormRow>
+            {/* <S.FormRow>
               <strong>Branding Mix:</strong> {customerForm.branding_mix || "N/A"}
             </S.FormRow> */}
-
 
             <S.FormRow>
               <strong>DBA:</strong> {customerForm.dba_number || "N/A"}
             </S.FormRow>
-                    <S.FormRow>
+            <S.FormRow>
               <strong>Instagram:</strong>{" "}
               {customerForm.instagram ? (
                 <a
@@ -415,8 +450,8 @@ export default function ValidationDetailsPage() {
                 "N/A"
               )}
             </S.FormRow>
-<S.FormRow>
-              <strong>Instagram:</strong>{" "}
+            <S.FormRow>
+              <strong>Website:</strong>{" "}
               {customerForm.website ? (
                 <a
                   href={customerForm.website}
@@ -445,9 +480,6 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-    
-
-
             <S.FormRow>
               <strong>Financial Statements:</strong>{" "}
               {customerForm.financial_statements ? (
@@ -463,12 +495,14 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
             <S.FormRow>
-               <strong>Photos:</strong>{" "}
+              <strong>Photos:</strong>{" "}
               {parsedPhotoUrls.length > 0 ? (
-                <S.PhotoGallery> {/* Assuming you have a styled component for a gallery */}
+                <S.PhotoGallery>
+                  {" "}
+                  {/* Assuming you have a styled component for a gallery */}
                   {parsedPhotoUrls.map((url, index) => (
                     <a key={index} href={url} target="_blank" rel="noopener noreferrer">
-                      View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ''}
+                      View Photo {parsedPhotoUrls.length > 1 ? index + 1 : ""}
                       {/* Or an image tag: <img src={url} alt={`Customer Photo ${index + 1}`} style={{ maxWidth: '100px', maxHeight: '100px', margin: '5px' }} /> */}
                     </a>
                   ))}
@@ -476,11 +510,10 @@ export default function ValidationDetailsPage() {
               ) : (
                 "Not sent"
               )}
-
             </S.FormRow>
           </S.FormSection>
 
-                    {/* Addresses Section */}
+          {/* Addresses Section */}
           <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
@@ -528,10 +561,7 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
           </S.FormSection>
 
-          
-
-
-         {/* Conditional Rendering for Wholesale and Credit Terms */}
+          {/* Conditional Rendering for Wholesale and Credit Terms */}
           {customerForm.status === "approved by the credit team" && validation && (
             <>
               {/* Wholesale Terms Section */}
@@ -544,7 +574,9 @@ export default function ValidationDetailsPage() {
                     <label>
                       <Building2 size={16} /> Invoicing Company
                     </label>
-                    <S.InfoText>{validation.wholesale_invoicing_company || "N/A"}</S.InfoText>
+                    <S.InfoText>
+                      {validation.wholesale_invoicing_company || "N/A"}
+                    </S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
@@ -573,7 +605,8 @@ export default function ValidationDetailsPage() {
                       <DollarSign size={16} /> Credit Limit
                     </label>
                     <S.InfoText>
-                      {validation.wholesale_credit !== undefined && validation.wholesale_credit !== null
+                      {validation.wholesale_credit !== undefined &&
+                      validation.wholesale_credit !== null
                         ? validation.wholesale_credit.toFixed(2)
                         : "N/A"}
                     </S.InfoText>
@@ -584,7 +617,8 @@ export default function ValidationDetailsPage() {
                       <Percent size={16} /> Discount
                     </label>
                     <S.InfoText>
-                      {validation.wholesale_discount !== undefined && validation.wholesale_discount !== null
+                      {validation.wholesale_discount !== undefined &&
+                      validation.wholesale_discount !== null
                         ? validation.wholesale_discount.toFixed(1) + "%"
                         : "N/A"}
                     </S.InfoText>
@@ -602,7 +636,9 @@ export default function ValidationDetailsPage() {
                     <label>
                       <Building2 size={16} /> Invoicing Company
                     </label>
-                    <S.InfoText>{validation.credit_invoicing_company || "N/A"}</S.InfoText>
+                    <S.InfoText>
+                      {validation.credit_invoicing_company || "N/A"}
+                    </S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
@@ -631,7 +667,8 @@ export default function ValidationDetailsPage() {
                       <DollarSign size={16} /> Credit Limit
                     </label>
                     <S.InfoText>
-                      {validation.credit_credit !== undefined && validation.credit_credit !== null
+                      {validation.credit_credit !== undefined &&
+                      validation.credit_credit !== null
                         ? validation.credit_credit.toFixed(2)
                         : "N/A"}
                     </S.InfoText>
@@ -642,7 +679,8 @@ export default function ValidationDetailsPage() {
                       <Percent size={16} /> Discount
                     </label>
                     <S.InfoText>
-                      {validation.credit_discount !== undefined && validation.credit_discount !== null
+                      {validation.credit_discount !== undefined &&
+                      validation.credit_discount !== null
                         ? validation.credit_discount.toFixed(1) + "%"
                         : "N/A"}
                     </S.InfoText>
@@ -651,43 +689,38 @@ export default function ValidationDetailsPage() {
               </S.FormSection>
             </>
           )}
-
         </S.FormDetails>
 
-     
-          <S.FeedbackGroup>
-            <S.Label htmlFor="feedback">
-              Observation
-            </S.Label>
-            <S.Textarea
-              id="feedback"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Explain the reason for rejection..."
-            />
-          </S.FeedbackGroup>
-      
+{customerForm.status !== "finished" && (
+  <S.FeedbackGroup>
+    <S.Label htmlFor="feedback">Observation</S.Label>
+    <S.Textarea
+      id="feedback"
+      value={feedback}
+      onChange={(e) => setFeedback(e.target.value)}
+      placeholder="Explain the reason for rejection or add relevant..."
+    />
+  </S.FeedbackGroup>
+)}
 
-        <S.ButtonContainer>
-          {customerForm.status === "approved by the CSC team" ? (
-            <S.Button onClick={handleFinish} variant="primary">
-              Finish
-            </S.Button>
-          ) : (
-            <>
-              <S.Button
-                onClick={() => handleApproval(false)}
-                variant="secondary"
-              >
-                Reject
-              </S.Button>
-              <S.Button onClick={() => handleApproval(true)} variant="primary">
-                Approve
-              </S.Button>
-            </>
-          )}
-        </S.ButtonContainer>
-
+{customerForm.status !== "finished" && (
+  <S.ButtonContainer>
+    {customerForm.status === "approved by the CSC team" ? (
+      <S.Button onClick={handleFinish} variant="primary">
+        Finish
+      </S.Button>
+    ) : (
+      <>
+        <S.Button onClick={() => handleApproval(false)} variant="secondary">
+          Reject
+        </S.Button>
+        <S.Button onClick={() => handleApproval(true)} variant="primary">
+          Approve
+        </S.Button>
+      </>
+    )}
+  </S.ButtonContainer>
+)}
 
         {showModal && (
           <S.Modal>
@@ -695,9 +728,7 @@ export default function ValidationDetailsPage() {
               <S.ModalTitle>
                 <CircleCheck size={48} />
               </S.ModalTitle>
-              <S.ModalDescription>
-                {modalContent.description}
-              </S.ModalDescription>
+              <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>

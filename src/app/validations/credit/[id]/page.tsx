@@ -18,7 +18,7 @@ import {
   Pencil,
   Check,
   X,
-  MessageSquare  
+  MessageSquare
 } from "lucide-react";
 
 // Interface definition for a single address (AddressDetail)
@@ -161,7 +161,7 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-    const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState(""); // Unified feedback state for the textarea
 
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -177,9 +177,9 @@ export default function ValidationDetailsPage() {
     if (customerForm?.duns_number) {
       setNewDuns(customerForm.duns_number);
     }
-    // Initialize creditFeedback when customerForm is available
+    // Initialize feedback when customerForm is available
     if (customerForm?.credit_feedback) {
-      setCreditFeedback(customerForm.credit_feedback);
+      setFeedback(customerForm.credit_feedback);
     }
   }, [customerForm]);
 
@@ -363,9 +363,6 @@ export default function ValidationDetailsPage() {
     setEditingDuns(false);
   };
 
-  // Handler for credit feedback save
-  
-
   // Handler para as mudanças nos termos do CRÉDITO
   const handleCreditTermChange = (
     field: keyof CreditTerms,
@@ -406,6 +403,15 @@ export default function ValidationDetailsPage() {
         if (creditTerms.credit_limit < 0 || creditTerms.discount < 0) { // Usa creditTerms
           throw new Error("⚠️ O limite de crédito e o desconto devem ser não-negativos!");
         }
+      } else { // If rejecting, feedback is required
+          if (!feedback.trim()) {
+              setModalContent({
+                  title: "Error!",
+                  description: "Feedback is required when rejecting a customer.",
+              });
+              setShowModal(true);
+              return;
+          }
       }
 
       console.log("Calling validateCreditCustomer");
@@ -416,9 +422,41 @@ export default function ValidationDetailsPage() {
         credit_terms: creditTerms.payment_terms, // Usa creditTerms
         credit_credit: creditTerms.credit_limit, // Usa creditTerms
         credit_discount: creditTerms.discount, // Usa creditTerms
+        credit_feedback: feedback.trim() === "" ? undefined : feedback, // Passa o feedback do textarea
       });
 
       console.log("Validation completed successfully");
+
+      // --- NOVA ADIÇÃO: Enviar e-mail após a validação de Crédito ---
+      if (customerForm) {
+        try {
+          const emailResponse = await fetch("/api/send-credit-validation-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              customerId: id,
+              customerName: customerForm.customer_name,
+              customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
+              validationStatus: approved,
+              feedback: feedback, // Passa o feedback do textarea
+              currentStatus: customerForm.status,
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            const errorData = await emailResponse.json();
+            console.error("Falha ao enviar e-mail de validação de Crédito:", errorData);
+          } else {
+            console.log("E-mail de validação de Crédito enviado com sucesso.");
+          }
+        } catch (emailError) {
+          console.error("Erro ao enviar e-mail de validação de Crédito:", emailError);
+        }
+      }
+      // --- FIM DA NOVA ADIÇÃO ---
+
 
       if (customerForm) {
         setCustomerForm({
@@ -555,7 +593,7 @@ export default function ValidationDetailsPage() {
                             )}
                           </S.FormRow>
 
-                          
+
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
                 <a
@@ -570,7 +608,7 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-                                     
+
                         <S.FormRow>
               <strong>Instagram:</strong>{" "}
               {customerForm.instagram ? (
@@ -663,7 +701,7 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
-             
+
           </S.FormSection>
 
                     {validation && (
@@ -690,7 +728,7 @@ export default function ValidationDetailsPage() {
                 </p>
               </S.TermsCard>
 
-              <S.Divider /> 
+              <S.Divider />
 
                         <S.SectionTitle>
               <MessageSquare  size={16} /> Wholesale Team Feedback
@@ -701,9 +739,8 @@ export default function ValidationDetailsPage() {
             </S.TermsCardsContainer>
           )}
         </S.FormDetails>
-              
 
-        
+
 
         <S.TermsContainer>
           <S.TermsTitle>Validation Terms (Credit Team)</S.TermsTitle>
@@ -814,9 +851,9 @@ export default function ValidationDetailsPage() {
           </S.TermsGrid>
         </S.TermsContainer>
 
-        
+
                 {(customerForm.status === "approved by the wholesale team" ||
-                          customerForm.status === "rejected by the tax team") && (
+                          customerForm.status === "rejected by the wholesale team") && ( // Condição para exibir o feedback
                           <S.FeedbackGroup>
                             <S.Label htmlFor="feedback">
                               Observation
@@ -829,7 +866,7 @@ export default function ValidationDetailsPage() {
                             />
                           </S.FeedbackGroup>
                         )}
-        
+
 
         <S.ButtonContainer>
           <S.Button onClick={() => handleApproval(false)} variant="secondary">

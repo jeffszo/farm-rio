@@ -8,208 +8,347 @@ import * as S from "../../customer/styles"
 import type { IFormInputs } from "../../../types/form"
 import { api } from "../../../lib/supabase/index"
 import { supabase } from "../../../lib/supabase/client" // ou `supabase.ts`, dependendo do seu projeto
-import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2 } from "lucide-react"
+import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react"
 
-export default function EditFormPage() {
-  const { id } = useParams()
-  const [file, setFile] = useState<File | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [shippingAddress, setShippingAddress] = useState<number[]>([0])
-  const [billingAddress, setBillingAddress] = useState<number[]>([0])
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
-  const router = useRouter()
-  const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null)
-  const [previousFormStatus, setPreviousFormStatus] = useState<string | null>(null); // NOVO ESTADO: Para guardar o status anterior
+const termsOptions = [
+  { value: "", label: "Select terms" },
+  { value: "100% Prior to Ship", label: "100% Prior to Ship" },
+  { value: "Net 15", label: "Net 15" },
+  { value: "Net 30", label: "Net 30" },
+];
+
+const currencyOptions = [
+  { value: "", label: "Select currency" },
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "GBP", label: "GBP" },
+];
+
+export default function OnboardingForm() {
+  const [file, setFile] = useState<File | null>(null); // Para Resale Certificate
+  const [imageFiles, setImageFiles] = useState<File[]>([]); // Para Multiple Images
+  const [financialStatementsFile, setFinancialStatementsFile] =
+    useState<File | null>(null); // ESTADO PARA O ARQUIVO FINANCIAL STATEMENTS
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
+  const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
+  const [billingAddress, setbillingAddress] = useState<number[]>([0]);
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+  const [user, setUser] = useState<{ id: string; userType?: string } | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Adicione esta linha para declarar e gerenciar o estado de validação do passo 4
+  const [stepFourAttemptedValidation, setStepFourAttemptedValidation] =
+    useState(false);
 
   const {
     register,
     handleSubmit: hookFormSubmit,
     formState: { errors },
     trigger,
+    getValues,
+    setValue,
+    clearErrors, // Importe clearErrors
+    setError, // Importe setError
   } = useForm<IFormInputs>({
     mode: "onChange",
-  })
+    defaultValues: {
+      billingAddress: [{} as any],
+      shippingAddress: [{} as any],
+      // Definir valor padrão para os selects para evitar erro de componente não controlado
+      buyerInfo: {
+        terms: "", // Valor vazio para a opção "Select terms"
+        currency: "", // Valor vazio para a opção "Select currency"
+        // ... outros campos de buyerInfo
+      } as any, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
+    },
+  });
+
+  const handleFinancialStatementsFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (event.target.files && event.target.files[0]) {
+      const selectedFile = event.target.files[0];
+      if (selectedFile.type !== "application/pdf") {
+        setError("buyerInfo.financialStatements", {
+          type: "manual",
+          message: "Financial Statements devem ser um arquivo PDF.",
+        });
+        setFinancialStatementsFile(null); // Limpa o arquivo inválido
+        console.log("Arquivo de Financial Statements inválido: não é PDF.");
+        return;
+      }
+      setFinancialStatementsFile(selectedFile);
+      // Limpa o erro se um arquivo for selecionado e for PDF válido
+      clearErrors("buyerInfo.financialStatements");
+      console.log(
+        "Arquivo de Financial Statements selecionado:",
+        selectedFile.name
+      );
+    } else {
+      setFinancialStatementsFile(null);
+      clearErrors("buyerInfo.financialStatements"); // Limpa o erro se nenhum arquivo for selecionado
+      console.log("Nenhum arquivo de Financial Statements selecionado.");
+    }
+  };
 
   useEffect(() => {
-    const fetchExistingData = async () => {
-      try {
-        const formData = await api.getCustomerFormById(id as string)
-        if (formData) {
-          // Atualiza o estado do status anterior
-          setPreviousFormStatus(formData.status); //
-          if ((formData as { resale_certificate?: string })?.resale_certificate) {
-            setExistingFileUrl((formData as { resale_certificate?: string }).resale_certificate ?? null)
-          }
-          // Você também precisaria usar o 'setValue' do react-hook-form aqui
-          // para preencher os campos do formulário com os dados existentes
-          // Ex: setValue('customerInfo.legalName', formData.customer_name);
-          // Este preenchimento não está no escopo da sua pergunta, mas é importante para um "edit form" completo.
-        }
-      } catch (error) {
-        console.error("Error fetching existing form data:", error)
-      }
-    }
-
-    if (id) {
-      fetchExistingData()
-    }
-  }, [id])
+    const fetchUser = async () => {
+      const currentUser = await api.getCurrentUser();
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0]
+    const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        alert("Please upload a PDF file.")
-        return
+        alert("Please upload a PDF file.");
+        setFile(null); // Limpa o arquivo inválido
+        console.log("Arquivo de Resale Certificate inválido: não é PDF.");
+        return;
       }
-      setFile(selectedFile)
+      setFile(selectedFile);
+      console.log(
+        "Arquivo de Resale Certificate selecionado:",
+        selectedFile.name
+      );
+    } else {
+      setFile(null);
+      console.log("Nenhum arquivo de Resale Certificate selecionado.");
     }
-  }
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // É importante usar event.target.files aqui, pois event.files não existe.
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setImageFiles((prev) => [...prev, ...files]);
+      console.log(
+        "Imagens selecionadas:",
+        files.map((f) => f.name)
+      );
+    } else {
+      console.log("Nenhuma imagem selecionada.");
+    }
+  };
 
   const onSubmit = async (formData: IFormInputs) => {
+    console.log("Submit button clicked. Starting onSubmit function.");
     try {
-      setApiError(null)
-      setIsUploading(true)
+      setApiError(null);
+      setIsUploading(true);
+      console.log("isUploading set to true.");
 
-      // Upload the PDF file to Supabase if selected
-      let fileUrl: string | null = existingFileUrl // Start with existing URL
+      const currentUser = user || (await api.getCurrentUser());
+      if (!currentUser || !currentUser.id) {
+        console.error("User not authenticated. Redirecting to login.");
+        setApiError(
+          "Your session has expired or you are not logged in. Please log in again.."
+        );
+        router.push("/");
+        setIsUploading(false);
+        return;
+      }
+      console.log("Current user ID:", currentUser.id);
+
+      console.log("Dados recebidos no formulário (formData):", formData);
+
+      const termsSelected = formData.buyerInfo?.terms;
+
+      // REFORÇO DA VALIDAÇÃO DE FINANCIAL STATEMENTS NO SUBMIT
+      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+        setError("buyerInfo.financialStatements", {
+          type: "required",
+          message: "Financial Statements are required if terms are selected.",
+        });
+        setApiError(
+          "Financial Statements are required if terms are selected.."
+        );
+        setIsUploading(false);
+        console.error(
+          "Validação de Financial Statements falhou no onSubmit: Termos selecionados, mas arquivo ausente."
+        );
+        return;
+      }
+      if (
+        financialStatementsFile &&
+        financialStatementsFile.type !== "application/pdf"
+      ) {
+        setError("buyerInfo.financialStatements", {
+          type: "manual",
+          message: "Financial Statements devem ser um arquivo PDF.",
+        });
+        setApiError("Financial Statements devem ser um arquivo PDF.");
+        setIsUploading(false);
+        console.error(
+          "Validação de Financial Statements falhou no onSubmit: Arquivo não é PDF."
+        );
+        return;
+      }
+      // FIM DO REFORÇO DA VALIDAÇÃO
+
+      let fileUrl: string | null = null;
       if (file) {
         try {
-          console.log("Starting file upload process...")
-          fileUrl = await api.uploadResaleCertificate(file, id as string)
-          console.log("File uploaded successfully:", fileUrl)
+          console.log("Attempting to upload resale certificate.");
+          fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
+          console.log(
+            "Arquivo de certificado de revenda enviado com sucesso:",
+            fileUrl
+          );
         } catch (error) {
-          console.error("Detailed file upload error:", error)
-          setApiError(error instanceof Error ? error.message : "Error uploading file. Please try again.")
-          setIsUploading(false)
-          return
+          console.error(
+            "Erro ao enviar o arquivo de certificado de revenda:",
+            error
+          );
+          setApiError(
+            error instanceof Error
+              ? error.message
+              : "Erro ao enviar o arquivo. Tente novamente."
+          );
+          setIsUploading(false);
+          return;
         }
-      }
-
-      // Determine the new status based on the previous form status
-      let newCalculatedStatus: string;
-
-      
-      const normalizedStatus = previousFormStatus?.toLowerCase().trim()
-
-      if (normalizedStatus === "rejected by the team wholesale") {
-        newCalculatedStatus = "pending"
-      } else if (normalizedStatus === "rejected by the csc team") {
-        newCalculatedStatus = "data corrected by client"
       } else {
-        newCalculatedStatus = "pending"
+        console.log("No resale certificate file to upload.");
       }
 
+      const photoUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        console.log("Attempting to upload image files.");
+        for (const imageFile of imageFiles) {
+          try {
+            const imageUrl = await api.uploadImage(imageFile, currentUser.id);
+            photoUrls.push(imageUrl);
+            console.log(`Image ${imageFile.name} uploaded successfully.`);
+          } catch (error) {
+            console.error(`Erro ao enviar a imagem ${imageFile.name}:`, error);
+            setApiError(
+              error instanceof Error
+                ? error.message
+                : "Erro ao enviar imagens. Tente novamente."
+            );
+            setIsUploading(false);
+            return;
+          }
+        }
+      } else {
+        console.log("No image files to upload.");
+      }
 
+      let financialStatementsFileUrl: string | null = null;
+      if (financialStatementsFile) {
+        // Só tenta fazer upload se o estado do arquivo for válido e não nulo
+        try {
+          console.log("Attempting to upload financial statements.");
+          financialStatementsFileUrl = await api.uploadFinancialStatements(
+            financialStatementsFile,
+            currentUser.id
+          );
+          console.log(
+            "Arquivo de Financial Statements enviado com sucesso:",
+            financialStatementsFileUrl
+          );
+        } catch (error) {
+          console.error("Erro ao enviar Financial Statements:", error);
+          setApiError(
+            error instanceof Error
+              ? error.message
+              : "Erro ao enviar Financial Statements. Tente novamente."
+          );
+          setIsUploading(false);
+          return;
+        }
+      } else {
+        console.log("No financial statements file to upload or not required.");
+      }
 
-      // Flatten the nested structure while preserving essential field names
-      const flattenedFormData: {
-        id: string // Make sure to include the ID
-        customer_name: string | null
-        sales_tax_id: string | null
-        duns_number: string | null
-        dba_number: string | null
-        resale_certificate: string | null
-        billing_address: string
-        shipping_address: string
-        ap_contact_name: string
-        ap_contact_email: string | null
-        buyer_name: string
-        buyer_email: string | null
-        additional_shipping_addresses?: string[]
-        additional_billing_addresses?: string[]
-        status: string // Agora dinâmico
-      } = {
-        id: id as string, // Include the ID in the data
+      // Garanta que os campos de select vazios sejam tratados como null, se necessário para o banco de dados
+      const termsValue =
+        formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+      const currencyValue =
+        formData.buyerInfo?.currency === ""
+          ? null
+          : formData.buyerInfo?.currency;
+
+      const payload = {
+        user_id: currentUser.id,
         customer_name: formData.customerInfo?.legalName || null,
         sales_tax_id: formData.customerInfo?.taxId || null,
         duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
         resale_certificate: fileUrl,
-        billing_address: Object.values(formData.billingAddress?.[0] || {}).join(", "),
-        shipping_address: Object.values(formData.shippingAddress?.[0] || {}).join(", "),
-        ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+        billing_address: formData.billingAddress || [],
+        shipping_address: formData.shippingAddress || [],
+        ap_contact_name:
+          `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
         ap_contact_email: formData.apContact?.email || null,
-        buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+        ap_contact_country_code: formData.apContact?.countryCode || null,
+        ap_contact_number: formData.apContact?.contactNumber || null,
+        buyer_name:
+          `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
         buyer_email: formData.buyerInfo?.email || null,
-        status: newCalculatedStatus, // USA O STATUS CALCULADO AQUI!
-      }
+        buyer_country_code: formData.buyerInfo?.countryCode || null,
+        buyer_number: formData.buyerInfo?.buyerNumber || null,
+        status: "pending",
+        photo_urls: photoUrls,
+        branding_mix: formData.brandingMix
+  ? formData.brandingMix.split(",").map((s) => s.trim())
+  : null,
 
-      // Process multiple shipping addresses
-      if (shippingAddress.length > 1) {
-        flattenedFormData.additional_shipping_addresses = shippingAddress
-          .slice(1)
-          .map((index) => Object.values(formData.shippingAddress?.[index] || {}).join(", "))
-      }
+        instagram: formData.instagram || null,
+        website: formData.website || null,
+        terms: termsValue, // Usando o valor tratado
+        currency: currencyValue, // Usando o valor tratado
+        estimated_purchase_amount:
+          formData.buyerInfo?.estimatedPurchaseAmount || null,
+        financial_statements: financialStatementsFileUrl,
+      };
 
-      // Process multiple billing addresses
-      if (billingAddress.length > 1) {
-        flattenedFormData.additional_billing_addresses = billingAddress
-          .slice(1)
-          .map((index) => Object.values(formData.billingAddress?.[index] || {}).join(", "))
-      }
+      console.log("Payload sendo enviado para submitForm:", payload);
 
-      // If there's an existing file URL and no new file was uploaded, keep the existing URL
-      if (!fileUrl && existingFileUrl) {
-        flattenedFormData.resale_certificate = existingFileUrl
-      }
-
-      console.log("Sending data to update:", flattenedFormData)
-
-      // Update the form with the edited data
-      const sanitizedFormData = Object.fromEntries(
-        Object.entries(flattenedFormData).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value ?? ""])
-      )
-
-      console.log("ID usado para update e get:", id)
-
-
-      const updateResult = await api.updateForm(JSON.stringify(sanitizedFormData), id as string)
-
-      if (!updateResult) {
-        setApiError("Falha ao atualizar os dados. Verifique se você tem permissão.")
-        return
-      }
-
-
-      // Verify the update was successful by fetching the updated record
-      const { data, error } = await supabase
-      .from("customer_forms")
-      .select("*")
-      .eq("id", id)
-
-      console.log("🧪 Data recebida manualmente:", data)
-      console.log("🧪 Erro manual:", error)
-
-      setIsModalOpen(true)
+      await api.submitForm(payload, currentUser.id);
+      console.log("Form submitted successfully via API.");
+      setIsModalOpen(true);
+      console.log("Modal set to open.");
     } catch (error: unknown) {
-      console.error("Error updating form:", error)
-      let errorMessage = "Error updating form. Please try again."
-
-      if (error instanceof Error) {
-        errorMessage = error.message
-      } else if (typeof error === "object" && error !== null) {
-        // Try to extract more meaningful error information
-        errorMessage = JSON.stringify(error)
-      }
-
-      setApiError(errorMessage)
+      console.error(
+        "Erro GERAL ao enviar o formulário:",
+        error instanceof Error ? error.message : String(error)
+      );
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Erro ao enviar o formulário. Tente novamente."
+      );
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
+      console.log("isUploading set to false. End of onSubmit function.");
     }
-  }
+  };
 
   const nextStep = async () => {
-    // Only validate the current step fields
-    let fieldsToValidate: string[] = []
+    let fieldsToValidate: (keyof IFormInputs | string)[] = [];
 
     if (currentStep === 1) {
-      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber"]
+      fieldsToValidate = [
+        "customerInfo.legalName",
+        "customerInfo.taxId",
+        "customerInfo.dunNumber",
+        "brandingMix",
+        "instagram",
+        "website",
+      ];
     } else if (currentStep === 2) {
-      // Validate billing addresses
       billingAddress.forEach((index) => {
         fieldsToValidate.push(
           `billingAddress.${index}.street`,
@@ -217,11 +356,10 @@ export default function EditFormPage() {
           `billingAddress.${index}.city`,
           `billingAddress.${index}.state`,
           `billingAddress.${index}.county`,
-          `billingAddress.${index}.country`,
-        )
-      })
+          `billingAddress.${index}.country`
+        );
+      });
 
-      // Validate shipping addresses
       shippingAddress.forEach((index) => {
         fieldsToValidate.push(
           `shippingAddress.${index}.street`,
@@ -229,9 +367,9 @@ export default function EditFormPage() {
           `shippingAddress.${index}.city`,
           `shippingAddress.${index}.state`,
           `shippingAddress.${index}.county`,
-          `shippingAddress.${index}.country`,
-        )
-      })
+          `shippingAddress.${index}.country`
+        );
+      });
     } else if (currentStep === 3) {
       fieldsToValidate = [
         "apContact.firstName",
@@ -239,44 +377,140 @@ export default function EditFormPage() {
         "apContact.email",
         "apContact.countryCode",
         "apContact.contactNumber",
-      ]
+      ];
+    } else if (currentStep === 4) {
+      fieldsToValidate = [
+        "buyerInfo.firstName",
+        "buyerInfo.lastName",
+        "buyerInfo.email",
+        "buyerInfo.countryCode",
+        "buyerInfo.buyerNumber",
+        "buyerInfo.terms",
+        "buyerInfo.currency",
+        "buyerInfo.estimatedPurchaseAmount",
+      ];
+      setStepFourAttemptedValidation(true);
+
+      const termsSelected = getValues("buyerInfo.terms");
+      // Validação de Financial Statements no nextStep
+      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+        setError("buyerInfo.financialStatements", {
+          type: "required",
+          message:
+            "Declarações Financeiras são obrigatórias se os Termos forem selecionados.",
+        });
+        console.log(
+          "Erro de validação (nextStep): Financial Statements são obrigatórias."
+        );
+      } else if (
+        financialStatementsFile &&
+        financialStatementsFile.type !== "application/pdf"
+      ) {
+        setError("buyerInfo.financialStatements", {
+          type: "manual",
+          message: "Financial Statements devem ser um arquivo PDF.",
+        });
+        console.log(
+          "Erro de validação (nextStep): Financial Statements deve ser PDF."
+        );
+      } else {
+        clearErrors("buyerInfo.financialStatements");
+      }
     }
 
-    // @ts-expect-error - We need to ignore the type error here because the React Hook Form types
-    // don't fully support dynamic field names with array indices
-    const isValid = await trigger(fieldsToValidate)
-    if (!isValid) return
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
-  }
+    // @ts-expect-error
+    const isValid = await trigger(fieldsToValidate);
+
+    // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
+    if (currentStep === 4) {
+      if (errors.buyerInfo?.financialStatements || !isValid) {
+        // Adicionado !isValid para garantir que todos os campos validados sejam checados
+        console.log(
+          "Validação do passo 4 falhou devido a Financial Statements ou outros campos."
+        );
+        return;
+      }
+    }
+
+    if (!isValid) {
+      console.log("Form validation failed for current step:", errors);
+      return;
+    }
+    console.log("Form validation successful for current step.");
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+  };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
-  }
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
 
   const addShippingAddress = () => {
-    setShippingAddress((prev) => [...prev, prev.length])
-  }
-
-  const addBillingAddress = () => {
-    setBillingAddress((prev) => [...prev, prev.length])
-  }
+    setshippingAddress((prev) => [...prev, prev.length]);
+  };
 
   const removeShippingAddress = (indexToRemove: number) => {
-    if (shippingAddress.length <= 1) return // Don't remove the last address
-    setShippingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
-  }
+    if (shippingAddress.length <= 1) return;
+    setshippingAddress((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+    setValue(`shippingAddress.${indexToRemove}`, {} as any);
+  };
 
   const removeBillingAddress = (indexToRemove: number) => {
-    if (billingAddress.length <= 1) return // Don't remove the last address
-    setBillingAddress((prev) => prev.filter((_, index) => index !== indexToRemove))
+    if (billingAddress.length <= 1) return;
+    setbillingAddress((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+    setValue(`billingAddress.${indexToRemove}`, {} as any);
+  };
+
+  const handleSameAsBilling = () => {
+    const currentBillingAddress = getValues("billingAddress.0");
+    if (currentBillingAddress) {
+      setValue("shippingAddress.0.street", currentBillingAddress.street || "");
+      setValue(
+        "shippingAddress.0.zipCode",
+        currentBillingAddress.zipCode || ""
+      );
+      setValue("shippingAddress.0.city", currentBillingAddress.city || "");
+      setValue("shippingAddress.0.state", currentBillingAddress.state || "");
+      setValue("shippingAddress.0.county", currentBillingAddress.county || "");
+      setValue(
+        "shippingAddress.0.country",
+        currentBillingAddress.country || ""
+      );
+      clearErrors("shippingAddress.0.street");
+      clearErrors("shippingAddress.0.zipCode");
+      clearErrors("shippingAddress.0.city");
+      clearErrors("shippingAddress.0.state");
+      clearErrors("shippingAddress.0.county");
+      clearErrors("shippingAddress.0.country");
+      console.log(
+        "Endereço de entrega preenchido com base no endereço de cobrança."
+      );
+    } else {
+      console.warn("Endereço de cobrança não encontrado para copiar.");
+    }
+    setIsSameAsBilling(true);
+  };
+
+  useEffect(() => {
+    // Este useEffect estava vazio, pode ser usado para algo como carregar dados iniciais do usuário
+    // ou resetar estados. Mantido aqui se houver um propósito futuro.
+  }, []);
+
+  if (isLoading) {
+    return <p>Loading...</p>;
   }
 
   return (
     <S.ContainerMain>
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Edit Customer Information</S.FormTitle>
-          <S.FormSubtitle>Please update your information and submit for review.</S.FormSubtitle>
+          <S.FormTitle>Customer Onboarding</S.FormTitle>
+          <S.FormSubtitle>
+            Please fill out the form to create your account.
+          </S.FormSubtitle>
         </S.FormHeader>
 
         {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
@@ -300,50 +534,174 @@ export default function EditFormPage() {
                     error={!!errors.customerInfo?.legalName}
                   />
                   {errors.customerInfo?.legalName && (
-                    <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>
+                    <S.ErrorMessage>
+                      {errors.customerInfo.legalName.message}
+                    </S.ErrorMessage>
                   )}
                 </S.InputGroup>
 
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
-                  <S.Input placeholder="Trade name" type="string" id="dba" {...register("customerInfo.dba")} />
+                  <S.Input
+                    placeholder="Trade name"
+                    type="string"
+                    id="dba"
+                    {...register("customerInfo.dba")}
+                  />
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
                   <S.Input
-                    type="number"
+                    type="string"
                     id="taxId"
                     {...register("customerInfo.taxId", {
                       required: "Tax ID is required",
                     })}
                     error={!!errors.customerInfo?.taxId}
                   />
-                  {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
+                  {errors.customerInfo?.taxId && (
+                    <S.ErrorMessage>
+                      {errors.customerInfo.taxId.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="dunNumber">D-U-N-S Number</S.Label>
+                  <S.Label htmlFor="dunNumber">D-U-N-S</S.Label>
                   <S.Input
                     id="dunNumber"
                     type="number"
                     {...register("customerInfo.dunNumber", {
                       required: "DUNS is required",
+                      valueAsNumber: true, // Garante que seja um número
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
-
                   {errors.customerInfo?.dunNumber && (
-                    <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>
+                    <S.ErrorMessage>
+                      {errors.customerInfo.dunNumber.message}
+                    </S.ErrorMessage>
                   )}
                 </S.InputGroup>
+
+                <S.InputGroup>
+                  <S.Label htmlFor="instagram">Instagram</S.Label>
+                  <S.Input
+                    id="instagram"
+                    type="url"
+                    placeholder="https://instagram.com/yourprofile"
+                    {...register("instagram" as any, {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
+                        message: "Please enter a valid Instagram URL.",
+                      },
+                    })}
+                    error={!!(errors as any).instagram}
+                  />
+                  {(errors as any).instagram && (
+                    <S.ErrorMessage>
+                      {(errors as any).instagram.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
+
+                <S.InputGroup>
+                  <S.Label htmlFor="website">Website</S.Label>
+                  <S.Input
+                    id="website"
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    {...register("website" as any, {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                        message: "Please enter a valid Website URL.",
+                      },
+                    })}
+                    error={!!(errors as any).website}
+                  />
+                  {(errors as any).website && (
+                    <S.ErrorMessage>
+                      {(errors as any).website.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
+
                 <S.FileInputContainer>
-                  <S.Label htmlFor="resale">Resale Certificate</S.Label>
-                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
+                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+                  <S.HiddenInput
+                    id="file-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileChange}
+                  />
                   <S.UploadButton htmlFor="file-upload">
                     <Upload size={16} />
                     {file ? file.name : "Attach file (PDF)"}
                   </S.UploadButton>
+                  {errors.customerInfo?.resaleCertificate && (
+                    <S.ErrorMessage>
+                      {errors.customerInfo.resaleCertificate.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.FileInputContainer>
+                <S.FileInputContainer>
+                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+                        <S.HiddenInput
+                          id="image-upload"
+                          type="file"  // Remova o espaço extra aqui
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageChange}
+                        />
+                  <S.UploadButton htmlFor="image-upload">
+                    <Upload size={16} />
+                    {imageFiles.length > 0
+                      ? `${imageFiles.length} file(s) selected`
+                      : "Attach image files"}
+                  </S.UploadButton>
+                  {imageFiles.length > 0 && (
+                    <S.FilePreviewContainer>
+                      {imageFiles.map((img, idx) => (
+                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
+                      ))}
+                    </S.FilePreviewContainer>
+                  )}
+                </S.FileInputContainer>
+
+                <S.InputGroup >
+                  <div style={{
+                      display: "flex",
+                      alignItems:"center",
+                      
+                    }}>
+                  <S.Label htmlFor="brandingMix">Branding Mix</S.Label>
+                  <S.InfoButton
+                    style={{textAlign:"center"}}
+                    type="button"
+                    title="list all the brands you work with (separate the brands by comma"
+                  >
+                    <Info size={16} />
+                  </S.InfoButton>
+                  </div>
+                  <S.Input
+                    style={{
+                      width:"500px",
+                     
+                    }}
+                    id="brandingMix"
+                    {...register("brandingMix" as any, {
+                      required: "Brand/Branding Mix is required",
+                    })}
+                    error={!!(errors as any).brandingMix}
+                  />
+                  {(errors as any).brandingMix && (
+                    <S.ErrorMessage>
+                      {(errors as any).brandingMix.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
               </S.Grid>
             </S.Section>
           )}
@@ -353,7 +711,13 @@ export default function EditFormPage() {
               <S.SectionTitle>Shipping and Billing Information</S.SectionTitle>
               <S.ResponsiveGrid>
                 <S.AddressSection>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <S.AddressTitle>Billing Address</S.AddressTitle>
                   </div>
 
@@ -361,225 +725,306 @@ export default function EditFormPage() {
                     <div
                       key={index}
                       style={{
-                        marginBottom: index < billingAddress.length - 1 ? "1.5rem" : "0",
-                        paddingBottom: index < billingAddress.length - 1 ? "1.5rem" : "0",
-                        borderBottom: index < billingAddress.length - 1 ? "1px dashed #eee" : "none",
+                        marginBottom:
+                          index < billingAddress.length - 1 ? "1.5rem" : "0",
+                        paddingBottom:
+                          index < billingAddress.length - 1 ? "1.5rem" : "0",
+                        borderBottom:
+                          index < billingAddress.length - 1
+                            ? "1px dashed #eee"
+                            : "none",
                       }}
                     >
                       <S.AddressHeader>
                         {index > 0 && (
-                          <div style={{ fontSize: "0.875rem", color: "#71717a" }}>Billing Address {index + 1}</div>
+                          <div
+                            style={{ fontSize: "0.875rem", color: "#71717a" }}
+                          >
+                            Billing Address {index + 1}
+                          </div>
                         )}
                         {index > 0 && (
-                          <S.RemoveButton type="button" onClick={() => removeBillingAddress(index)}>
+                          <S.RemoveButton
+                            type="button"
+                            onClick={() => removeBillingAddress(index)}
+                          >
                             <Trash2 size={16} />
                           </S.RemoveButton>
                         )}
                       </S.AddressHeader>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingStreet${index}`}>Street and Number</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.street`}>
+                            Street and Number
+                          </S.Label>
                           <S.Input
-                            id={`billingStreet${index}`}
+                            id={`billingAddress.${index}.street`}
                             {...register(`billingAddress.${index}.street`, {
                               required: "Street is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.street}
                           />
                           {errors.billingAddress?.[index]?.street && (
-                            <S.ErrorMessage>{errors.billingAddress[index].street.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].street.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingZipCode${index}`}>ZIP Code</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.zipCode`}>
+                            ZIP Code
+                          </S.Label>
                           <S.Input
-                            id={`billingZipCode${index}`}
+                            id={`billingAddress.${index}.zipCode`}
                             {...register(`billingAddress.${index}.zipCode`, {
                               required: "ZIP code is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.zipCode}
                           />
                           {errors.billingAddress?.[index]?.zipCode && (
-                            <S.ErrorMessage>{errors.billingAddress[index].zipCode.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].zipCode.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingCity${index}`}>City</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.city`}>
+                            City
+                          </S.Label>
                           <S.Input
-                            id={`billingCity${index}`}
+                            id={`billingAddress.${index}.city`}
                             {...register(`billingAddress.${index}.city`, {
                               required: "City is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.city}
                           />
                           {errors.billingAddress?.[index]?.city && (
-                            <S.ErrorMessage>{errors.billingAddress[index].city.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].city.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingState${index}`}>State</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.state`}>
+                            State
+                          </S.Label>
                           <S.Input
-                            id={`billingState${index}`}
+                            id={`billingAddress.${index}.state`}
                             {...register(`billingAddress.${index}.state`, {
                               required: "State is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.state}
                           />
                           {errors.billingAddress?.[index]?.state && (
-                            <S.ErrorMessage>{errors.billingAddress[index].state.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].state.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingCounty${index}`}>County</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.county`}>
+                            County
+                          </S.Label>
                           <S.Input
-                            id={`billingCounty${index}`}
+                            id={`billingAddress.${index}.county`}
                             {...register(`billingAddress.${index}.county`, {
                               required: "County is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.county}
                           />
                           {errors.billingAddress?.[index]?.county && (
-                            <S.ErrorMessage>{errors.billingAddress[index].county.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].county.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`billingCountry${index}`}>Country</S.Label>
+                          <S.Label htmlFor={`billingAddress.${index}.country`}>
+                            Country
+                          </S.Label>
                           <S.Input
-                            id={`billingCountry${index}`}
+                            id={`billingAddress.${index}.country`}
                             {...register(`billingAddress.${index}.country`, {
                               required: "Country is required",
                             })}
                             error={!!errors.billingAddress?.[index]?.country}
                           />
                           {errors.billingAddress?.[index]?.country && (
-                            <S.ErrorMessage>{errors.billingAddress[index].country.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.billingAddress[index].country.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                     </div>
                   ))}
-
-                  <S.AddAddressButton type="button" onClick={addBillingAddress}>
-                    <Plus size={16} /> Add another billing address
-                  </S.AddAddressButton>
                 </S.AddressSection>
 
                 <S.AddressSection>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
                     <S.AddressTitle>Shipping Address</S.AddressTitle>
+                    <S.Button type="button" onClick={handleSameAsBilling}>
+                      Same as Billing Address
+                    </S.Button>
                   </div>
 
                   {shippingAddress.map((index) => (
                     <div
                       key={index}
                       style={{
-                        marginBottom: index < shippingAddress.length - 1 ? "1.5rem" : "0",
-                        paddingBottom: index < shippingAddress.length - 1 ? "1.5rem" : "0",
-                        borderBottom: index < shippingAddress.length - 1 ? "1px dashed #eee" : "none",
+                        marginBottom:
+                          index < shippingAddress.length - 1 ? "1.5rem" : "0",
+                        paddingBottom:
+                          index < shippingAddress.length - 1 ? "1.5rem" : "0",
+                        borderBottom:
+                          index < shippingAddress.length - 1
+                            ? "1px dashed #eee"
+                            : "none",
                       }}
                     >
                       <S.AddressHeader>
                         {index > 0 && (
-                          <div style={{ fontSize: "0.875rem", color: "#71717a" }}>Shipping Address {index + 1}</div>
+                          <div
+                            style={{ fontSize: "0.875rem", color: "#71717a" }}
+                          >
+                            Shipping Address {index + 1}
+                          </div>
                         )}
                         {index > 0 && (
-                          <S.RemoveButton type="button" onClick={() => removeShippingAddress(index)}>
+                          <S.RemoveButton
+                            type="button"
+                            onClick={() => removeShippingAddress(index)}
+                          >
                             <Trash2 size={16} />
                           </S.RemoveButton>
                         )}
                       </S.AddressHeader>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingStreet${index}`}>Street and Number</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.street`}>
+                            Street and Number
+                          </S.Label>
                           <S.Input
-                            id={`shippingStreet${index}`}
+                            id={`shippingAddress.${index}.street`}
                             {...register(`shippingAddress.${index}.street`, {
                               required: "Street is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.street}
                           />
                           {errors.shippingAddress?.[index]?.street && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].street.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].street.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingZipCode${index}`}>ZIP Code</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.zipCode`}>
+                            ZIP Code
+                          </S.Label>
                           <S.Input
-                            id={`shippingZipCode${index}`}
+                            id={`shippingAddress.${index}.zipCode`}
                             {...register(`shippingAddress.${index}.zipCode`, {
                               required: "ZIP code is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.zipCode}
                           />
                           {errors.shippingAddress?.[index]?.zipCode && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].zipCode.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].zipCode.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingCity${index}`}>City</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.city`}>
+                            City
+                          </S.Label>
                           <S.Input
-                            id={`shippingCity${index}`}
+                            id={`shippingAddress.${index}.city`}
                             {...register(`shippingAddress.${index}.city`, {
                               required: "City is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.city}
                           />
                           {errors.shippingAddress?.[index]?.city && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].city.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].city.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingState${index}`}>State</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.state`}>
+                            State
+                          </S.Label>
                           <S.Input
-                            id={`shippingState${index}`}
+                            id={`shippingAddress.${index}.state`}
                             {...register(`shippingAddress.${index}.state`, {
                               required: "State is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.state}
                           />
                           {errors.shippingAddress?.[index]?.state && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].state.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].state.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                       <S.FieldRowAddress>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingCounty${index}`}>County</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.county`}>
+                            County
+                          </S.Label>
                           <S.Input
-                            id={`shippingCounty${index}`}
-                            {...register(`shippingAddress.${index}.county` as `shippingAddress.${number}.county`, {
+                            id={`shippingAddress.${index}.county`}
+                            {...register(`shippingAddress.${index}.county`, {
                               required: "County is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.county}
                           />
                           {errors.shippingAddress?.[index]?.county && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].county.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].county.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                         <S.InputGroup>
-                          <S.Label htmlFor={`shippingCountry${index}`}>Country</S.Label>
+                          <S.Label htmlFor={`shippingAddress.${index}.country`}>
+                            Country
+                          </S.Label>
                           <S.Input
-                            id={`shippingCountry${index}`}
-                            {...register(`shippingAddress.${index}.country` as `shippingAddress.${number}.country`, {
+                            id={`shippingAddress.${index}.country`}
+                            {...register(`shippingAddress.${index}.country`, {
                               required: "Country is required",
                             })}
                             error={!!errors.shippingAddress?.[index]?.country}
                           />
                           {errors.shippingAddress?.[index]?.country && (
-                            <S.ErrorMessage>{errors.shippingAddress[index].country.message}</S.ErrorMessage>
+                            <S.ErrorMessage>
+                              {errors.shippingAddress[index].country.message}
+                            </S.ErrorMessage>
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
                     </div>
                   ))}
 
-                  <S.AddAddressButton type="button" onClick={addShippingAddress}>
+                  <S.AddAddressButton
+                    type="button"
+                    onClick={addShippingAddress}
+                  >
                     <Plus size={16} /> Add another shipping address
                   </S.AddAddressButton>
                 </S.AddressSection>
@@ -592,7 +1037,7 @@ export default function EditFormPage() {
               <S.SectionTitle>Accounts Payable Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="apFirstName">AP Contact First Name</S.Label>
+                  <S.Label htmlFor="apFirstName">First name</S.Label>
                   <S.Input
                     id="apFirstName"
                     {...register("apContact.firstName", {
@@ -600,10 +1045,14 @@ export default function EditFormPage() {
                     })}
                     error={!!errors.apContact?.firstName}
                   />
-                  {errors.apContact?.firstName && <S.ErrorMessage>{errors.apContact.firstName.message}</S.ErrorMessage>}
+                  {errors.apContact?.firstName && (
+                    <S.ErrorMessage>
+                      {errors.apContact.firstName.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apLastName">AP Contact Last Name</S.Label>
+                  <S.Label htmlFor="apLastName">Last name</S.Label>
                   <S.Input
                     id="apLastName"
                     {...register("apContact.lastName", {
@@ -611,66 +1060,83 @@ export default function EditFormPage() {
                     })}
                     error={!!errors.apContact?.lastName}
                   />
-                  {errors.apContact?.lastName && <S.ErrorMessage>{errors.apContact.lastName.message}</S.ErrorMessage>}
+                  {errors.apContact?.lastName && (
+                    <S.ErrorMessage>
+                      {errors.apContact.lastName.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="apEmail">AP Contact E-mail</S.Label>
+                  <S.Label htmlFor="apEmail">E-mail</S.Label>
                   <S.Input
                     id="apEmail"
                     type="email"
                     placeholder="example@hotmail.com"
                     {...register("apContact.email", {
                       required: "Email is required",
-      pattern: {
-                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: "Please enter a valid email address.",
-                },
+                      pattern: {
+                        value:
+                          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Please enter a valid email address.",
+                      },
                     })}
                     error={!!errors.apContact?.email}
                   />
-                  {errors.apContact?.email && <S.ErrorMessage>{errors.apContact.email.message}</S.ErrorMessage>}
-                </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="apCountryCode">AP Contact Country Code</S.Label>
-                  <S.Input
-                    id="apCountryCode"
-                    type="number"
-                    min={0}
-                    style={{ width: "80px" }}
-                    {...register("apContact.countryCode", {
-                      required: "Country code is required",
-                    })}
-                    error={!!errors.apContact?.countryCode}
-                  />
-                  {errors.apContact?.countryCode && (
-                    <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>
+                  {errors.apContact?.email && (
+                    <S.ErrorMessage>
+                      {errors.apContact.email.message}
+                    </S.ErrorMessage>
                   )}
                 </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="apContactNumber">AP Contact Number:</S.Label>
-                  <S.Input
-                    id="apContactNumber"
-                    type="number"
-                    min={0}
-                    {...register("apContact.contactNumber", {
-                      required: "Contact number is required",
-                    })}
-                    error={!!errors.apContact?.contactNumber}
-                  />
-                  {errors.apContact?.contactNumber && (
-                    <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+                <S.PhoneInputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="apCountryCode">Country Code</S.Label>
+                    <S.Input
+                      id="apCountryCode"
+                      type="number"
+                      min={0}
+                      {...register("apContact.countryCode", {
+                        required: "Code is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.apContact?.countryCode}
+                    />
+                    {errors.apContact?.countryCode && (
+                      <S.ErrorMessage>
+                        {errors.apContact.countryCode.message}
+                      </S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="apContactNumber">Phone:</S.Label>
+                    <S.Input
+                      id="apContactNumber"
+                      type="number"
+                      min={0}
+                      {...register("apContact.contactNumber", {
+                        required: "Contact number is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.apContact?.contactNumber}
+                    />
+                    {errors.apContact?.contactNumber && (
+                      <S.ErrorMessage>
+                        {errors.apContact.contactNumber.message}
+                      </S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                </S.PhoneInputGroup>
               </S.Grid>
             </S.Section>
           )}
 
           {currentStep === 4 && (
             <S.Section>
-              <S.SectionTitle>Buyer Information</S.SectionTitle>
+              <S.SectionTitleBuyer>Buyer Information</S.SectionTitleBuyer>
+
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerFirstName">Buyer First Name:</S.Label>
+                  <S.Label htmlFor="buyerFirstName">First name:</S.Label>
                   <S.Input
                     id="buyerFirstName"
                     {...register("buyerInfo.firstName", {
@@ -678,10 +1144,14 @@ export default function EditFormPage() {
                     })}
                     error={!!errors.buyerInfo?.firstName}
                   />
-                  {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
+                  {errors.buyerInfo?.firstName && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.firstName.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerLastName">Buyer Last Name:</S.Label>
+                  <S.Label htmlFor="buyerLastName">Last name:</S.Label>
                   <S.Input
                     id="buyerLastName"
                     {...register("buyerInfo.lastName", {
@@ -689,58 +1159,193 @@ export default function EditFormPage() {
                     })}
                     error={!!errors.buyerInfo?.lastName}
                   />
-                  {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
+                  {errors.buyerInfo?.lastName && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.lastName.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerEmail">Buyer E-mail:</S.Label>
+                  <S.Label htmlFor="buyerEmail">E-mail:</S.Label>
                   <S.Input
                     id="buyerEmail"
                     type="email"
                     placeholder="example@hotmail.com"
                     {...register("buyerInfo.email", {
                       required: "Email is required",
-pattern: {
-    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    message: "Please enter a valid email address.",
-},
+                      pattern: {
+                        value:
+                          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Please enter a valid email address.",
+                      },
                     })}
                     error={!!errors.buyerInfo?.email}
                   />
-                  {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
+                  {errors.buyerInfo?.email && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.email.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
+
+                <S.PhoneInputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="buyerCountryCode">Country Code:</S.Label>
+                    <S.Input
+                      id="buyerCountryCode"
+                      type="number"
+                      min={0}
+                      {...register("buyerInfo.countryCode", {
+                        required: "Code is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.buyerInfo?.countryCode}
+                    />
+                    {errors.buyerInfo?.countryCode && (
+                      <S.ErrorMessage>
+                        {errors.buyerInfo.countryCode.message}
+                      </S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                  <S.InputGroup>
+                    <S.Label htmlFor="buyerNumber">Phone:</S.Label>
+                    <S.Input
+                      type="number"
+                      id="buyerNumber"
+                      min={0}
+                      {...register("buyerInfo.buyerNumber", {
+                        required: "Phone number is required",
+                        valueAsNumber: true,
+                      })}
+                      error={!!errors.buyerInfo?.buyerNumber}
+                    />
+                    {errors.buyerInfo?.buyerNumber && (
+                      <S.ErrorMessage>
+                        {errors.buyerInfo.buyerNumber.message}
+                      </S.ErrorMessage>
+                    )}
+                  </S.InputGroup>
+                </S.PhoneInputGroup>
+
+                <S.InputGroup>
+                  <S.Label htmlFor="terms">Terms</S.Label>
+                  <S.Input
+                    style={{ width: "250px" }}
+                    as="select"
+                    id="terms"
+                    {...register("buyerInfo.terms", {
+                      required: "Terms are required",
+                      validate: (value) =>
+                        value !== "" || "Please select terms",
+                    })}
+                    error={!!errors.buyerInfo?.terms}
+                  >
+                    {termsOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </S.Input>
+                  {errors.buyerInfo?.terms && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.terms.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerCountryCode">Buyer Country Code:</S.Label>
+                  <S.Label htmlFor="currency">Currency</S.Label>
                   <S.Input
-                    id="buyerCountryCode"
-                    type="number"
-                    min={0}
-                    style={{ width: "80px" }}
-                    {...register("buyerInfo.countryCode", {
-                      required: "Country code is required",
+                    style={{ width: "250px" }}
+                    as="select"
+                    id="currency"
+                    {...register("buyerInfo.currency", {
+                      required: "Currency is required",
+                      validate: (value) =>
+                        value !== "" || "Please select a currency",
                     })}
-                    error={!!errors.buyerInfo?.countryCode}
-                  />
-                  {errors.buyerInfo?.countryCode && (
-                    <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>
+                    error={!!errors.buyerInfo?.currency}
+                  >
+                    {currencyOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </S.Input>
+                  {errors.buyerInfo?.currency && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.currency.message}
+                    </S.ErrorMessage>
                   )}
                 </S.InputGroup>
+
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerNumber">Buyer Number:</S.Label>
+                  <S.Label htmlFor="estimatedPurchaseAmount">
+                    Estimated Purchase Amount
+                  </S.Label>
                   <S.Input
+                    id="estimatedPurchaseAmount"
                     type="number"
-                    id="buyerNumber"
                     min={0}
-                    {...register("buyerInfo.buyerNumber", {
-                      required: "Buyer number is required",
+                    step="0.01"
+                    {...register("buyerInfo.estimatedPurchaseAmount", {
+                      required: "Estimated purchase amount is required",
+                      valueAsNumber: true,
+                      min: { value: 0, message: "Amount must be positive" },
                     })}
-                    error={!!errors.buyerInfo?.buyerNumber}
+                    error={!!errors.buyerInfo?.estimatedPurchaseAmount}
                   />
-                  {errors.buyerInfo?.buyerNumber && (
-                    <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>
+                  {errors.buyerInfo?.estimatedPurchaseAmount && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.estimatedPurchaseAmount.message}
+                    </S.ErrorMessage>
                   )}
                 </S.InputGroup>
+
+                <S.FileInputContainer>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <S.Label htmlFor="financialStatements-upload">
+                      Financial Statements
+                    </S.Label>
+                    <S.InfoButton
+                      type="button"
+                      title="Most disclosed tax period"
+                    >
+                      <Info size={16} />
+                    </S.InfoButton>
+                  </div>
+                  <S.HiddenInput
+                    id="financialStatements-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFinancialStatementsFileChange}
+                  />
+                  <S.UploadButton htmlFor="financialStatements-upload">
+                    <Upload size={16} />
+                    {financialStatementsFile
+                      ? financialStatementsFile.name
+                      : "Attach file (PDF)"}
+                  </S.UploadButton>
+                  {/* A mensagem de erro só aparece se houve tentativa de validação do passo 4 E houver erro */}
+                  {errors.buyerInfo?.financialStatements &&
+                    stepFourAttemptedValidation && (
+                      <S.ErrorMessage>
+                        {errors.buyerInfo.financialStatements.message}
+                      </S.ErrorMessage>
+                    )}
+                </S.FileInputContainer>
               </S.Grid>
+
+              <S.AlertMessage>
+                ALL ACCOUNTS START WITH 100% PRIOR TO SHIPMENT PAYMENTS <br />
+                You may request alternative payment terms, which will be subject to FARM Rio discretionary approval
+              </S.AlertMessage>
             </S.Section>
           )}
 
@@ -756,7 +1361,7 @@ pattern: {
               </S.Button>
             ) : (
               <S.Button type="submit" variant="primary" disabled={isUploading}>
-                {isUploading ? "Updating..." : "Submit Changes"}
+                {isUploading ? "Submitting..." : "Submit"}
               </S.Button>
             )}
           </S.ButtonGroup>
@@ -769,11 +1374,13 @@ pattern: {
             <S.ModalTitle>
               <CircleCheck size={48} />
             </S.ModalTitle>
-            <S.ModalMessage>Your form has been updated successfully and sent for review!</S.ModalMessage>
+            <S.ModalMessage>
+              Your form has been submitted successfully!
+            </S.ModalMessage>
             <S.ModalButton
               onClick={() => {
-                setIsModalOpen(false)
-                router.push("/")
+                setIsModalOpen(false);
+                router.push("/");
               }}
             >
               OK
@@ -782,5 +1389,5 @@ pattern: {
         </S.ModalOverlay>
       )}
     </S.ContainerMain>
-  )
+  );
 }

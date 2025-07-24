@@ -102,6 +102,37 @@ export default function TaxValidationDetailsPage() {
         css_initial_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
       });
 
+      // --- NOVA ADIÇÃO: Enviar e-mail após a validação TAX ---
+      if (customerForm) {
+        try {
+          const emailResponse = await fetch("/api/send-tax-validation-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              customerId: id,
+              customerName: customerForm.customer_name,
+              customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
+              validationStatus: approved,
+              feedback: feedback,
+              currentStatus: customerForm.status, // Envia o status atual para a rota para diferenciar os e-mails
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            const errorData = await emailResponse.json();
+            console.error("Falha ao enviar e-mail de validação TAX:", errorData);
+            // Você pode optar por mostrar um erro aqui ou apenas logar, dependendo da criticidade do e-mail
+          } else {
+            console.log("E-mail de validação TAX enviado com sucesso.");
+          }
+        } catch (emailError) {
+          console.error("Erro ao enviar e-mail de validação TAX:", emailError);
+        }
+      }
+      // --- FIM DA NOVA ADIÇÃO ---
+
       setModalContent({
         title: "Success!",
         description: approved
