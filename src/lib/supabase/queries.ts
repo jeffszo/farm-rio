@@ -1,4 +1,5 @@
 import { supabase } from "./client"
+//aaaa
 
 export async function getApprovedCustomers() {
   const { data, error } = await supabase
