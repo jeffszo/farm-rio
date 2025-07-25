@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
 console.log("📨 Request received to send credit validation email (App Router)");
 
 const body = await req.json();
-const { customerId, customerName, customerEmail, validationStatus, feedback, currentStatus } = body;
+const { customerId, customerName, customerEmail, validationStatus, feedback } = body;
 
 if (!customerId || !customerName || !customerEmail || validationStatus === undefined || validationStatus === null) {
 console.warn("⚠️ Missing data in the body for sending credit validation email.");
