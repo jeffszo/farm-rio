@@ -71,7 +71,7 @@ interface CustomerForm {
   atacado_terms?: string;
   atacado_credit?: number;
   atacado_discount?: number;
-  tax_feedback: string;
+  csc_feedback: string;
   terms: string;
   currency: string;
 }
@@ -400,7 +400,7 @@ export default function ValidationDetailsPage() {
       setModalContent({
         title: "Success!",
         description: approved
-          ? "Client approved! Forwarded to the credit team."
+          ? "Client approved! Forwarded to the CSC team."
           : "Customer rejected!",
       });
       setShowModal(true);
@@ -527,13 +527,7 @@ export default function ValidationDetailsPage() {
             </S.FormRow>
 
             {/* SEÇÃO DO BRANDING MIX - CONFORME SOLICITADO PARA USAR FORMROW */}
-            <S.FormRow>
-              <strong>Branding Mix:</strong>{" "}
-              {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
-                String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
-                "Not provided"
-              }
-            </S.FormRow>
+
 
 
             <S.FormRow>
@@ -608,6 +602,14 @@ export default function ValidationDetailsPage() {
               )}
 
             </S.FormRow>
+
+                        <S.FormRow>
+              <strong>Branding Mix:</strong>{" "}
+              {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
+                String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
+                "Not provided"
+              }
+            </S.FormRow>
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
@@ -657,7 +659,7 @@ export default function ValidationDetailsPage() {
               <MessageSquare  size={16} /> Tax Team Feedback
             </S.SectionTitle>
             <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
+              <strong>Feedback:</strong> {customerForm.csc_feedback || "No feedback provided by CSC Team."}
             </S.FormRow>
 
           </S.FormSection>

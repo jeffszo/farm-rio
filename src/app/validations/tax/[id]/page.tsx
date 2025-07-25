@@ -136,7 +136,7 @@ export default function TaxValidationDetailsPage() {
       setModalContent({
         title: "Success!",
         description: approved
-          ? "Client approved by the Tax team!"
+          ? "Client approved! Forwarded to the credit team."
           : "Client rejected by the Tax team!",
       });
       setShowModal(true);

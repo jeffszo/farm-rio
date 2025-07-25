@@ -228,7 +228,7 @@ export default function ValidationDetailsPage() {
       setModalContent({
         title: "Ok!",
         description: approved
-          ? "Client approved by the CSC team!"
+          ? "Client approved!"
           : "Customer rejected!",
       });
       setShowModal(true);
@@ -389,9 +389,9 @@ export default function ValidationDetailsPage() {
 
             {/* D-U-N-S Number (Editable) */}
             <S.FormRow
-              style={{
-                alignItens: "center",
-              }}
+              // style={{
+              //   alignItens: "center",
+              // }}
             >
               <strong>D-U-N-S:</strong>{" "}
               {editingDuns ? (
@@ -562,7 +562,7 @@ export default function ValidationDetailsPage() {
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {customerForm.status === "approved by the credit team" && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team") && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>

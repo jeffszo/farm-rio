@@ -468,7 +468,7 @@ export default function ValidationDetailsPage() {
       setModalContent({
         title: "Ok!",
         description: approved
-          ? "Customer approved! Forwarded to CSC team."
+          ? "Customer approved! Forwarded to CSC team final."
           : "Customer rejected!",
       });
       setShowModal(true);

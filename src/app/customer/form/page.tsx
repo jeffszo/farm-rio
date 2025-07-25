@@ -696,8 +696,9 @@ export default function OnboardingForm() {
                   </div>
                   <S.Input
                     style={{
-                      width:"560px",
-                      height: "200px"
+                      width:"562px",
+                      height: "200px",
+                      paddingBottom:"170px",
                      
                     }}
                     id="brandingMix"

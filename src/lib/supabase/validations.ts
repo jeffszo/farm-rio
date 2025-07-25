@@ -3,14 +3,14 @@ import { supabase } from "./client"
 
 
 // Helper function to determine the next status in the new flow
-function getNextStatus(teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final"): string {
+function getNextStatus(teamRole: "wholesale" | "csc_initial" | "tax" | "credit" | "csc_final"): string {
   switch (teamRole) {
-    case "csc_initial":
-      return "approved by the CSC team initial";
-    case "tax":
-      return "approved by the tax team";
     case "wholesale":
       return "approved by the wholesale team";
+    case "csc_initial":
+      return "approved by the csc initial team";
+    case "tax":
+      return "approved by the tax team";
     case "credit":
       return "approved by the credit team";
     case "csc_final":
@@ -121,7 +121,7 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
 
   const updateData = {
     status: newStatus,
-    csc_initial_status: approved ? "aprovado" : "reprovado",
+    // csc_initial_status: approved ? "aprovado" : "reprovado",
     csc_initial_feedback: feedback || null,
     updated_at: new Date().toISOString()
   };
@@ -313,8 +313,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
 
   const updateData = {
     status: newStatus,
-    csc_final_status: approved ? "aprovado" : "reprovado", // New field for final CSC
-    csc_final_feedback: feedback || null,
+    // csc_final_status: approved ? "aprovado" : "reprovado", 
     updated_at: new Date().toISOString()
   };
 

@@ -43,9 +43,9 @@ export async function getPendingCSCValidations(
 
   // Todos os status combinados
   const statuses = [
-    "pending",
-    "rejected by the CSC initial team",
     "approved by the credit team",
+    "rejected by the CSC initial team",
+    "approved by the wholesale team",
     "finished"
     // Adicione outros status se houver mais que você deseja buscar nesta visão geral
   ];
@@ -74,7 +74,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the CSC team initial"]) // From CSC initial or rejected by tax
+    .in("status", ["approved by the csc initial team"]) // From CSC initial or rejected by tax
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -96,7 +96,7 @@ export async function getPendingWholesaleValidations(page = 1, itemsPerPage = 10
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the tax team", "rejected by the credit team"]) // From Tax or rejected by wholesale
+    .in("status", ["pending"]) // From Tax or rejected by wholesale
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -118,7 +118,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabase
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the wholesale team"]) // From Wholesale or rejected by credit
+    .in("status", ["approved by the tax team"]) // From Wholesale or rejected by credit
     .range(from, to)
     .order("created_at", { ascending: true })
 
