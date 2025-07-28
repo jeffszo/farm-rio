@@ -18,6 +18,7 @@ import {
   Pencil,
   Check,
   X,
+  Truck,
   MessageSquare
 } from "lucide-react";
 
@@ -62,7 +63,7 @@ interface CustomerForm {
   instagram: string;
   website: string;
   branding_mix: string;
-  wholesale_feedback: string;
+  tax_feedback: string;
   // Campos relacionados ao crédito
   credit_invoicing_company?: string;
   credit_warehouse?: string;
@@ -568,13 +569,13 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-<S.FormRow>
+{/* <S.FormRow>
   <strong>Branding Mix:</strong>{" "}
   {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
     String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
     "Not provided"
   }
-</S.FormRow>
+</S.FormRow> */}
 
             <S.FormRow>
 
@@ -684,17 +685,9 @@ export default function ValidationDetailsPage() {
                 <div>No shipping addresses provided.</div>
               )}
             </S.FormRow>
-          </S.FormSection>
-          <S.FormSection>
-            <S.SectionTitle>
+            <S.SectionTitle style={{marginTop:"32px"}}>
               <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            {/* <S.FormRow>
-              <strong>AP Contact:</strong> {customerForm.ap_contact_name}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>AP Email:</strong> {customerForm.ap_contact_email}
-            </S.FormRow> */}
             <S.FormRow>
               <strong>Buyer Name:</strong> {customerForm.buyer_name}
             </S.FormRow>
@@ -704,40 +697,45 @@ export default function ValidationDetailsPage() {
 
           </S.FormSection>
 
-                    {validation && (
+            {validation && (
             <S.TermsCardsContainer>
               <S.TermsCard>
-                <h3>Wholesale Team Validation</h3>
-                <p>
+                <S.SectionTitle> <Truck size={16}/> Wholesale Team Validation</S.SectionTitle>
+                <S.FormRow>
                   <strong>Invoicing Company:</strong> {validation.wholesale_invoicing_company}
-                </p>
-                <p>
+                </S.FormRow>
+                <S.FormRow>
                   <strong>Warehouse:</strong> {validation.wholesale_warehouse}
-                </p>
-                <p>
+                </S.FormRow>
+                <S.FormRow>
                   <strong>Currency:</strong> {validation.wholesale_currency}
-                </p>
-                <p>
+                </S.FormRow>
+                <S.FormRow>
                   <strong>Terms:</strong> {validation.wholesale_terms}
-                </p>
-                <p>
+                </S.FormRow>
+                <S.FormRow>
                   <strong>Credit Limit:</strong> {validation.wholesale_credit}
-                </p>
-                <p>
+                </S.FormRow>
+                <S.FormRow>
                   <strong>Discount:</strong> {validation.wholesale_discount}%
-                </p>
+                </S.FormRow>
               </S.TermsCard>
 
-              <S.Divider />
+            </S.TermsCardsContainer>
+          )}   
+
+          <S.FormSection>
 
                         <S.SectionTitle>
-              <MessageSquare  size={16} /> Wholesale Team Feedback
+              <MessageSquare  size={16} /> Team Feedback
             </S.SectionTitle>
                                    <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.wholesale_feedback || "No feedback provided by Wholesale Team."}
+              <strong>Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
             </S.FormRow>
-            </S.TermsCardsContainer>
-          )}
+
+          </S.FormSection>
+
+                   
         </S.FormDetails>
 
 
@@ -852,7 +850,7 @@ export default function ValidationDetailsPage() {
         </S.TermsContainer>
 
 
-                {(customerForm.status === "approved by the wholesale team" ||
+                {(customerForm.status === "approved by the tax team" ||
                           customerForm.status === "rejected by the wholesale team") && ( // Condição para exibir o feedback
                           <S.FeedbackGroup>
                             <S.Label htmlFor="feedback">
@@ -869,8 +867,9 @@ export default function ValidationDetailsPage() {
 
 
         <S.ButtonContainer>
+
           <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Reject
+            Review
           </S.Button>
 
           <S.Button

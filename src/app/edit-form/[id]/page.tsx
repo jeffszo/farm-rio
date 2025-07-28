@@ -7,7 +7,6 @@ import { useRouter, useParams } from "next/navigation"
 import * as S from "../../customer/styles"
 import type { IFormInputs } from "../../../types/form"
 import { api } from "../../../lib/supabase/index"
-import { supabase } from "../../../lib/supabase/client" // ou `supabase.ts`, dependendo do seu projeto
 import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react"
 
 const termsOptions = [
@@ -35,6 +34,9 @@ export default function OnboardingForm() {
   const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
+  const params = useParams();
+const customerId = typeof params?.id === "string" ? params.id : "";
+
   const totalSteps = 4;
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(
     null
@@ -494,10 +496,55 @@ export default function OnboardingForm() {
     setIsSameAsBilling(true);
   };
 
-  useEffect(() => {
-    // Este useEffect estava vazio, pode ser usado para algo como carregar dados iniciais do usuário
-    // ou resetar estados. Mantido aqui se houver um propósito futuro.
-  }, []);
+useEffect(() => {
+  const fetchCustomerData = async () => {
+    if (!customerId) return;
+
+    try {
+      const { data, error } = await api.getCustomerFormById(customerId as string); // Crie esse método na sua API se ainda não existir
+
+      if (error || !data) {
+        console.error("Erro ao buscar dados do cliente:", error);
+        return;
+      }
+
+      // Preenche os valores nos campos
+      setValue("customerInfo.legalName", data.customer_name || "");
+      setValue("customerInfo.taxId", data.sales_tax_id || "");
+      setValue("customerInfo.dunNumber", data.duns_number || "");
+      setValue("customerInfo.dba", data.dba_number || "");
+      setValue("instagram", data.instagram || "");
+      setValue("website", data.website || "");
+      setValue("brandingMix", (data.branding_mix || []).join(", "));
+
+      setValue("apContact.firstName", data.ap_contact_name?.split(" ")[0] || "");
+      setValue("apContact.lastName", data.ap_contact_name?.split(" ")[1] || "");
+      setValue("apContact.email", data.ap_contact_email || "");
+      setValue("apContact.countryCode", data.ap_contact_country_code || "");
+      setValue("apContact.contactNumber", data.ap_contact_number || "");
+
+      setValue("buyerInfo.firstName", data.buyer_name?.split(" ")[0] || "");
+      setValue("buyerInfo.lastName", data.buyer_name?.split(" ")[1] || "");
+      setValue("buyerInfo.email", data.buyer_email || "");
+      setValue("buyerInfo.countryCode", data.buyer_country_code || "");
+      setValue("buyerInfo.buyerNumber", data.buyer_number || "");
+      setValue("buyerInfo.terms", data.terms || "");
+      setValue("buyerInfo.currency", data.currency || "");
+      setValue("buyerInfo.estimatedPurchaseAmount", data.estimated_purchase_amount || "");
+
+      setValue("billingAddress", data.billing_address || []);
+      setbillingAddress(data.billing_address?.map((_, i) => i) || [0]);
+
+      setValue("shippingAddress", data.shipping_address || []);
+      setshippingAddress(data.shipping_address?.map((_, i) => i) || [0]);
+
+    } catch (err) {
+      console.error("Erro ao popular dados:", err);
+    }
+  };
+
+  fetchCustomerData();
+}, [customerId, setValue]);
 
   if (isLoading) {
     return <p>Loading...</p>;

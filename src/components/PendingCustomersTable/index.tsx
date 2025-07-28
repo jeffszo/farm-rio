@@ -50,9 +50,11 @@ export default function PendingCustomersTable({
       // CORRIGIDO: Use a string exata do banco de dados para rejeições
       rejectedByWholesale: "rejected by the wholesale team", // <-- Verifique esta string no seu DB
       approvedByCredit: "approved by the credit team",
+      approvedByTax:"approved by the tax team",
       // CORRIGIDO: Use a string exata do banco de dados para rejeições
       rejectedByCredit: "rejected by the credit team", // <-- Verifique esta string no seu DB
       approvedByCSC: "approved by the CSC team",
+      finished: "finished",
       dataByClient: "data corrected by client", // <-- Esta string deve bater EXATAMENTE com o DB
     }
 
@@ -122,14 +124,17 @@ export default function PendingCustomersTable({
                 <S.TableHeaderFilter>
                   Status
                   <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    <option value="all">All status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approvedByWholesale">Approved by Wholesale</option>
-                    <option value="rejectedByWholesale">Rejected by Wholesale</option>
-                    <option value="approvedByCredit">Approved by Credit</option>
-                    <option value="rejectedByCredit">Rejected by Credit</option>
-                    <option value="approvedByCSC">Approved by CSC</option>
-                    <option value="dataByClient">Data corrected by client</option>
+                    <option value="all">all status</option>
+                    <option value="pending">pending</option>
+                    <option value="approvedByWholesale">approved by the wholesale team</option>
+                    {/* <option value="rejectedByWholesale">Rejected by Wholesale</option> */}
+                     <option value="approvedByCSC">approved by the tax team</option>
+                    <option value="approvedByCredit">approved by the credit team</option>
+                    {/* <option value="rejectedByCredit">Rejected by Credit</option> */}
+                    <option value="approvedByCSC">approved by the csc initial team</option>
+                    <option value="finished">finished</option>
+
+                    {/* <option value="dataByClient">Data corrected by client</option> */}
                   </S.TableFilterSelect>
                 </S.TableHeaderFilter>
               </S.TableHeader>

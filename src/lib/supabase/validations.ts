@@ -116,7 +116,7 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("csc_initial") : "rejected by the CSC initial team";
+  const newStatus = approved ? getNextStatus("csc_initial") : "review requested by the initial CSC team";
   // const statusMessageForEmail = approved ? "aprovado pela equipe CSC Inicial" : "rejeitado pela equipe CSC Inicial";
 
   const updateData = {
@@ -160,7 +160,7 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("tax") : "rejected by the tax team";
+  const newStatus = approved ? getNextStatus("tax") : "review requested by the tax team";
   // const statusMessageForEmail = approved ? "aprovado pela equipe Fiscal" : "rejeitado pela equipe Fiscal";
 
   const updateData = {
@@ -192,10 +192,10 @@ export async function validateWholesaleCustomer(
     wholesale_terms?: string | string[];
     wholesale_credit: number;
     wholesale_discount: number;
-    feedback?: string; // Adicionado para passar feedback ao e-mail
-  }
+    wholesale_feedback?: string;
+  },
+  isReview?: boolean
 ) {
-  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
   const { data: customerData, error: fetchError } = await supabase
     .from("customer_forms")
     .select("customer_name")
@@ -206,11 +206,11 @@ export async function validateWholesaleCustomer(
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // const customerEmail = customerData.email;
-  // const customerName = customerData.customer_name;
-
-  const newStatus = approved ? getNextStatus("wholesale") : "rejected by the wholesale team";
-  // const statusMessageForEmail = approved ? "aprovado pela equipe Atacado" : "rejeitado pela equipe Atacado";
+  const newStatus = isReview
+    ? "review requested by the wholesale team"
+    : approved
+    ? getNextStatus("wholesale")
+    : "rejected by the wholesale team";
 
   const updateData = {
     status: newStatus,
@@ -223,7 +223,8 @@ export async function validateWholesaleCustomer(
       : terms.wholesale_terms ?? null,
     wholesale_credit: terms.wholesale_credit,
     wholesale_discount: terms.wholesale_discount,
-    updated_at: new Date().toISOString()
+    wholesale_feedback: terms.wholesale_feedback ?? null,
+    updated_at: new Date().toISOString(),
   };
 
   const { error, data } = await supabase
@@ -232,13 +233,13 @@ export async function validateWholesaleCustomer(
     .eq("id", customerId)
     .select();
 
-  console.log("Resultado do update no Supabase:", { data, error });
-
   if (error) {
     throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
   }
 
+  return data;
 }
+
 
 // Existing function, now reflecting the new flow's status update
 interface CreditTerms {
@@ -248,7 +249,7 @@ interface CreditTerms {
   credit_credit: number;
   credit_discount: number;
   credit_terms?: string;
-  feedback?: string; // Adicionado para passar feedback ao e-mail
+  credit_feedback?: string; // Adicionado para passar feedback ao e-mail
 }
 
 export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
@@ -266,7 +267,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("credit") : "rejected by the wholesale team"; // MODIFICAÇÃO AQUI
+  const newStatus = approved ? getNextStatus("credit") : "review requested by the wholesale team"; // MODIFICAÇÃO AQUI
   // const statusMessageForEmail = approved ? "aprovado pela equipe de Crédito" : "rejeitado pela equipe de Crédito";
 
   const updateData = {
@@ -278,6 +279,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     credit_terms: creditTerms.credit_terms ?? null,
     credit_credit: creditTerms.credit_credit,
     credit_discount: creditTerms.credit_discount,
+    credit_feedback: creditTerms.credit_feedback,
     updated_at: new Date().toISOString()
   };
 
@@ -293,7 +295,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
 }
 
 // Existing function, now for the final CSC review
-export async function validateCSCFinalCustomer(customerId: string, approved: boolean, feedback: string) {
+export async function validateCSCFinalCustomer(customerId: string, approved: boolean) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
   const { data: customerData, error: fetchError } = await supabase
     .from("customer_forms")
@@ -308,7 +310,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("csc_final") : "rejected by the CSC final team";
+  const newStatus = approved ? getNextStatus("csc_final") : "review requested by the CSC final team";
   // const statusMessageForEmail = approved ? "finalizado e aprovado" : "rejeitado pela equipe CSC Final";
 
   const updateData = {
@@ -327,28 +329,30 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   }
 }
 
-// Finaliza o cliente na customer_forms (This might be redundant if validateCSCFinalCustomer sets status to "finished")
-export async function finishCustomer(customerId: string) {
-  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
-  const { data: customerData, error: fetchError } = await supabase
-    .from("customer_forms")
-    .select("email, customer_name")
-    .eq("id", customerId)
-    .single();
 
-  if (fetchError || !customerData) {
-    throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
+
+export async function reviewCustomer(customerId: string, feedback: string | null = null) {
+  console.log(`Revisando cliente ${customerId} para edição...`);
+
+
+  const updateData: { status: string; updated_at: string; wholesale_feedback?: string | null; } = {
+    status: "review requested by the wholesale team", // O NOVO STATUS
+    updated_at: new Date().toISOString(),
+  };
+
+  if (feedback) {
+    updateData.wholesale_feedback = feedback; // Adiciona o feedback se houver
   }
 
-
-  const { error: customerError } = await supabase
+  const { error } = await supabase
     .from("customer_forms")
-    .update({ status: "finished", updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq("id", customerId);
 
-  if (customerError) {
-    throw new Error(`Erro ao atualizar cliente: ${customerError.message}`);
+  if (error) {
+    console.error("Erro ao enviar formulário para revisão do cliente:", error);
+    throw new Error(`Falha ao enviar formulário para revisão: ${error.message}`);
   }
 
-
+  return { success: true };
 }

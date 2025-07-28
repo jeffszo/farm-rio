@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   Info,
+  CircleX // Import CircleX for error icon
 } from "lucide-react";
 import { api } from "../../../lib/supabase/index";
 
@@ -49,6 +50,12 @@ export default function OnboardingForm() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // New states for dynamic modal content
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalIcon, setModalIcon] = useState<React.ElementType | null>(null); // To store the icon component
+
   const router = useRouter();
 
   // Adicione esta linha para declarar e gerenciar o estado de validação do passo 4
@@ -86,23 +93,25 @@ export default function OnboardingForm() {
       if (selectedFile.type !== "application/pdf") {
         setError("buyerInfo.financialStatements", {
           type: "manual",
-          message: "Financial Statements devem ser um arquivo PDF.",
+          message: "Financial Statements must be a PDF file.", // Traduzido
         });
         setFinancialStatementsFile(null); // Limpa o arquivo inválido
-        console.log("Arquivo de Financial Statements inválido: não é PDF.");
+        console.log("Invalid Financial Statements file: not a PDF."); // Traduzido
         return;
       }
       setFinancialStatementsFile(selectedFile);
       // Limpa o erro se um arquivo for selecionado e for PDF válido
       clearErrors("buyerInfo.financialStatements");
+      setApiError(null); // Limpa o erro da API se o arquivo se tornar válido
       console.log(
-        "Arquivo de Financial Statements selecionado:",
+        "Financial Statements file selected:",
         selectedFile.name
-      );
+      ); // Traduzido
     } else {
       setFinancialStatementsFile(null);
       clearErrors("buyerInfo.financialStatements"); // Limpa o erro se nenhum arquivo for selecionado
-      console.log("Nenhum arquivo de Financial Statements selecionado.");
+      setApiError(null); // Limpa o erro da API se nenhum arquivo for selecionado (e não for mais obrigatório)
+      console.log("No Financial Statements file selected."); // Traduzido
     }
   };
 
@@ -119,19 +128,19 @@ export default function OnboardingForm() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        alert("Please upload a PDF file.");
+        alert("Please upload a PDF file."); // Traduzido
         setFile(null); // Limpa o arquivo inválido
-        console.log("Arquivo de Resale Certificate inválido: não é PDF.");
+        console.log("Invalid Resale Certificate file: not a PDF."); // Traduzido
         return;
       }
       setFile(selectedFile);
       console.log(
-        "Arquivo de Resale Certificate selecionado:",
+        "Resale Certificate file selected:",
         selectedFile.name
-      );
+      ); // Traduzido
     } else {
       setFile(null);
-      console.log("Nenhum arquivo de Resale Certificate selecionado.");
+      console.log("No Resale Certificate file selected."); // Traduzido
     }
   };
 
@@ -141,206 +150,300 @@ export default function OnboardingForm() {
     if (files.length > 0) {
       setImageFiles((prev) => [...prev, ...files]);
       console.log(
-        "Imagens selecionadas:",
+        "Images selected:",
         files.map((f) => f.name)
-      );
+      ); // Traduzido
     } else {
-      console.log("Nenhuma imagem selecionada.");
+      console.log("No images selected."); // Traduzido
     }
   };
 
   const onSubmit = async (formData: IFormInputs) => {
-  console.log("Submit button clicked. Starting onSubmit function.");
-  try {
+    console.log("Submit button clicked. Starting onSubmit function.");
+
+    // Clear any previous API errors and modal states at the start of submission attempt
     setApiError(null);
-    setIsUploading(true);
-    console.log("isUploading set to true.");
+    setModalTitle("");
+    setModalMessage("");
+    setModalIcon(null);
+    setIsModalOpen(false); // Ensure modal is closed before new attempt
 
-    const currentUser = user || (await api.getCurrentUser());
-    if (!currentUser || !currentUser.id) {
-      console.error("User not authenticated. Redirecting to login.");
-      setApiError(
-        "Your session has expired or you are not logged in. Please log in again.."
-      );
-      router.push("/");
-      setIsUploading(false);
-      return;
+    // Manually trigger validation for financial statements before submission
+    const termsSelected = getValues("buyerInfo.terms");
+    let financialStatementsError = false;
+    let specificErrorMessage = ""; // To hold the specific error message for API error
+
+    // Re-evaluate the conditional validation
+    if (
+      termsSelected &&
+      termsSelected !== "100% Prior to Ship" &&
+      !financialStatementsFile
+    ) {
+      specificErrorMessage =
+        "Financial Statements are required if terms are not 100% Prior to Ship."; // Traduzido
+      setError("buyerInfo.financialStatements", {
+        type: "required",
+        message: specificErrorMessage,
+      });
+      financialStatementsError = true;
+    } else if (
+      financialStatementsFile &&
+      financialStatementsFile.type !== "application/pdf"
+    ) {
+      specificErrorMessage = "Financial Statements must be a PDF file."; // Traduzido
+      setError("buyerInfo.financialStatements", {
+        type: "manual",
+        message: specificErrorMessage,
+      });
+      financialStatementsError = true;
+    } else {
+      clearErrors("buyerInfo.financialStatements");
     }
-    console.log("Current user ID:", currentUser.id);
 
-    console.log("Dados recebidos no formulário (formData):", formData);
+    // Trigger validation for all fields that are part of the final step,
+    // including the financial statements field which might have been manually set.
+    const allFieldsValid = await trigger([
+      "buyerInfo.firstName",
+      "buyerInfo.lastName",
+      "buyerInfo.email",
+      "buyerInfo.countryCode",
+      "buyerInfo.buyerNumber",
+      "buyerInfo.terms",
+      "buyerInfo.currency",
+      "buyerInfo.estimatedPurchaseAmount",
+      "buyerInfo.financialStatements", // Inclua este campo para que trigger o avalie
+    ]);
 
-    const termsSelected = formData.buyerInfo?.terms;
+    // Check if there are any errors after triggering all validations
+    if (!allFieldsValid || financialStatementsError || Object.keys(errors).length > 0) {
+      console.log("Final form submission validation failed. Errors:", errors); // Traduzido
+      let displayMessage = "";
+      // If there's a specific financial statements error, use it.
+      // Otherwise, find the first error message from react-hook-form's errors.
+      if (financialStatementsError && specificErrorMessage) {
+        displayMessage = specificErrorMessage;
+      } else {
+        // Find the first error message from the 'errors' object if any
+        const firstErrorMessage = Object.values(errors)
+          .find((e: any) => e.message)?.message;
 
-    // ... (your existing validation and file upload logic) ...
+        if (firstErrorMessage) {
+          displayMessage = firstErrorMessage;
+        } else {
+          // Fallback message if no specific error found
+          displayMessage = "Please fill in all required fields correctly."; // Traduzido
+        }
+      }
 
-    let fileUrl: string | null = null;
-    if (file) {
-      try {
-        console.log("Attempting to upload resale certificate.");
-        fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
-        console.log(
-          "Arquivo de certificado de revenda enviado com sucesso:",
-          fileUrl
-        );
-      } catch (error) {
-        console.error(
-          "Erro ao enviar o arquivo de certificado de revenda:",
-          error
-        );
-        setApiError(
-          error instanceof Error
-            ? error.message
-            : "Erro ao enviar o arquivo. Tente novamente."
-        );
+      setModalTitle("Submission Error");
+      setModalMessage(displayMessage);
+      setModalIcon(() => CircleX); // Set the error icon component
+      setIsModalOpen(true); // Open the modal with error content
+
+      setIsUploading(false); // Make sure to reset loading state if submission is aborted
+      return; // Stop the submission process
+    }
+
+    // Proceed with API call only if all validations pass
+    try {
+      setApiError(null); // Clear API error before attempting API call
+      setIsUploading(true);
+      console.log("isUploading set to true.");
+
+      const currentUser = user || (await api.getCurrentUser());
+      if (!currentUser || !currentUser.id) {
+        console.error("User not authenticated. Redirecting to login."); // Traduzido
+        
+        setModalTitle("Authentication Error");
+        setModalMessage("Your session has expired or you are not logged in. Please log in again.");
+        setModalIcon(() => CircleX);
+        setIsModalOpen(true);
+
         setIsUploading(false);
+        router.push("/");
         return;
       }
-    } else {
-      console.log("No resale certificate file to upload.");
-    }
+      console.log("Current user ID:", currentUser.id);
 
-    const photoUrls: string[] = [];
-    if (imageFiles.length > 0) {
-      console.log("Attempting to upload image files.");
-      for (const imageFile of imageFiles) {
+      console.log("Data received in form (formData):", formData); // Traduzido
+
+      let fileUrl: string | null = null;
+      if (file) {
         try {
-          const imageUrl = await api.uploadImage(imageFile, currentUser.id);
-          photoUrls.push(imageUrl);
-          console.log(`Image ${imageFile.name} uploaded successfully.`);
+          console.log("Attempting to upload resale certificate."); // Traduzido
+          fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
+          console.log(
+            "Resale certificate file uploaded successfully:",
+            fileUrl
+          ); // Traduzido
         } catch (error) {
-          console.error(`Erro ao enviar a imagem ${imageFile.name}:`, error);
-          setApiError(
-            error instanceof Error
-              ? error.message
-              : "Erro ao enviar imagens. Tente novamente."
-          );
+          console.error(
+            "Error uploading resale certificate file:",
+            error
+          ); // Traduzido
+          
+          setModalTitle("Upload Error");
+          setModalMessage(error instanceof Error ? error.message : "Error uploading file. Please try again.");
+          setModalIcon(() => CircleX);
+          setIsModalOpen(true);
+
           setIsUploading(false);
           return;
         }
-      }
-    } else {
-      console.log("No image files to upload.");
-    }
-
-    let financialStatementsFileUrl: string | null = null;
-    if (financialStatementsFile) {
-      try {
-        console.log("Attempting to upload financial statements.");
-        financialStatementsFileUrl = await api.uploadFinancialStatements(
-          financialStatementsFile,
-          currentUser.id
-        );
-        console.log(
-          "Arquivo de Financial Statements enviado com sucesso:",
-          financialStatementsFileUrl
-        );
-      } catch (error) {
-        console.error("Erro ao enviar Financial Statements:", error);
-        setApiError(
-          error instanceof Error
-            ? error.message
-            : "Erro ao enviar Financial Statements. Tente novamente."
-        );
-        setIsUploading(false);
-        return;
-      }
-    } else {
-      console.log("No financial statements file to upload or not required.");
-    }
-
-    const termsValue =
-      formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
-    const currencyValue =
-      formData.buyerInfo?.currency === ""
-        ? null
-        : formData.buyerInfo?.currency;
-
-    const payload = {
-      user_id: currentUser.id,
-      customer_name: formData.customerInfo?.legalName || null,
-      sales_tax_id: formData.customerInfo?.taxId || null,
-      duns_number: formData.customerInfo?.dunNumber || null,
-      dba_number: formData.customerInfo?.dba || null,
-      resale_certificate: fileUrl,
-      billing_address: formData.billingAddress || [],
-      shipping_address: formData.shippingAddress || [],
-      ap_contact_name:
-        `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
-      ap_contact_email: formData.apContact?.email || null,
-      ap_contact_country_code: formData.apContact?.countryCode || null,
-      ap_contact_number: formData.apContact?.contactNumber || null,
-      buyer_name:
-        `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
-      buyer_email: formData.buyerInfo?.email || null,
-      buyer_country_code: formData.buyerInfo?.countryCode || null,
-      buyer_number: formData.buyerInfo?.buyerNumber || null,
-      status: "pending",
-      photo_urls: photoUrls,
-      branding_mix: formData.brandingMix
-        ? formData.brandingMix.split(",").map((s) => s.trim())
-        : null,
-      instagram: formData.instagram || null,
-      website: formData.website || null,
-      terms: termsValue,
-      currency: currencyValue,
-      estimated_purchase_amount:
-        formData.buyerInfo?.estimatedPurchaseAmount || null,
-      financial_statements: financialStatementsFileUrl,
-    };
-
-    console.log("Payload sendo enviado para submitForm:", payload);
-
-    await api.submitForm(payload, currentUser.id);
-    console.log("Form submitted successfully via API.");
-
-    // --- NEW: Send email after successful form submission ---
-    try {
-      const emailResponse = await fetch("/api/send-form-submission-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipientEmail: "your-internal-email@example.com", // Or an email from formData (e.g., buyerInfo.email)
-          recipientName: "Admin Team", // Or the user's name from formData (e.g., buyerInfo.firstName)
-          formData: payload, // Send the full payload or a subset of it
-        }),
-      });
-
-      if (!emailResponse.ok) {
-        const errorData = await emailResponse.json();
-        console.error("Failed to send form submission email:", errorData);
-        // Optionally, set an API error for email sending, but don't prevent form submission success
       } else {
-        console.log("Form submission email sent successfully.");
+        console.log("No resale certificate file to upload."); // Traduzido
       }
-    } catch (emailError) {
-      console.error("Error sending form submission email:", emailError);
-      // Handle email sending error, but again, don't necessarily fail the form submission itself
-    }
-    // --- END NEW ---
 
-    setIsModalOpen(true);
-    console.log("Modal set to open.");
-  } catch (error: unknown) {
-    console.error(
-      "Erro GERAL ao enviar o formulário:",
-      error instanceof Error ? error.message : String(error)
-    );
-    setApiError(
-      error instanceof Error
-        ? error.message
-        : "Erro ao enviar o formulário. Tente novamente."
-    );
-  } finally {
-    setIsUploading(false);
-    console.log("isUploading set to false. End of onSubmit function.");
-  }
-};
+      const photoUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        console.log("Attempting to upload image files."); // Traduzido
+        for (const imageFile of imageFiles) {
+          try {
+            const imageUrl = await api.uploadImage(imageFile, currentUser.id);
+            photoUrls.push(imageUrl);
+            console.log(`Image ${imageFile.name} uploaded successfully.`); // Traduzido
+          } catch (error) {
+            console.error(`Error uploading image ${imageFile.name}:`, error); // Traduzido
+            
+            setModalTitle("Upload Error");
+            setModalMessage(error instanceof Error ? error.message : "Error uploading images. Please try again.");
+            setModalIcon(() => CircleX);
+            setIsModalOpen(true);
+
+            setIsUploading(false);
+            return;
+          }
+        }
+      } else {
+        console.log("No image files to upload."); // Traduzido
+      }
+
+      let financialStatementsFileUrl: string | null = null;
+      // The check for financialStatementsError already happened above
+      if (financialStatementsFile) {
+        try {
+          console.log("Attempting to upload financial statements."); // Traduzido
+          financialStatementsFileUrl = await api.uploadFinancialStatements(
+            financialStatementsFile,
+            currentUser.id
+          );
+          console.log(
+            "Financial Statements file uploaded successfully:",
+            financialStatementsFileUrl
+          ); // Traduzido
+        } catch (error) {
+          console.error("Error uploading Financial Statements:", error); // Traduzido
+          
+          setModalTitle("Upload Error");
+          setModalMessage(error instanceof Error ? error.message : "Error uploading Financial Statements. Please try again.");
+          setModalIcon(() => CircleX);
+          setIsModalOpen(true);
+
+          setIsUploading(false);
+          return;
+        }
+      } else {
+        console.log("No financial statements file to upload or not required."); // Traduzido
+      }
+
+      const termsValue =
+        formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+      const currencyValue =
+        formData.buyerInfo?.currency === ""
+          ? null
+          : formData.buyerInfo?.currency;
+
+      const payload = {
+        user_id: currentUser.id,
+        customer_name: formData.customerInfo?.legalName || null,
+        sales_tax_id: formData.customerInfo?.taxId || null,
+        duns_number: formData.customerInfo?.dunNumber || null,
+        dba_number: formData.customerInfo?.dba || null,
+        resale_certificate: fileUrl,
+        billing_address: formData.billingAddress || [],
+        shipping_address: formData.shippingAddress || [],
+        ap_contact_name:
+          `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+        ap_contact_email: formData.apContact?.email || null,
+        ap_contact_country_code: formData.apContact?.countryCode || null,
+        ap_contact_number: formData.apContact?.contactNumber || null,
+        buyer_name:
+          `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+        buyer_email: formData.buyerInfo?.email || null,
+        buyer_country_code: formData.buyerInfo?.countryCode || null,
+        buyer_number: formData.buyerInfo?.buyerNumber || null,
+        status: "pending",
+        photo_urls: photoUrls,
+        branding_mix: formData.brandingMix
+          ? formData.brandingMix.split(",").map((s) => s.trim())
+          : null,
+        instagram: formData.instagram || null,
+        website: formData.website || null,
+        terms: termsValue,
+        currency: currencyValue,
+        estimated_purchase_amount:
+          formData.buyerInfo?.estimatedPurchaseAmount || null,
+        financial_statements: financialStatementsFileUrl,
+      };
+
+      console.log("Payload being sent to submitForm:", payload); // Traduzido
+
+      await api.submitForm(payload, currentUser.id);
+      console.log("Form submitted successfully via API."); // Traduzido
+
+      // --- NEW: Send email after successful form submission ---
+      try {
+        const emailResponse = await fetch("/api/send-form-submission-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipientEmail: "your-internal-email@example.com", // Or an email from formData (e.g., buyerInfo.email)
+            recipientName: "Admin Team", // Or the user's name from formData (e.g., buyerInfo.firstName)
+            formData: payload, // Send the full payload or a subset of it
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json();
+          console.error("Failed to send form submission email:", errorData); // Traduzido
+          // Optionally, set an API error for email sending, but don't prevent form submission success
+        } else {
+          console.log("Form submission email sent successfully."); // Traduzido
+        }
+      } catch (emailError) {
+        console.error("Error sending form submission email:", emailError); // Traduzido
+        // Handle email sending error, but again, don't necessarily fail the form submission itself
+      }
+      // --- END NEW ---
+
+      setModalTitle("Success!");
+      setModalMessage("Your form has been submitted successfully!");
+      setModalIcon(() => CircleCheck); // Set the success icon component
+      setIsModalOpen(true); // Open the modal with success content
+      console.log("Modal set to open with success message.");
+
+    } catch (error: unknown) {
+      console.error(
+        "GENERAL error submitting the form:",
+        error instanceof Error ? error.message : String(error)
+      ); // Traduzido
+      
+      setModalTitle("Submission Error");
+      setModalMessage(error instanceof Error ? error.message : "Error submitting the form. Please try again.");
+      setModalIcon(() => CircleX); // Set the error icon component
+      setIsModalOpen(true); // Open the modal with error content
+
+    } finally {
+      setIsUploading(false);
+      console.log("isUploading set to false. End of onSubmit function."); // Traduzido
+    }
+  };
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof IFormInputs | string)[] = [];
+    setApiError(null); // Clear API error on next step attempt
 
     if (currentStep === 1) {
       fieldsToValidate = [
@@ -391,60 +494,95 @@ export default function OnboardingForm() {
         "buyerInfo.terms",
         "buyerInfo.currency",
         "buyerInfo.estimatedPurchaseAmount",
+        // DO NOT add 'buyerInfo.financialStatements' here for direct 'required' validation,
+        // as its requirement is conditional and handled manually.
       ];
       setStepFourAttemptedValidation(true);
 
       const termsSelected = getValues("buyerInfo.terms");
-      // Validação de Financial Statements no nextStep
-      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+      let financialStatementsError = false; // Flag to track specific financial statements error
+      let specificErrorMessage = ""; // To hold the specific error message for API error
+
+      // Conditional validation for Financial Statements
+      if (
+        termsSelected &&
+        termsSelected !== "100% Prior to Ship" &&
+        !financialStatementsFile
+      ) {
+        specificErrorMessage =
+          "Financial Statements are required if terms are not 100% Prior to Ship."; // Traduzido
         setError("buyerInfo.financialStatements", {
           type: "required",
-          message:
-            "Declarações Financeiras são obrigatórias se os Termos forem selecionados.",
+          message: specificErrorMessage,
         });
+        financialStatementsError = true;
         console.log(
-          "Erro de validação (nextStep): Financial Statements são obrigatórias."
-        );
+          "Validation Error (nextStep): Financial Statements required for terms other than 100%."
+        ); // Traduzido
       } else if (
         financialStatementsFile &&
         financialStatementsFile.type !== "application/pdf"
       ) {
+        specificErrorMessage = "Financial Statements must be a PDF file."; // Traduzido
         setError("buyerInfo.financialStatements", {
           type: "manual",
-          message: "Financial Statements devem ser um arquivo PDF.",
+          message: specificErrorMessage,
         });
+        financialStatementsError = true;
         console.log(
-          "Erro de validação (nextStep): Financial Statements deve ser PDF."
-        );
+          "Validation Error (nextStep): Financial Statements must be PDF."
+        ); // Traduzido
       } else {
+        // Clear the error if conditions are met (e.g., file is present and PDF, or terms are '100% Prior to Ship')
         clearErrors("buyerInfo.financialStatements");
       }
-    }
 
-    // @ts-expect-error
-    const isValid = await trigger(fieldsToValidate);
+      // Trigger validation for other fields in step 4
+      // @ts-expect-error (may need a more robust typing solution if it persists)
+      const otherFieldsValid = await trigger(fieldsToValidate);
 
-    // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
-    if (currentStep === 4) {
-      if (errors.buyerInfo?.financialStatements || !isValid) {
-        // Adicionado !isValid para garantir que todos os campos validados sejam checados
-        console.log(
-          "Validação do passo 4 falhou devido a Financial Statements ou outros campos."
-        );
-        return;
+      // Check if there are any errors after all validations (including manual ones)
+      // This is crucial to capture manually defined errors like financialStatementsError
+      if (!otherFieldsValid || financialStatementsError || Object.keys(errors).length > 0) {
+        console.log("Step 4 validation failed. Errors:", errors); // Traduzido
+        // If there's a specific financial statements error, use it.
+        // Otherwise, find the first error message from react-hook-form's errors.
+        if (financialStatementsError && specificErrorMessage) {
+            setApiError(specificErrorMessage);
+        } else {
+            const firstErrorMessage = Object.values(errors)
+              .find((e: any) => e.message)?.message;
+            if (firstErrorMessage) {
+                setApiError(firstErrorMessage);
+            }
+        }
+        return; // Prevents advancing to the next step
       }
     }
 
+    // General step validation
+    // @ts-expect-error (if fieldsToValidate can have types that don't directly match trigger, consider refactoring)
+    const isValid = await trigger(fieldsToValidate);
+
     if (!isValid) {
-      console.log("Form validation failed for current step:", errors);
+      console.log("Form validation failed for the current step:", errors); // Traduzido
+      // If isValid is false, it means react-hook-form has errors.
+      // Display the first one in apiError.
+      const firstErrorMessage = Object.values(errors)
+        .find((e: any) => e.message)?.message;
+      if (firstErrorMessage) {
+        setApiError(firstErrorMessage);
+      }
       return;
     }
-    console.log("Form validation successful for current step.");
+    console.log("Form validation successful for the current step."); // Traduzido
+    setApiError(null); // Clear API error if validation passes for the step
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setApiError(null); // Clear API error on previous step
   };
 
   const addShippingAddress = () => {
@@ -489,10 +627,10 @@ export default function OnboardingForm() {
       clearErrors("shippingAddress.0.county");
       clearErrors("shippingAddress.0.country");
       console.log(
-        "Endereço de entrega preenchido com base no endereço de cobrança."
-      );
+        "Shipping address populated based on billing address."
+      ); // Traduzido
     } else {
-      console.warn("Endereço de cobrança não encontrado para copiar.");
+      console.warn("Billing address not found to copy."); // Traduzido
     }
     setIsSameAsBilling(true);
   };
@@ -653,7 +791,7 @@ export default function OnboardingForm() {
                         <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
                         <S.HiddenInput
                           id="image-upload"
-                          type="file"  // Remova o espaço extra aqui
+                          type="file"
                           accept="image/*"
                           multiple
                           onChange={handleImageChange}
@@ -687,9 +825,9 @@ export default function OnboardingForm() {
                       display: "flex",
                       // alignItems:"center",
                       // justifyContent: "center",
-                      
+
                     }}
-                   
+
                   >
                     <Info size={16} />
                   </S.InfoButton>
@@ -699,7 +837,7 @@ export default function OnboardingForm() {
                       width:"562px",
                       height: "200px",
                       paddingBottom:"170px",
-                     
+
                     }}
                     id="brandingMix"
                     {...register("brandingMix" as any, {
@@ -1292,7 +1430,7 @@ export default function OnboardingForm() {
 
                 <S.InputGroup>
                   <S.Label htmlFor="estimatedPurchaseAmount">
-                    Estimated Purchase Amount
+                    Estimated Puchase Amount Per Season
                   </S.Label>
                   <S.Input
                     id="estimatedPurchaseAmount"
@@ -1319,10 +1457,10 @@ export default function OnboardingForm() {
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
-                      
+
                     }}
                   >
-                    <S.Label  htmlFor="financialStatements-upload">
+                    <S.Label htmlFor="financialStatements-upload">
                       Financial Statements
                     </S.Label>
                     <S.InfoButton
@@ -1333,10 +1471,11 @@ export default function OnboardingForm() {
                     </S.InfoButton>
                   </div>
                   <S.HiddenInput
-                  
                     id="financialStatements-upload"
                     type="file"
                     accept="application/pdf"
+                    // REGISTER THE FIELD SO RHF CAN MONITOR IT
+                    {...register("buyerInfo.financialStatements")}
                     onChange={handleFinancialStatementsFileChange}
                   />
                   <S.UploadButton htmlFor="financialStatements-upload">
@@ -1345,7 +1484,7 @@ export default function OnboardingForm() {
                       ? financialStatementsFile.name
                       : "Attach file (PDF)"}
                   </S.UploadButton>
-                  {/* A mensagem de erro só aparece se houve tentativa de validação do passo 4 E houver erro */}
+                  {/* Error message only appears if step 4 validation has been attempted AND there is an error */}
                   {errors.buyerInfo?.financialStatements &&
                     stepFourAttemptedValidation && (
                       <S.ErrorMessage>
@@ -1385,15 +1524,17 @@ export default function OnboardingForm() {
         <S.ModalOverlay>
           <S.ModalContent>
             <S.ModalTitle>
-              <CircleCheck size={48} />
+              {modalIcon && React.createElement(modalIcon, { size: 48 })}
             </S.ModalTitle>
-            <S.ModalMessage>
-              Your form has been submitted successfully!
-            </S.ModalMessage>
+            <S.ModalMessage>{modalTitle}</S.ModalMessage> {/* e.g., "Success!" or "Submission Error" */}
+            <S.ModalMessage>{modalMessage}</S.ModalMessage> {/* Detailed message */}
             <S.ModalButton
               onClick={() => {
                 setIsModalOpen(false);
-                router.push("/");
+                // Only redirect on success
+                if (modalTitle === "Success!") {
+                  router.push("/");
+                }
               }}
             >
               OK

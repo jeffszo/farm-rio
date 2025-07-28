@@ -20,6 +20,7 @@ import {
   Calendar,
   DollarSign,
   Percent,
+  MessageSquare 
 } from "lucide-react";
 
 interface Address {
@@ -51,6 +52,7 @@ interface CustomerForm {
   buyer_email: string;
   status: string;
   created_at: string;
+  wholesale_feedback: string;
 }
 
 interface ValidationDetails {
@@ -178,7 +180,7 @@ export default function ValidationDetailsPage() {
       if (!approved && !feedback.trim()) {
         setModalContent({
           title: "Error!",
-          description: "Feedback is required when rejecting a customer.",
+          description: "Feedback is required when requesting a customer review.",
         });
         setShowModal(true);
         return;
@@ -228,7 +230,7 @@ export default function ValidationDetailsPage() {
       setModalContent({
         title: "Ok!",
         description: approved
-          ? "Client approved!"
+          ? "Customer approved!"
           : "Customer rejected!",
       });
       setShowModal(true);
@@ -559,6 +561,25 @@ export default function ValidationDetailsPage() {
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email || "N/A"}
             </S.FormRow>
+
+                <S.Divider />
+
+              
+<S.SectionTitle>
+  <MessageSquare size={16} /> Team Feedback
+</S.SectionTitle>
+
+<S.FormRow>
+  <strong>Feedback:</strong>{" "}
+  {customerForm.status === "approved by the wholesale team" ? (
+    customerForm.wholesale_feedback || "No feedback provided by Wholesale Team."
+  ) : customerForm.status === "approved by the credit team" ? (
+    customerForm.credit_feedback || "No feedback provided by Credit Team."
+  ) : (
+    "No feedback available."
+  )}
+</S.FormRow>
+
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
@@ -712,7 +733,7 @@ export default function ValidationDetailsPage() {
     ) : (
       <>
         <S.Button onClick={() => handleApproval(false)} variant="secondary">
-          Reject
+          Review
         </S.Button>
         <S.Button onClick={() => handleApproval(true)} variant="primary">
           Approve

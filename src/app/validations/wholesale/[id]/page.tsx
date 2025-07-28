@@ -19,8 +19,7 @@ import {
   Pencil,
   Check,
   X,
-  MessageSquare,
-  Blend // Icone para Branding Mix
+  // MessageSquare,
 } from "lucide-react";
 
 // Interface definition for a single address (AddressDetail)
@@ -71,7 +70,6 @@ interface CustomerForm {
   atacado_terms?: string;
   atacado_credit?: number;
   atacado_discount?: number;
-  csc_feedback: string;
   terms: string;
   currency: string;
 }
@@ -132,6 +130,7 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
+  const [reviewFeedback, setReviewFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -417,6 +416,61 @@ export default function ValidationDetailsPage() {
     }
   };
 
+  // src/app/validations/wholesale/[id]/page.tsx
+// ...
+const handleReview = async () => {
+  if (!id) {
+    console.error("ID do cliente não encontrado para revisão.");
+    return;
+  }
+
+  try {
+    setLoading(true); // Se você tem um estado de loading
+
+    setModalContent({
+      title: "Revisando Formulário...",
+      description: "Aguarde enquanto o status do formulário é atualizado para revisão do cliente.",
+      isError: false,
+    });
+    setShowModal(true);
+
+    console.log("Revisando formulário para edição do cliente...", { customerId: id, feedback: reviewFeedback });
+
+    // CHAMA A FUNÇÃO DEDICADA PARA REVISÃO
+    await api.reviewCustomer(id as string, reviewFeedback.trim() === "" ? null : reviewFeedback);
+
+    if (customerForm) {
+      setCustomerForm({
+        ...customerForm,
+        status: "review requested by the wholesale team",
+      });
+    }
+
+    setModalContent({
+      title: "Success!",
+      description: "The form has been sent for the client's review. They can edit it now.",
+      isError: false,
+    });
+    setTimeout(() => {
+      closeModal();
+      router.push("/validations/wholesale"); // Redirecione para a lista de validações, por exemplo
+    }, 2000);
+  } catch (err: any) {
+    console.error("Erro ao enviar para revisão:", err);
+    setModalContent({
+      title: "Erro!",
+      description: err.message || "Ocorreu um erro ao enviar para revisão. Tente novamente.",
+      isError: true,
+    });
+    setShowModal(true);
+  } finally {
+    setLoading(false); // Desativa o loading no final
+  }
+};
+// ...
+
+
+
   const handleSaveDuns = async () => {
     try {
       setSavingDuns(true);
@@ -653,14 +707,14 @@ export default function ValidationDetailsPage() {
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
 
-            <S.Divider /> 
+            {/* <S.Divider />  */}
 
-            <S.SectionTitle>
+            {/* <S.SectionTitle>
               <MessageSquare  size={16} /> Tax Team Feedback
             </S.SectionTitle>
             <S.FormRow>
               <strong>Feedback:</strong> {customerForm.csc_feedback || "No feedback provided by CSC Team."}
-            </S.FormRow>
+            </S.FormRow> */}
 
           </S.FormSection>
         </S.FormDetails>
@@ -800,7 +854,7 @@ export default function ValidationDetailsPage() {
           </S.TermsGrid>
         </S.TermsContainer>
 
-        {(customerForm.status === "approved by the tax team" ||
+        {(customerForm.status === "pending" ||
                   customerForm.status === "rejected by the tax team") && (
                   <S.FeedbackGroup>
                     <S.Label htmlFor="feedback">
@@ -816,21 +870,19 @@ export default function ValidationDetailsPage() {
                 )}
 
 
-        <S.ButtonContainer>
-          <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Reject
-          </S.Button>
+<S.ButtonContainer>
+  <S.Button onClick={() => handleApproval(false)} variant="secondary">
+    Reject
+  </S.Button>
 
-          <S.Button
-            variant="primary"
-            onClick={() => {
-              console.log("Click detected!")
-              handleApproval(true)
-            }}
-          >
-            Approve
-          </S.Button>
-        </S.ButtonContainer>
+  <S.Button onClick={handleReview} variant="tertiary">
+    Review
+  </S.Button>
+
+  <S.Button variant="primary" onClick={() => handleApproval(true)}>
+    Approve
+  </S.Button>
+</S.ButtonContainer>
 
 
         {showModal && (

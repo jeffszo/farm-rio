@@ -45,17 +45,14 @@ export default function StatusClient({
 
   // Determine se o formulário está em um status de rejeição que requer feedback
   const isRejectedStatusWithFeedback =
-    formStatus === "rejected by the CSC initial team" ||
-    formStatus === "rejected by the CSC final team" ||
-    formStatus === "rejected by the tax team" ||
     formStatus === "rejected by the wholesale team";
 
   // Determine se o formulário está em um status que permite edição
   const canEditForm =
-    formStatus === "rejected by the CSC initial team" ||
-    formStatus === "rejected by the CSC final team" ||
-    formStatus === "rejected by the tax team" ||
-    formStatus === "rejected by the wholesale team";
+    formStatus === "review requested by the CSC initial team" ||
+    formStatus === "review requested by the CSC final team" ||
+    formStatus === "review requested by the tax team" ||
+    formStatus === "review requested by the wholesale team";
 
   return (
     <S.ReviewContainer>
@@ -63,8 +60,7 @@ export default function StatusClient({
       <S.ReviewSubtitle>
         {formStatus === "pending" && (
           <div>
-            Your form is currently <strong>pending review</strong>. We'll notify
-            you once it has been processed by the CSC team.
+            Your form is currently <strong>pending review</strong>. 
           </div>
         )}
 
@@ -98,27 +94,27 @@ export default function StatusClient({
           </div>
         )}
 
-        {formStatus === "rejected by the CSC initial team" && (
+        {formStatus === "review requested by the CSC initial team" && (
           <div>
-            Your form has been <strong>rejected by the CSC team</strong>. Please review the feedback and make the necessary corrections.
+            Your form has been <strong>review requested by the CSC team</strong>. Please review the feedback and make the necessary corrections.
           </div>
         )}
 
-        {formStatus === "rejected by the CSC final team" && (
+        {formStatus === "review requested by the CSC final team" && (
           <div>
-            Your corrected form has been <strong>rejected by the CSC team</strong> again. Please review the feedback carefully.
+            Your corrected form has been <strong>review requested by the CSC team</strong> again. Please review the feedback carefully.
           </div>
         )}
 
-        {formStatus === "rejected by the tax team" && (
+        {formStatus === "review requested by the tax team" && (
           <div>
-            Your form has been <strong>rejected by the Tax team</strong>. Please review the feedback and make the necessary corrections.
+            Your form has been <strong>review requested by the Tax team</strong>. Please review the feedback and make the necessary corrections.
           </div>
         )}
 
-        {formStatus === "rejected by the wholesale team" && (
+        {formStatus === "review requested by the wholesale team" && (
           <div>
-            Your form has been <strong>rejected by the Wholesale team</strong>. Please review the feedback and make the necessary corrections.
+            Your form has been <strong>review requested by the Wholesale team</strong>. Please review the feedback and make the necessary corrections.
           </div>
         )}
 

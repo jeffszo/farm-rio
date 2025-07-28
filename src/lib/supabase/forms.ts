@@ -5,8 +5,8 @@ export async function submitForm(formData: unknown, userId: string) {
     customer_name: string;
     sales_tax_id: string;
     resale_certificate?: string | null;
-    billing_address: any[]; // Usar 'any[]' ou definir uma interface para o endereço
-    shipping_address: any[]; // Usar 'any[]' ou definir uma interface para o endereço
+    billing_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
+    shipping_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
     ap_contact_name: string;
     ap_contact_email: string;
     ap_contact_country_code?: number | null; // Adicionado

@@ -39,7 +39,7 @@ interface CustomerForm {
   branding_mix: string;
   // Add Tax-specific fields here if any, e.g., tax_status, tax_notes
   tax_status?: string;
-  css_initial_feedback?: string;
+  csc_initial_feedback?: string;
 }
 
 export default function TaxValidationDetailsPage() {
@@ -47,7 +47,7 @@ export default function TaxValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
     const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
-  const [dunsCopied, setDunsCopied] = useState<boolean>(false);
+  const [setDunsCopied] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -66,7 +66,7 @@ export default function TaxValidationDetailsPage() {
           const data = await api.getCustomerFormById(id); // Ensure this function fetches all relevant data
           if (!data) throw new Error("Form not found.");
           setCustomerForm(data);
-          setFeedback(data.css_initial_feedback || ""); // Initialize feedback with existing notes if any
+          // setFeedback(data.csc_initial_feedback || "");// Initialize feedback with existing notes if any
           setTaxStatus(data.tax_status || "approved"); // Initialize status with existing
         }
       } catch (err) {
@@ -99,7 +99,7 @@ export default function TaxValidationDetailsPage() {
       // Call the new validation function specific to Tax
       await api.validateTaxCustomer(id, approved, {
         tax_status: approved ? "approved" : "rejected",
-        css_initial_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
+        tax_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
       });
 
       // --- NOVA ADIÇÃO: Enviar e-mail após a validação TAX ---
@@ -137,7 +137,7 @@ export default function TaxValidationDetailsPage() {
         title: "Success!",
         description: approved
           ? "Client approved! Forwarded to the credit team."
-          : "Client rejected by the Tax team!",
+          : "Feedback is required when requesting a customer review.",
       });
       setShowModal(true);
     } catch (err) {
@@ -413,13 +413,13 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               <MessageSquare  size={16} /> CSC Team Feedback
             </S.SectionTitle>
                                    <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.css_initial_feedback || "No feedback provided by CSC Team."}
+              <strong>Feedback:</strong> {customerForm.csc_initial_feedback || "No feedback provided by CSC Team."}
             </S.FormRow>
           </S.FormSection>
         </S.FormDetails>
 
         {/* Feedback/Notes field for the Tax team */}
-        {(customerForm.status === "approved by the CSC team initial" ||
+        {(customerForm.status === "approved by the csc initial team" ||
           customerForm.status === "rejected by the tax team") && (
           <S.FeedbackGroup>
             <S.Label htmlFor="feedback">
@@ -438,7 +438,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
         {(customerForm.status === "approved by the CSC team initial" || customerForm.status === "rejected by the tax team") && ( */}
         <S.ButtonContainer>
           <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Reject
+            Review
           </S.Button>
           <S.Button onClick={() => handleApproval(true)} variant="primary">
             Approve
