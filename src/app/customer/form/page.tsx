@@ -551,7 +551,7 @@ export default function OnboardingForm() {
             setApiError(specificErrorMessage);
         } else {
             const firstErrorMessage = Object.values(errors)
-              .find((e: any) => e.message)?.message;
+              .find((e: unknown) => e.message)?.message;
             if (firstErrorMessage) {
                 setApiError(firstErrorMessage);
             }
@@ -569,7 +569,7 @@ export default function OnboardingForm() {
       // If isValid is false, it means react-hook-form has errors.
       // Display the first one in apiError.
       const firstErrorMessage = Object.values(errors)
-        .find((e: any) => e.message)?.message;
+        .find((e: unknown) => e.message)?.message;
       if (firstErrorMessage) {
         setApiError(firstErrorMessage);
       }
@@ -594,7 +594,7 @@ export default function OnboardingForm() {
     setshippingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`shippingAddress.${indexToRemove}`, {} as any);
+    setValue(`shippingAddress.${indexToRemove}`, {} as unknown);
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
@@ -602,7 +602,7 @@ export default function OnboardingForm() {
     setbillingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`billingAddress.${indexToRemove}`, {} as any);
+    setValue(`billingAddress.${indexToRemove}`, {} as unknown);
   };
 
   const handleSameAsBilling = () => {
@@ -731,18 +731,18 @@ export default function OnboardingForm() {
                     id="instagram"
                     type="url"
                     placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram" as any, {
+                    {...register("instagram" as unknown, {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
                         message: "Please enter a valid Instagram URL.",
                       },
                     })}
-                    error={!!(errors as any).instagram}
+                    error={!!(errors as unknown).instagram}
                   />
-                  {(errors as any).instagram && (
+                  {(errors as unknown).instagram && (
                     <S.ErrorMessage>
-                      {(errors as any).instagram.message}
+                      {(errors as unknown).instagram.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -753,18 +753,18 @@ export default function OnboardingForm() {
                     id="website"
                     type="url"
                     placeholder="https://yourwebsite.com"
-                    {...register("website" as any, {
+                    {...register("website" as unknown, {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
                         message: "Please enter a valid Website URL.",
                       },
                     })}
-                    error={!!(errors as any).website}
+                    error={!!(errors as unknown).website}
                   />
-                  {(errors as any).website && (
+                  {(errors as unknown).website && (
                     <S.ErrorMessage>
-                      {(errors as any).website.message}
+                      {(errors as unknown).website.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -840,14 +840,14 @@ export default function OnboardingForm() {
 
                     }}
                     id="brandingMix"
-                    {...register("brandingMix" as any, {
+                    {...register("brandingMix" as unknown, {
                       required: "Brand/Branding Mix is required",
                     })}
-                    error={!!(errors as any).brandingMix}
+                    error={!!(errors as unknown).brandingMix}
                   />
-                  {(errors as any).brandingMix && (
+                  {(errors as unknown).brandingMix && (
                     <S.ErrorMessage>
-                      {(errors as any).brandingMix.message}
+                      {(errors as unknown).brandingMix.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
