@@ -446,6 +446,7 @@ useEffect(() => {
     } else {
       console.warn("Endereço de cobrança não encontrado para copiar.");
     }
+    isSameAsBilling("");
     setIsSameAsBilling(true);
   };
 

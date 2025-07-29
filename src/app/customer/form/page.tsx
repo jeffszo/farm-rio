@@ -632,6 +632,7 @@ export default function OnboardingForm() {
     } else {
       console.warn("Billing address not found to copy."); // Traduzido
     }
+    isSameAsBilling("");
     setIsSameAsBilling(true);
   };
 
