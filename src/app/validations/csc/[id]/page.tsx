@@ -193,6 +193,7 @@ export default function ValidationDetailsPage() {
         statusUpdated = true;
       } else {
         await api.validateCSCInitialCustomer(id, approved, feedback); // Etapa 2
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         statusUpdated = true;
       }
 

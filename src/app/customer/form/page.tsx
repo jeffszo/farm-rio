@@ -74,14 +74,14 @@ export default function OnboardingForm() {
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{} as any],
-      shippingAddress: [{} as any],
+      billingAddress: [{} as unknown],
+      shippingAddress: [{} as unknown],
       // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
         terms: "", // Valor vazio para a opção "Select terms"
         currency: "", // Valor vazio para a opção "Select currency"
         // ... outros campos de buyerInfo
-      } as any, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
+      } as unknown, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
     },
   });
 
@@ -225,7 +225,7 @@ export default function OnboardingForm() {
       } else {
         // Find the first error message from the 'errors' object if any
         const firstErrorMessage = Object.values(errors)
-          .find((e: any) => e.message)?.message;
+          .find((e: unknown) => e.message)?.message;
 
         if (firstErrorMessage) {
           displayMessage = firstErrorMessage;
