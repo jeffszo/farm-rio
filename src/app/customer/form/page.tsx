@@ -4,7 +4,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as S from "../../customer/styles";
-import type { IFormInputs } from "../../../types/form";
+import type { IFormInputs, AddressInput } from "../../../types/form";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
@@ -41,7 +41,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
+  const [, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -74,14 +74,20 @@ export default function OnboardingForm() {
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{} as unknown],
-      shippingAddress: [{} as unknown],
+      billingAddress: [{} as AddressInput],
+      shippingAddress: [{} as AddressInput],
       // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
-        terms: "", // Valor vazio para a opção "Select terms"
-        currency: "", // Valor vazio para a opção "Select currency"
-        // ... outros campos de buyerInfo
-      } as unknown, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
+        firstName: "",
+        lastName: "",
+        email: "",
+        countryCode: "",
+        buyerNumber: "",
+        terms: "",
+        currency: "",
+        estimatedPurchaseAmount: undefined,
+        financialStatements: undefined,
+      },
     },
   });
 
@@ -225,7 +231,7 @@ export default function OnboardingForm() {
       } else {
         // Find the first error message from the 'errors' object if any
         const firstErrorMessage = Object.values(errors)
-          .find((e: unknown) => e.message)?.message;
+          .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
 
         if (firstErrorMessage) {
           displayMessage = firstErrorMessage;
@@ -551,7 +557,7 @@ export default function OnboardingForm() {
             setApiError(specificErrorMessage);
         } else {
             const firstErrorMessage = Object.values(errors)
-              .find((e: unknown) => e.message)?.message;
+              .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
             if (firstErrorMessage) {
                 setApiError(firstErrorMessage);
             }
@@ -569,7 +575,7 @@ export default function OnboardingForm() {
       // If isValid is false, it means react-hook-form has errors.
       // Display the first one in apiError.
       const firstErrorMessage = Object.values(errors)
-        .find((e: unknown) => e.message)?.message;
+        .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
       if (firstErrorMessage) {
         setApiError(firstErrorMessage);
       }
@@ -594,7 +600,7 @@ export default function OnboardingForm() {
     setshippingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`shippingAddress.${indexToRemove}`, {} as unknown);
+    setValue(`shippingAddress.${indexToRemove}`, {} as AddressInput);
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
@@ -602,7 +608,7 @@ export default function OnboardingForm() {
     setbillingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`billingAddress.${indexToRemove}`, {} as unknown);
+    setValue(`billingAddress.${indexToRemove}`, {} as AddressInput);
   };
 
   const handleSameAsBilling = () => {
@@ -632,7 +638,6 @@ export default function OnboardingForm() {
     } else {
       console.warn("Billing address not found to copy."); // Traduzido
     }
-    isSameAsBilling("");
     setIsSameAsBilling(true);
   };
 
@@ -732,18 +737,18 @@ export default function OnboardingForm() {
                     id="instagram"
                     type="url"
                     placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram" as unknown, {
+                    {...register("instagram", {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
                         message: "Please enter a valid Instagram URL.",
                       },
                     })}
-                    error={!!(errors as unknown).instagram}
+                    error={!!(errors as typeof errors).instagram}
                   />
-                  {(errors as unknown).instagram && (
+                  {(errors as Record<string, any>).instagram && (
                     <S.ErrorMessage>
-                      {(errors as unknown).instagram.message}
+                      {(errors as Record<string, any>).instagram.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -754,18 +759,18 @@ export default function OnboardingForm() {
                     id="website"
                     type="url"
                     placeholder="https://yourwebsite.com"
-                    {...register("website" as unknown, {
+                    {...register("website", {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
                         message: "Please enter a valid Website URL.",
                       },
                     })}
-                    error={!!(errors as unknown).website}
+                    error={!!errors.website}
                   />
-                  {(errors as unknown).website && (
+                  {errors.website && (
                     <S.ErrorMessage>
-                      {(errors as unknown).website.message}
+                      {errors.website.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>

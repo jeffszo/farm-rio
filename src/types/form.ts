@@ -33,6 +33,7 @@ export interface BuyerInfo {
     terms: string; // Ex: 'Net 30', 'COD', etc.
     currency: string; // Ex: 'USD', 'EUR', 'BRL'
     estimatedPurchaseAmount: number; // Valor numérico
+    financialStatements?: File;
 }
 
 export interface IFormInputs {
