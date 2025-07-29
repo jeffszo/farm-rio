@@ -271,7 +271,6 @@ export default function TaxValidationDetailsPage() {
 
 
 const handleCopyToClipboard = async (text: string, field: 'taxId') => {
-const handleCopyToClipboard = async (text: string, field: 'taxId') => {
     try {
         await navigator.clipboard.writeText(text);
         if (field === 'taxId') {
