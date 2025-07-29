@@ -31,7 +31,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
+ const [_, setIsSameAsBilling] = useState(false); // O linter ignorará '_'// Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const params = useParams();
@@ -512,6 +512,8 @@ setshippingAddress(parsedShipping.map((_, i) => i));
   if (isLoading) {
     return <p>Loading...</p>;
   }
+
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <S.ContainerMain>
