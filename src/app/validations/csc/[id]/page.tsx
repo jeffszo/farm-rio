@@ -53,6 +53,7 @@ interface CustomerForm {
   status: string;
   created_at: string;
   wholesale_feedback: string;
+  credit_feedback: string;
 }
 
 interface ValidationDetails {
@@ -89,26 +90,26 @@ export default function ValidationDetailsPage() {
 
   const [validation, setValidation] = useState<ValidationDetails | null>(null);
 
-  const handleFinish = async () => {
-    try {
-      setLoading(true);
-      await api.finishCustomer(id as string);
-      setModalContent({
-        title: "Success!",
-        description: "Customer finalized successfully!",
-      });
-      setShowModal(true);
-    } catch (err) {
-      console.error("Erro ao finalizar cliente:", err);
-      setModalContent({
-        title: "Erro!",
-        description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-      setShowModal(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleFinish = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await api.finishCustomer(id as string);
+  //     setModalContent({
+  //       title: "Success!",
+  //       description: "Customer finalized successfully!",
+  //     });
+  //     setShowModal(true);
+  //   } catch (err) {
+  //     console.error("Erro ao finalizar cliente:", err);
+  //     setModalContent({
+  //       title: "Erro!",
+  //       description: err instanceof Error ? err.message : "Erro desconhecido",
+  //     });
+  //     setShowModal(true);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     const fetchValidationDetails = async () => {
@@ -130,9 +131,75 @@ export default function ValidationDetailsPage() {
         if (typeof id === "string") {
           const data = await api.getCustomerValidationDetails(id);
           if (!data) throw new Error("Formulário não encontrado.");
-          setCustomerForm(data);
+          // Map API response to CustomerForm type
+          const customerFormData: CustomerForm = {
+            id: data.id,
+            customer_name: data.customer_name,
+            sales_tax_id: data.sales_tax_id,
+            duns_number: data.duns_number,
+            dba_number: data.dba_number,
+            resale_certificate: data.resale_certificate,
+            photo_urls:
+              "photo_urls" in data
+                ? Array.isArray(data.photo_urls)
+                  ? data.photo_urls
+                  : typeof data.photo_urls === "string"
+                  ? (() => {
+                      try {
+                        const parsed = JSON.parse(data.photo_urls);
+                        return Array.isArray(parsed) ? parsed : [];
+                      } catch {
+                        return [];
+                      }
+                    })()
+                  : []
+                : [],
+            instagram: "instagram" in data && typeof data.instagram === "string" ? data.instagram : "",
+            website: "website" in data ? (typeof data.website === "string" ? data.website : (data.website ? String(data.website) : "")) : "",
+            branding_mix: "branding_mix" in data
+              ? typeof data.branding_mix === "string"
+                ? data.branding_mix
+                : data.branding_mix
+                ? JSON.stringify(data.branding_mix)
+                : ""
+              : "",
+            financial_statements: "financial_statements" in data
+              ? typeof data.financial_statements === "string"
+                ? data.financial_statements
+                : data.financial_statements
+                ? JSON.stringify(data.financial_statements)
+                : ""
+              : "",
+            billing_address: data.billing_address ?? "",
+            shipping_address: data.shipping_address ?? "",
+            ap_contact_name: typeof data.ap_contact_name === "string"
+              ? data.ap_contact_name
+              : data.ap_contact_name
+              ? String(data.ap_contact_name)
+              : "",
+            ap_contact_email: data.ap_contact_email ?? "",
+            buyer_name: data.buyer_name ?? "",
+            buyer_email: data.buyer_email ?? "",
+            status: data.status,
+            created_at: data.created_at,
+            wholesale_feedback: "wholesale_feedback" in data
+              ? typeof data.wholesale_feedback === "string"
+                ? data.wholesale_feedback
+                : data.wholesale_feedback
+                ? JSON.stringify(data.wholesale_feedback)
+                : ""
+              : "",
+            credit_feedback: "credit_feedback" in data
+              ? typeof data.credit_feedback === "string"
+                ? data.credit_feedback
+                : data.credit_feedback
+                ? JSON.stringify(data.credit_feedback)
+                : ""
+              : "",
+          };
+          setCustomerForm(customerFormData);
           // Initialize editable DUNS state with fetched data
-          setEditedDuns(data.duns_number || "");
+          setEditedDuns(customerFormData.duns_number || "");
         }
       } catch (err) {
         console.error("Erro ao buscar detalhes do cliente:", err);
@@ -189,7 +256,7 @@ export default function ValidationDetailsPage() {
       let statusUpdated = false;
 
       if (customerForm?.status === "approved by the credit team") {
-        await api.validateCSCFinalCustomer(id, approved, feedback); // Etapa 6
+        await api.validateCSCFinalCustomer(id, approved); // Etapa 6
         statusUpdated = true;
       } else {
         await api.validateCSCInitialCustomer(id, approved, feedback); // Etapa 2
@@ -355,6 +422,8 @@ export default function ValidationDetailsPage() {
       setShowModal(true);
     }
   };
+
+
 
   return (
     <S.ContainerMain>
@@ -728,7 +797,7 @@ export default function ValidationDetailsPage() {
 {customerForm.status !== "finished" && (
   <S.ButtonContainer>
     {customerForm.status === "approved by the CSC team" ? (
-      <S.Button onClick={handleFinish} variant="primary">
+      <S.Button variant="primary">
         Finish
       </S.Button>
     ) : (

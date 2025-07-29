@@ -135,7 +135,7 @@ interface FormStatusData {
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {
   const { data, error } = await supabase
     .from("customer_forms")
-    .select("status")
+    .select("status, csc_feedback")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1);

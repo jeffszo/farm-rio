@@ -186,7 +186,7 @@ export default function ValidationDetailsPage() {
                   return Array.isArray(parsed) ? parsed : [parsed];
               } catch (e) {
                   console.error("Error parsing address string JSON:", e);
-                  return [];
+                  return [] as AddressDetail[];
               }
           }
           if (Array.isArray(addrData)) {
@@ -196,7 +196,7 @@ export default function ValidationDetailsPage() {
                           return JSON.parse(item);
                       } catch (e) {
                           console.error("Error parsing address item in array:", e);
-                          return {};
+                          return {} as AddressDetail;
                       }
                   }
                   return item;
@@ -211,29 +211,72 @@ export default function ValidationDetailsPage() {
           sales_tax_id: data.sales_tax_id ?? "",
           duns_number: data.duns_number ?? "",
           dba_number: data.dba_number ?? "",
-          financial_statements: data.financial_statements ?? "",
+          financial_statements: "financial_statements" in data
+            ? typeof data.financial_statements === "string"
+              ? data.financial_statements
+              : data.financial_statements
+                ? JSON.stringify(data.financial_statements)
+                : ""
+            : "",
           resale_certificate: data.resale_certificate ?? "",
           billing_address: processAddressArray(data.billing_address),
           shipping_address: processAddressArray(data.shipping_address),
           ap_contact_name: data.ap_contact_name ?? "",
           ap_contact_email: data.ap_contact_email ?? "",
-          estimated_purchase_amount: data.estimated_purchase_amount ?? "",
-          photo_urls: data.photo_urls ?? [],
-          instagram: data.instagram ?? "",
-          website: data.website ?? "",
-          branding_mix: data.branding_mix ?? "",
-          buyer_name: data.buyer_name ?? "",
+          estimated_purchase_amount: "estimated_purchase_amount" in data
+            ? typeof data.estimated_purchase_amount === "string"
+              ? data.estimated_purchase_amount
+              : data.estimated_purchase_amount
+                ? JSON.stringify(data.estimated_purchase_amount)
+                : ""
+            : "",
+          photo_urls: (() => {
+            if (!("photo_urls" in data)) return [];
+            const value = data.photo_urls;
+            if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
+            if (typeof value === "string") {
+              try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed)
+                  ? parsed.filter((v) => typeof v === "string")
+                  : [];
+              } catch {
+                return [];
+              }
+            }
+            return [];
+          })(),
+          instagram: "instagram" in data
+            ? typeof data.instagram === "string"
+              ? data.instagram
+              : ""
+            : "",
+          website: "website" in data
+            ? typeof data.website === "string"
+              ? data.website
+              : data.website
+                ? JSON.stringify(data.website)
+                : ""
+            : "",
+          branding_mix: "branding_mix" in data
+            ? typeof data.branding_mix === "string"
+              ? data.branding_mix
+              : data.branding_mix
+                ? JSON.stringify(data.branding_mix)
+                : ""
+            : "",
+          buyer_name: typeof data.buyer_name === "string" ? data.buyer_name : "",
           buyer_email: data.buyer_email ?? "",
           status: data.status ?? "",
           created_at: data.created_at ?? "",
           atacado_invoicing_company: data.credit_invoicing_company ?? "",
-          atacado_warehouse: data.atacado_warehouse ?? "",
-          atacado_currency: data.atacado_currency ?? "",
-          atacado_terms: data.atacado_terms ?? "",
-          atacado_credit: data.atacado_credit ?? 0,
-          atacado_discount: data.atacado_discount ?? 0,
-          terms: data.terms ?? "",
-          currency: data.currency ?? "",
+          atacado_warehouse: data.wholesale_warehouse ?? "",
+          atacado_currency: data.wholesale_currency ?? "",
+          atacado_terms: data.wholesale_terms ?? "",
+          atacado_credit: data.wholesale_credit ?? 0,
+          atacado_discount: data.credit_discount ?? 0,
+          terms: data.wholesale_terms ?? "",
+          currency: data.wholesale_currency ?? "",
         };
 
         setCustomerForm(processedData);
@@ -242,18 +285,18 @@ export default function ValidationDetailsPage() {
 
         const fetchedTerms: WholesaleTerms = {
           wholesale_invoicing_company: data.credit_invoicing_company || "",
-          wholesale_warehouse: data.atacado_warehouse || "",
-          wholesale_currency: data.currency || "",
-          wholesale_terms: data.terms || "",
-          // CORREÇÃO: Inicializa wholesale_credit com estimated_purchase_amount
-          wholesale_credit: Number(data.estimated_purchase_amount) || data.atacado_credit || 0,
-          wholesale_discount: data.atacado_discount || 0,
-          wholesale_feedback: data.wholesale_feedback || "", // Initialize feedback for wholesale
+          wholesale_warehouse: data.wholesale_warehouse || "",
+          wholesale_currency: data.wholesale_currency || "",
+          wholesale_terms: data.wholesale_terms || "",
+          // CORREÇÃO: Inicializa wholesale_credit com atacado_credit
+          wholesale_credit: Number(data.wholesale_credit) || 0,
+          wholesale_discount: data.credit_discount || 0,
+          wholesale_feedback: "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
         setInitialTerms(fetchedTerms); // Define initialTerms here
 
-        setFeedback(data.wholesale_feedback || ""); // Initialize the feedback state for the textarea
+        setFeedback(""); // Initialize the feedback state for the textarea
 
       } catch (err) {
         console.error("Error fetching customer details:", err);
@@ -274,7 +317,7 @@ export default function ValidationDetailsPage() {
         // Replace 'userId' with the actual user ID value available in your context
         const userId = typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
         if (!userId) return;
-        const currentUser = await api.getCurrentUser(userId);
+        const currentUser = await api.getCurrentUser();
         if (!currentUser) return;
       } catch (err) {
         console.error("Error getting user:", err);

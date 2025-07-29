@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter, useParams } from "next/navigation"
 import * as S from "../../customer/styles"
-import type { IFormInputs } from "../../../types/form"
+import type { IFormInputs, AddressInput } from "../../../types/form"
 import { api } from "../../../lib/supabase/index"
 import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react"
 
@@ -31,7 +31,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Estado para "Same as Billing"
+  const [, setIsSameAsBilling] = useState(false); // Estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const params = useParams();
@@ -61,14 +61,20 @@ const customerId = typeof params?.id === "string" ? params.id : "";
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{} as unknown],
-      shippingAddress: [{} as unknown],
+      billingAddress: [{}],
+      shippingAddress: [{}],
       // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
-        terms: "", // Valor vazio para a opção "Select terms"
-        currency: "", // Valor vazio para a opção "Select currency"
-        // ... outros campos de buyerInfo
-      } as unknown, // Adicione 'as unknown' temporariamente se IFormInputs ainda não refletir os defaults
+        firstName: "",
+        lastName: "",
+        email: "",
+        countryCode: "",
+        buyerNumber: "",
+        terms: "",
+        currency: "",
+        estimatedPurchaseAmount: undefined,
+        financialStatements: undefined,
+      },
     },
   });
 
@@ -103,7 +109,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
 useEffect(() => {
   const fetchUser = async () => {
     setIsLoading(true); // Garanta que isLoading é true enquanto busca
-    const currentUser = await api.getCurrentUser();
+    const currentUser = await api.getCurrentUserClient();
     console.log("currentUser fetched:", currentUser); // <--- ADICIONE ESTE LOG
     setUser(currentUser);
     setIsLoading(false);
@@ -112,6 +118,7 @@ useEffect(() => {
 }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // É importante usar event.target.files aqui, pois event.files não existe.
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
@@ -374,7 +381,7 @@ useEffect(() => {
     }
 
     
-    const isValid = await trigger(fieldsToValidate);
+    const isValid = await trigger(fieldsToValidate as Parameters<typeof trigger>[0]);
 
     // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
     if (currentStep === 4) {
@@ -408,7 +415,8 @@ useEffect(() => {
     setshippingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`shippingAddress.${indexToRemove}`, {} as unknown);
+    setValue(`shippingAddress.${indexToRemove}`, {} as AddressInput);
+    
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
@@ -416,7 +424,7 @@ useEffect(() => {
     setbillingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`billingAddress.${indexToRemove}`, {} as unknown);
+    setValue(`billingAddress.${indexToRemove}`, {} as AddressInput);
   };
 
   const handleSameAsBilling = () => {
@@ -446,7 +454,6 @@ useEffect(() => {
     } else {
       console.warn("Endereço de cobrança não encontrado para copiar.");
     }
-    isSameAsBilling("");
     setIsSameAsBilling(true);
   };
 
@@ -497,10 +504,10 @@ useEffect(() => {
           : data.shipping_address || [];
 
           setValue("billingAddress", parsedBilling);
-setbillingAddress(parsedBilling.map((_, i) => i));
+          setbillingAddress(parsedBilling.map((_: AddressInput, i: number) => i));
 
-setValue("shippingAddress", parsedShipping);
-setshippingAddress(parsedShipping.map((_, i) => i));
+          setValue("shippingAddress", parsedShipping);
+          setshippingAddress(parsedShipping.map((_: AddressInput, i: number) => i));
 
     } catch (err) {
       console.error("Erro ao popular dados:", err);
@@ -514,7 +521,6 @@ setshippingAddress(parsedShipping.map((_, i) => i));
     return <p>Loading...</p>;
   }
 
-  if (error) return <p>Error: {error}</p>;
 
   return (
     <S.ContainerMain>
@@ -601,125 +607,127 @@ setshippingAddress(parsedShipping.map((_, i) => i));
                   )}
                 </S.InputGroup>
 
-                <S.InputGroup>
-                  <S.Label htmlFor="instagram">Instagram</S.Label>
-                  <S.Input
-                    id="instagram"
-                    type="url"
-                    placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram" as unknown, {
-                      pattern: {
-                        value:
-                          /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
-                        message: "Please enter a valid Instagram URL.",
-                      },
-                    })}
-                    error={!!(errors as unknown).instagram}
-                  />
-                  {(errors as unknown).instagram && (
-                    <S.ErrorMessage>
-                      {(errors as unknown).instagram.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+                              <S.InputGroup>
+                                <S.Label htmlFor="instagram">Instagram</S.Label>
+                                <S.Input
+                                  id="instagram"
+                                  type="url"
+                                  placeholder="https://instagram.com/yourprofile"
+                                  {...register("instagram", {
+                                    pattern: {
+                                      value:
+                                        /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
+                                      message: "Please enter a valid Instagram URL.",
+                                    },
+                                  })}
+                                  error={!!(errors as typeof errors).instagram}
+                                />
+                                {errors.instagram && (
+                                  <S.ErrorMessage>
+                                    {errors.instagram.message}
+                                  </S.ErrorMessage>
+                                )}
+                              </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="website">Website</S.Label>
-                  <S.Input
-                    id="website"
-                    type="url"
-                    placeholder="https://yourwebsite.com"
-                    {...register("website" as unknown, {
-                      pattern: {
-                        value:
-                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-                        message: "Please enter a valid Website URL.",
-                      },
-                    })}
-                    error={!!(errors as unknown).website}
-                  />
-                  {(errors as unknown).website && (
-                    <S.ErrorMessage>
-                      {(errors as unknown).website.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.InputGroup>
-
+                                  <S.Label htmlFor="website">Website</S.Label>
+                                  <S.Input
+                                    id="website"
+                                    type="url"
+                                    placeholder="https://yourwebsite.com"
+                                    {...register("website", {
+                                      pattern: {
+                                        value:
+                                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                                        message: "Please enter a valid Website URL.",
+                                      },
+                                    })}
+                                    error={!!errors.website}
+                                  />
+                                  {errors.website && (
+                                    <S.ErrorMessage>
+                                      {errors.website.message}
+                                    </S.ErrorMessage>
+                                  )}
+                                </S.InputGroup>
                 <S.FileInputContainer>
-                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-                  <S.HiddenInput
-                    id="file-upload"
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                  />
-                  <S.UploadButton htmlFor="file-upload">
-                    <Upload size={16} />
-                    {file ? file.name : "Attach file (PDF)"}
-                  </S.UploadButton>
-                  {errors.customerInfo?.resaleCertificate && (
-                    <S.ErrorMessage>
-                      {errors.customerInfo.resaleCertificate.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.FileInputContainer>
-                <S.FileInputContainer>
-                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
-                        <S.HiddenInput
-                          id="image-upload"
-                          type="file"  // Remova o espaço extra aqui
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageChange}
-                        />
-                  <S.UploadButton htmlFor="image-upload">
-                    <Upload size={16} />
-                    {imageFiles.length > 0
-                      ? `${imageFiles.length} file(s) selected`
-                      : "Attach image files"}
-                  </S.UploadButton>
-                  {imageFiles.length > 0 && (
-                    <S.FilePreviewContainer>
-                      {imageFiles.map((img, idx) => (
-                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
-                      ))}
-                    </S.FilePreviewContainer>
-                  )}
-                </S.FileInputContainer>
+                                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+                                  <S.HiddenInput
+                                    id="file-upload"
+                                    type="file"
+                                    accept="application/pdf"
+                                    onChange={handleFileChange}
+                                  />
+                                  <S.UploadButton htmlFor="file-upload">
+                                    <Upload size={16} />
+                                    {file ? file.name : "Attach file (PDF)"}
+                                  </S.UploadButton>
+                                  {/* No error message for resaleCertificate since it's not a form field */}
+                                </S.FileInputContainer>
+                                <S.FileInputContainer>
+                                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+                                        <S.HiddenInput
+                                          id="image-upload"
+                                          type="file"
+                                          accept="image/*"
+                                          multiple
+                                          onChange={handleImageChange}
+                                        />
+                                  <S.UploadButton htmlFor="image-upload">
+                                    <Upload size={16} />
+                                    {imageFiles.length > 0
+                                      ? `${imageFiles.length} file(s) selected`
+                                      : "Attach image files"}
+                                  </S.UploadButton>
+                                  {imageFiles.length > 0 && (
+                                    <S.FilePreviewContainer>
+                                      {imageFiles.map((img, idx) => (
+                                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
+                                      ))}
+                                    </S.FilePreviewContainer>
+                                  )}
+                                </S.FileInputContainer>
 
                 <S.InputGroup >
-                  <div style={{
-                      display: "flex",
-                      alignItems:"center",
-                      
-                    }}>
-                  <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
-                  <S.InfoButton
-                    style={{textAlign:"center"}}
-                    type="button"
-                    title="list all the brands you work with (separate the brands by comma"
-                  >
-                    <Info size={16} />
-                  </S.InfoButton>
-                  </div>
-                  <S.Input
-                    style={{
-                      width:"500px",
-                      height: "200px",
-                      paddingBottom:"170px",
-                    }}
-                    id="brandingMix"
-                    {...register("brandingMix" as unknown, {
-                      required: "Brand/Branding Mix is required",
-                    })}
-                    error={!!(errors as unknown).brandingMix}
-                  />
-                  {(errors as unknown).brandingMix && (
-                    <S.ErrorMessage>
-                      {(errors as unknown).brandingMix.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+                                  <div style={{
+                                      display: "flex",
+                                      alignItems:"center",
+                                      
+                                    }}>
+                                  <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
+                                  <S.InfoButton
+                                   type="button"
+                                    title="list all the brands you work with (separate the brands by comma"
+                                    style={{
+                                      display: "flex",
+                                      // alignItems:"center",
+                                      // justifyContent: "center",
+                
+                                    }}
+                
+                                  >
+                                    <Info size={16} />
+                                  </S.InfoButton>
+                                  </div>
+                                  <S.Input
+                                    style={{
+                                      width:"562px",
+                                      height: "200px",
+                                      paddingBottom:"170px",
+                
+                                    }}
+                                    id="brandingMix"
+                                    {...register("brandingMix", {
+                                      required: "Brand/Branding Mix is required",
+                                    })}
+                                    error={!!errors.brandingMix}
+                                  />
+                                  {errors.brandingMix && (
+                                    <S.ErrorMessage>
+                                      {errors.brandingMix.message}
+                                    </S.ErrorMessage>
+                                  )}
+                                </S.InputGroup>
               </S.Grid>
             </S.Section>
           )}

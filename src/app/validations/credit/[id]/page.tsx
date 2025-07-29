@@ -247,6 +247,33 @@ export default function ValidationDetailsPage() {
           // Apply the processing function for billing_address and shipping_address
           billing_address: processAddressArray(data.billing_address),
           shipping_address: processAddressArray(data.shipping_address),
+          financial_statements: "financial_statements" in data ? String(data.financial_statements) : "",
+          photo_urls: (() => {
+            if ("photo_urls" in data) {
+              if (Array.isArray(data.photo_urls)) {
+                return data.photo_urls as string[];
+              }
+              if (typeof data.photo_urls === "string") {
+                try {
+                  const parsed = JSON.parse(data.photo_urls);
+                  return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                  return [];
+                }
+              }
+            }
+            return [];
+          })(),
+          instagram: "instagram" in data ? (typeof data.instagram === "string" ? data.instagram : "") : "",
+          website: "website" in data ? String(data.website) : "",
+          branding_mix: "branding_mix" in data
+            ? typeof data.branding_mix === "string"
+              ? data.branding_mix
+              : data.branding_mix
+                ? JSON.stringify(data.branding_mix)
+                : ""
+            : "",
+          tax_feedback: "tax_feedback" in data ? (typeof data.tax_feedback === "string" ? data.tax_feedback : JSON.stringify(data.tax_feedback ?? "")) : "",
         };
 
         setCustomerForm(processedData);
@@ -270,7 +297,7 @@ export default function ValidationDetailsPage() {
 
     const fetchUser = async () => {
       try {
-        const currentUser = await api.getCurrentUser();
+        const currentUser = await api.getCurrentUserClient();
         if (!currentUser) return;
         // setUser({ email: currentUser.email, role: currentUser.userType });
       } catch (err) {

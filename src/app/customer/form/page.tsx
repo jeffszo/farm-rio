@@ -746,9 +746,9 @@ export default function OnboardingForm() {
                     })}
                     error={!!(errors as typeof errors).instagram}
                   />
-                  {(errors as Record<string, any>).instagram && (
+                  {errors.instagram && (
                     <S.ErrorMessage>
-                      {(errors as Record<string, any>).instagram.message}
+                      {errors.instagram.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -787,11 +787,7 @@ export default function OnboardingForm() {
                     <Upload size={16} />
                     {file ? file.name : "Attach file (PDF)"}
                   </S.UploadButton>
-                  {errors.customerInfo?.resaleCertificate && (
-                    <S.ErrorMessage>
-                      {errors.customerInfo.resaleCertificate.message}
-                    </S.ErrorMessage>
-                  )}
+                  {/* No error message for resaleCertificate since it's not a form field */}
                 </S.FileInputContainer>
                 <S.FileInputContainer>
                         <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
@@ -846,14 +842,14 @@ export default function OnboardingForm() {
 
                     }}
                     id="brandingMix"
-                    {...register("brandingMix" as unknown, {
+                    {...register("brandingMix", {
                       required: "Brand/Branding Mix is required",
                     })}
-                    error={!!(errors as unknown).brandingMix}
+                    error={!!errors.brandingMix}
                   />
-                  {(errors as unknown).brandingMix && (
+                  {errors.brandingMix && (
                     <S.ErrorMessage>
-                      {(errors as unknown).brandingMix.message}
+                      {errors.brandingMix.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>

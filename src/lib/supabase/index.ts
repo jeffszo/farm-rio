@@ -4,15 +4,28 @@ import * as validations from "./validations"
 import * as queries from "./queries"
 import * as storage from "./storage"
 import { supabase } from "./client"
-import type { AuthAPI } from "../../types/api"
+import type { AuthAPI, User } from "../../types/api"
 
 // Create a class that implements the AuthAPI interface
 class SupabaseAPI implements AuthAPI {
+  // Implementation for getCurrentUser
+  async getCurrentUser(): Promise<User | null> {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) return null
+    // Map supabase user to your User type if needed
+    return {
+      id: data.user.id,
+      email: data.user.email ?? "",
+      name: data.user.user_metadata?.name ?? "",
+      userType: data.user.user_metadata?.userType ?? "",
+      // Add other fields as needed
+    }
+  }
+
   // Auth methods
   signUp = auth.signUp
   signIn = auth.signIn
   signOut = auth.signOut
-  getCurrentUser = auth.getCurrentUser
   getCurrentUserClient = auth.getCurrentUserClient
 
   // Form methods
@@ -38,10 +51,8 @@ class SupabaseAPI implements AuthAPI {
   getCustomerValidationDetails = queries.getCustomerValidationDetails
   getPendingTaxValidations = queries.getPendingTaxValidations
   getPendingCSCValidations = queries.getPendingCSCValidations
-  getCustomerFormById  = queries.getCustomerFormById 
+  // getCustomerFormById  = queries.getCustomerFormById 
   resetFormStatus = queries.resetFormStatus
-  
-  
 
   uploadResaleCertificate = storage.uploadResaleCertificate
   uploadImage = storage.uploadImage
