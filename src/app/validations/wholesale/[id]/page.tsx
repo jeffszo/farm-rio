@@ -173,7 +173,7 @@ export default function ValidationDetailsPage() {
     const fetchCustomerDetails = async () => {
       try {
         setLoading(true);
-        const data = await api.getCustomerFormById(id as string);
+        const data = await api.getCustomerValidationDetails(id as string);
         console.log("ID received:", id);
         console.log("RAW form data (before processing):", data);
 

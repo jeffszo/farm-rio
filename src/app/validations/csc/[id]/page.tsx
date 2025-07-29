@@ -128,7 +128,7 @@ export default function ValidationDetailsPage() {
         setLoading(true);
         // Ensure id is a string before passing to API
         if (typeof id === "string") {
-          const data = await api.getCustomerFormById(id);
+          const data = await api.getCustomerValidationDetails(id);
           if (!data) throw new Error("Formulário não encontrado.");
           setCustomerForm(data);
           // Initialize editable DUNS state with fetched data

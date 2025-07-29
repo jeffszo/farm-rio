@@ -23,8 +23,7 @@ const currencyOptions = [
   { value: "GBP", label: "GBP" },
 ];
 
-export default async function OnboardingForm() {
-  const { id: userId } = useParams();
+export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null); // Para Resale Certificate
   const [imageFiles, setImageFiles] = useState<File[]>([]); // Para Multiple Images
   const [financialStatementsFile, setFinancialStatementsFile] =
@@ -35,6 +34,7 @@ export default async function OnboardingForm() {
   const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
+  const params = useParams();
 const customerId = typeof params?.id === "string" ? params.id : "";
 
   const totalSteps = 4;
@@ -100,14 +100,16 @@ const customerId = typeof params?.id === "string" ? params.id : "";
     }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await api.getCurrentUser();
-      setUser(currentUser);
-      setIsLoading(false);
-    };
-    fetchUser();
-  }, []);
+useEffect(() => {
+  const fetchUser = async () => {
+    setIsLoading(true); // Garanta que isLoading é true enquanto busca
+    const currentUser = await api.getCurrentUser();
+    console.log("currentUser fetched:", currentUser); // <--- ADICIONE ESTE LOG
+    setUser(currentUser);
+    setIsLoading(false);
+  };
+  fetchUser();
+}, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -144,17 +146,32 @@ const customerId = typeof params?.id === "string" ? params.id : "";
   };
 
  const onSubmit = async (formData: IFormInputs) => {
+  
   console.log("Submit button clicked. Starting onSubmit function.");
   try {
     setApiError(null);
     setIsUploading(true);
     console.log("isUploading set to true.");
 
-    // 🔽 Usa diretamente o ID do usuário já carregado
-    const userId = user?.id;
+     let userIdToUse = user?.id;
 
-    console.log("Dados recebidos no formulário (formData):", formData);
+    if (!userIdToUse) {
+            // Se o ID do usuário autenticado não estiver disponível,
+            // usa o customerId da URL como fallback.
+            // ATENÇÃO: Considere as implicações de segurança mencionadas acima.
+            console.warn("Usuário não logado ou ID do usuário não disponível. Usando customerId da URL como fallback.");
+            userIdToUse = customerId; // Usa o ID capturado da URL
+        }
 
+        // Se mesmo com o fallback o ID ainda for nulo, então exibe o erro
+        if (!userIdToUse) {
+            setApiError("Erro: ID do usuário ou do formulário não disponível. Por favor, tente novamente.");
+            setIsUploading(false);
+            console.error("Erro: ID do usuário ou do formulário não disponível.");
+            return; // Impede a continuação
+        }
+
+        console.log("ID do usuário a ser usado para o payload:", userIdToUse);
     const termsSelected = formData.buyerInfo?.terms;
 
     if (
@@ -186,11 +203,10 @@ const customerId = typeof params?.id === "string" ? params.id : "";
 }
 
 
-
     let fileUrl: string | null = null;
     if (file) {
       try {
-        fileUrl = await api.uploadResaleCertificate(file, userId);
+        fileUrl = await api.uploadResaleCertificate(file, userIdToUse );
       } catch (error) {
         setApiError("Erro ao enviar o Resale Certificate.");
         setIsUploading(false);
@@ -202,7 +218,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
     if (imageFiles.length > 0) {
       for (const imageFile of imageFiles) {
         try {
-          const imageUrl = await api.uploadImage(imageFile, userId);
+          const imageUrl = await api.uploadImage(imageFile, userIdToUse );
           photoUrls.push(imageUrl);
         } catch (error) {
           setApiError("Erro ao enviar imagens.");
@@ -217,7 +233,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
       try {
         financialStatementsFileUrl = await api.uploadFinancialStatements(
           financialStatementsFile,
-          userId
+          userIdToUse 
         );
       } catch (error) {
         setApiError("Erro ao enviar Financial Statements.");
@@ -234,7 +250,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
         : formData.buyerInfo?.currency;
 
     const payload = {
-      user_id: userId,
+      user_id: userIdToUse,
       customer_name: formData.customerInfo?.legalName || null,
       sales_tax_id: formData.customerInfo?.taxId || null,
       duns_number: formData.customerInfo?.dunNumber || null,
@@ -264,7 +280,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
       financial_statements: financialStatementsFileUrl,
     };
 
-    await api.submitForm(payload, userId);
+    await api.submitForm(payload, userIdToUse);
     setIsModalOpen(true);
   } catch (error: unknown) {
     console.error("Erro ao enviar formulário:", error);
@@ -513,7 +529,11 @@ setshippingAddress(parsedShipping.map((_, i) => i));
           <S.ProgressFill progress={(currentStep / totalSteps) * 100} />
         </S.ProgressBar>
 
-        <form onSubmit={hookFormSubmit(onSubmit)}>
+        <form onSubmit={hookFormSubmit(onSubmit)}  onKeyDown={(e) => {
+    if (currentStep === 4 && e.key === "Enter") {
+      e.preventDefault();
+    }
+  }}>
           {currentStep === 1 && (
             <S.Section>
               <S.SectionTitle>Customer Information</S.SectionTitle>
@@ -1344,22 +1364,34 @@ setshippingAddress(parsedShipping.map((_, i) => i));
             </S.Section>
           )}
 
-          <S.ButtonGroup>
-            {currentStep > 1 && (
-              <S.Button type="button" onClick={prevStep} variant="secondary">
-                <ChevronLeft size={16} /> Previous
-              </S.Button>
-            )}
-            {currentStep < totalSteps ? (
-              <S.Button type="button" onClick={nextStep} variant="primary">
-                Next <ChevronRight size={16} />
-              </S.Button>
-            ) : (
-              <S.Button type="submit" variant="primary" disabled={isUploading}>
-                {isUploading ? "Submitting..." : "Submit"}
-              </S.Button>
-            )}
-          </S.ButtonGroup>
+         <S.ButtonGroup>
+  {currentStep > 1 && (
+    <S.Button type="button" onClick={prevStep} variant="secondary">
+      <ChevronLeft size={16} /> Previous
+    </S.Button>
+  )}
+
+  {/* Botão Next visível apenas se currentStep < totalSteps */}
+  <S.Button
+    type="button"
+    onClick={nextStep}
+    variant="primary"
+    style={{ display: currentStep < totalSteps ? "inline-flex" : "none" }}
+  >
+    Next <ChevronRight size={16} />
+  </S.Button>
+
+  {/* Botão Submit visível apenas na última etapa */}
+  <S.Button
+    type="submit"
+    variant="primary"
+    disabled={isUploading || isLoading}
+    style={{ display: currentStep === totalSteps ? "inline-flex" : "none" }}
+  >
+    {isUploading ? "Submitting..." : "Submit"}
+  </S.Button>
+</S.ButtonGroup>
+
         </form>
       </S.FormContainer>
 

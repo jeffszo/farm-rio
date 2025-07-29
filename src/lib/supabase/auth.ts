@@ -62,29 +62,54 @@ export async function signOut(): Promise<void> {
   if (error) throw new Error(`Erro ao sair: ${error.message}`)
 }
 
-export async function getCurrentUser(): Promise<User | null> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError || !sessionData.session || !sessionData.session.user) return null
+// No arquivo: ../../../lib/supabase/index.ts (ou onde a função está)
 
-  const user = sessionData.session.user
+export async function getCurrentUser(userId: string): Promise<User | null> {
+  console.log("Iniciando getCurrentUser() para Time de Validação com ID:", userId); // Log 1
 
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single()
+  try {
+    // 1. Verificação básica do ID
+    if (!userId) {
+      console.log("ID de usuário não fornecido para getCurrentUser.");
+      return null;
+    }
 
-  if (userError) {
-    console.error("Erro ao buscar tipo de usuário:", userError)
-    return null
-  }
+    // 2. Buscar o usuário diretamente na tabela 'users'
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id, name, email, role") // Seleciona todas as colunas necessárias para o tipo User
+      .eq("id", userId)
+      .single();
 
-  return {
-    id: user.id,
-    name: user.user_metadata?.name || "Usuário",
-    email: user.email!,
-    userType: userData?.role || "cliente",
+    if (userError) {
+      console.error(`Erro ao buscar usuário ${userId} na tabela 'users':`, userError); // Log 4
+      return null;
+    }
+
+    if (!userData) {
+      console.log(`Nenhum usuário encontrado na tabela 'users' com o ID: ${userId}`);
+      return null;
+    }
+
+    console.log("Dados do usuário da tabela 'users':", userData); // Log 5
+
+    // 3. Validar se o usuário encontrado é de fato um 'validador' ou 'admin'
+    // Esta é uma camada adicional de segurança/filtro.
+    const allowedRoles = ['validador', 'admin']; // Defina quais roles são considerados "Times de Validação"
+    if (!allowedRoles.includes(userData.role)) {
+      console.log(`Usuário ${userId} encontrado, mas seu tipo ('${userData.role}') não é um tipo de validador/admin permitido.`);
+      return null; // Não retorne se não for o tipo de usuário esperado para este fluxo
+    }
+
+    // 4. Retornar o objeto User formatado
+    return {
+      id: userData.id,
+      name: userData.name || "Validador", // Assumindo 'name' está na sua tabela 'users'
+      email: userData.email || "email@example.com", // Assumindo 'email' está na sua tabela 'users'
+      userType: userData.role, // Agora 'userType' será diretamente o 'role' da tabela
+    };
+  } catch (outerError) {
+    console.error("Erro inesperado em getCurrentUser():", outerError); // Log para erros gerais
+    return null;
   }
 }
-
-

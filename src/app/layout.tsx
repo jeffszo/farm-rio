@@ -1,7 +1,7 @@
 import { Nunito_Sans } from "next/font/google";
-import ClientLayout from "@/components/ClientWrapper"; 
+import ClientLayout from "@/components/ClientWrapper";
 import HeaderValidations from "@/components/HeaderValidations";
-
+// import { SupabaseProvider } from '@/supabase/supabase-provider';
 
 const nunitoSans = Nunito_Sans({
   variable: "--font-nunito-sans",
@@ -16,12 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={nunitoSans.variable}>
-      <HeaderValidations/>
+        <HeaderValidations />
         <ClientLayout>
-          {/* <AuthProvider> */}
+          {/* <SupabaseProvider> */}
             {children}
-          {/* </AuthProvider> */}
-          </ClientLayout>
+          {/* </SupabaseProvider> */}
+        </ClientLayout>
       </body>
     </html>
   );

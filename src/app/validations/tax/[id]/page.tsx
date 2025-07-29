@@ -63,7 +63,7 @@ export default function TaxValidationDetailsPage() {
       try {
         setLoading(true);
         if (typeof id === "string") {
-          const data = await api.getCustomerFormById(id); // Ensure this function fetches all relevant data
+          const data = await api.getCustomerValidationDetails(id); // Ensure this function fetches all relevant data
           if (!data) throw new Error("Form not found.");
           setCustomerForm(data);
           // setFeedback(data.csc_initial_feedback || "");// Initialize feedback with existing notes if any
