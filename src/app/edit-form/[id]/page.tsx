@@ -61,14 +61,14 @@ const customerId = typeof params?.id === "string" ? params.id : "";
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{} as any],
-      shippingAddress: [{} as any],
+      billingAddress: [{} as unknown],
+      shippingAddress: [{} as unknown],
       // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
         terms: "", // Valor vazio para a opção "Select terms"
         currency: "", // Valor vazio para a opção "Select currency"
         // ... outros campos de buyerInfo
-      } as any, // Adicione 'as any' temporariamente se IFormInputs ainda não refletir os defaults
+      } as unknown, // Adicione 'as unknown' temporariamente se IFormInputs ainda não refletir os defaults
     },
   });
 
@@ -408,7 +408,7 @@ useEffect(() => {
     setshippingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`shippingAddress.${indexToRemove}`, {} as any);
+    setValue(`shippingAddress.${indexToRemove}`, {} as unknown);
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
@@ -416,7 +416,7 @@ useEffect(() => {
     setbillingAddress((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
-    setValue(`billingAddress.${indexToRemove}`, {} as any);
+    setValue(`billingAddress.${indexToRemove}`, {} as unknown);
   };
 
   const handleSameAsBilling = () => {
@@ -604,18 +604,18 @@ setshippingAddress(parsedShipping.map((_, i) => i));
                     id="instagram"
                     type="url"
                     placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram" as any, {
+                    {...register("instagram" as unknown, {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
                         message: "Please enter a valid Instagram URL.",
                       },
                     })}
-                    error={!!(errors as any).instagram}
+                    error={!!(errors as unknown).instagram}
                   />
-                  {(errors as any).instagram && (
+                  {(errors as unknown).instagram && (
                     <S.ErrorMessage>
-                      {(errors as any).instagram.message}
+                      {(errors as unknown).instagram.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -626,18 +626,18 @@ setshippingAddress(parsedShipping.map((_, i) => i));
                     id="website"
                     type="url"
                     placeholder="https://yourwebsite.com"
-                    {...register("website" as any, {
+                    {...register("website" as unknown, {
                       pattern: {
                         value:
                           /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
                         message: "Please enter a valid Website URL.",
                       },
                     })}
-                    error={!!(errors as any).website}
+                    error={!!(errors as unknown).website}
                   />
-                  {(errors as any).website && (
+                  {(errors as unknown).website && (
                     <S.ErrorMessage>
-                      {(errors as any).website.message}
+                      {(errors as unknown).website.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
@@ -706,14 +706,14 @@ setshippingAddress(parsedShipping.map((_, i) => i));
                       paddingBottom:"170px",
                     }}
                     id="brandingMix"
-                    {...register("brandingMix" as any, {
+                    {...register("brandingMix" as unknown, {
                       required: "Brand/Branding Mix is required",
                     })}
-                    error={!!(errors as any).brandingMix}
+                    error={!!(errors as unknown).brandingMix}
                   />
-                  {(errors as any).brandingMix && (
+                  {(errors as unknown).brandingMix && (
                     <S.ErrorMessage>
-                      {(errors as any).brandingMix.message}
+                      {(errors as unknown).brandingMix.message}
                     </S.ErrorMessage>
                   )}
                 </S.InputGroup>
