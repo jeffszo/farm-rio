@@ -31,7 +31,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
- const [_, setIsSameAsBilling] = useState(false); // O linter ignorará '_'// Novo estado para "Same as Billing"
+  const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const params = useParams();
@@ -207,7 +207,7 @@ useEffect(() => {
     if (file) {
       try {
         fileUrl = await api.uploadResaleCertificate(file, userIdToUse );
-      } catch (error) {
+      } catch {
         setApiError("Erro ao enviar o Resale Certificate.");
         setIsUploading(false);
         return;
@@ -220,7 +220,7 @@ useEffect(() => {
         try {
           const imageUrl = await api.uploadImage(imageFile, userIdToUse );
           photoUrls.push(imageUrl);
-        } catch (error) {
+        } catch {
           setApiError("Erro ao enviar imagens.");
           setIsUploading(false);
           return;
@@ -235,7 +235,7 @@ useEffect(() => {
           financialStatementsFile,
           userIdToUse 
         );
-      } catch (error) {
+      } catch {
         setApiError("Erro ao enviar Financial Statements.");
         setIsUploading(false);
         return;
@@ -373,7 +373,7 @@ useEffect(() => {
       }
     }
 
-    // @ts-expect-error
+    
     const isValid = await trigger(fieldsToValidate);
 
     // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
