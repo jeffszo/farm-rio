@@ -251,6 +251,7 @@ export default function ValidationDetailsPage() {
           wholesale_feedback: data.wholesale_feedback || "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
+        initialTerms("");
         setInitialTerms(fetchedTerms); // Define initialTerms here
 
         setFeedback(data.wholesale_feedback || ""); // Initialize the feedback state for the textarea
