@@ -429,33 +429,33 @@ export default function ValidationDetailsPage() {
       console.log("Validation completed successfully");
 
       // --- NOVA ADIÇÃO: Enviar e-mail após a validação de Crédito ---
-      if (customerForm) {
-        try {
-          const emailResponse = await fetch("/api/send-credit-validation-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              customerId: id,
-              customerName: customerForm.customer_name,
-              customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
-              validationStatus: approved,
-              feedback: feedback, // Passa o feedback do textarea
-              currentStatus: customerForm.status,
-            }),
-          });
+      // if (customerForm) {
+      //   try {
+      //     const emailResponse = await fetch("/api/send-credit-validation-email", {
+      //       method: "POST",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //       body: JSON.stringify({
+      //         customerId: id,
+      //         customerName: customerForm.customer_name,
+      //         customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
+      //         validationStatus: approved,
+      //         feedback: feedback, // Passa o feedback do textarea
+      //         currentStatus: customerForm.status,
+      //       }),
+      //     });
 
-          if (!emailResponse.ok) {
-            const errorData = await emailResponse.json();
-            console.error("Falha ao enviar e-mail de validação de Crédito:", errorData);
-          } else {
-            console.log("E-mail de validação de Crédito enviado com sucesso.");
-          }
-        } catch (emailError) {
-          console.error("Erro ao enviar e-mail de validação de Crédito:", emailError);
-        }
-      }
+      //     if (!emailResponse.ok) {
+      //       const errorData = await emailResponse.json();
+      //       console.error("Falha ao enviar e-mail de validação de Crédito:", errorData);
+      //     } else {
+      //       console.log("E-mail de validação de Crédito enviado com sucesso.");
+      //     }
+      //   } catch (emailError) {
+      //     console.error("Erro ao enviar e-mail de validação de Crédito:", emailError);
+      //   }
+      // }
       // --- FIM DA NOVA ADIÇÃO ---
 
 
