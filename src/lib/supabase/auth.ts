@@ -113,3 +113,29 @@ export async function getCurrentUser(userId: string): Promise<User | null> {
     return null;
   }
 }
+
+
+export async function getCurrentUserClient(): Promise<User | null> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError || !sessionData.session || !sessionData.session.user) return null
+
+  const user = sessionData.session.user
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+
+  if (userError) {
+    console.error("Erro ao buscar tipo de usuário:", userError)
+    return null
+  }
+
+  return {
+    id: user.id,
+    name: user.user_metadata?.name || "Usuário",
+    email: user.email!,
+    userType: userData?.role || "cliente",
+  }
+}

@@ -130,7 +130,6 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
-  const [reviewFeedback, setReviewFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -207,9 +206,34 @@ export default function ValidationDetailsPage() {
         };
 
         const processedData: CustomerForm = {
-          ...data,
+          id: data.id ?? "",
+          customer_name: data.customer_name ?? "",
+          sales_tax_id: data.sales_tax_id ?? "",
+          duns_number: data.duns_number ?? "",
+          dba_number: data.dba_number ?? "",
+          financial_statements: data.financial_statements ?? "",
+          resale_certificate: data.resale_certificate ?? "",
           billing_address: processAddressArray(data.billing_address),
           shipping_address: processAddressArray(data.shipping_address),
+          ap_contact_name: data.ap_contact_name ?? "",
+          ap_contact_email: data.ap_contact_email ?? "",
+          estimated_purchase_amount: data.estimated_purchase_amount ?? "",
+          photo_urls: data.photo_urls ?? [],
+          instagram: data.instagram ?? "",
+          website: data.website ?? "",
+          branding_mix: data.branding_mix ?? "",
+          buyer_name: data.buyer_name ?? "",
+          buyer_email: data.buyer_email ?? "",
+          status: data.status ?? "",
+          created_at: data.created_at ?? "",
+          atacado_invoicing_company: data.credit_invoicing_company ?? "",
+          atacado_warehouse: data.atacado_warehouse ?? "",
+          atacado_currency: data.atacado_currency ?? "",
+          atacado_terms: data.atacado_terms ?? "",
+          atacado_credit: data.atacado_credit ?? 0,
+          atacado_discount: data.atacado_discount ?? 0,
+          terms: data.terms ?? "",
+          currency: data.currency ?? "",
         };
 
         setCustomerForm(processedData);
@@ -217,7 +241,7 @@ export default function ValidationDetailsPage() {
         console.log("Processed Shipping Addresses (after parse):", processedData.shipping_address);
 
         const fetchedTerms: WholesaleTerms = {
-          wholesale_invoicing_company: data.atacado_invoicing_company || "",
+          wholesale_invoicing_company: data.credit_invoicing_company || "",
           wholesale_warehouse: data.atacado_warehouse || "",
           wholesale_currency: data.currency || "",
           wholesale_terms: data.terms || "",
@@ -247,7 +271,10 @@ export default function ValidationDetailsPage() {
 
     const fetchUser = async () => {
       try {
-        const currentUser = await api.getCurrentUser();
+        // Replace 'userId' with the actual user ID value available in your context
+        const userId = typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
+        if (!userId) return;
+        const currentUser = await api.getCurrentUser(userId);
         if (!currentUser) return;
       } catch (err) {
         console.error("Error getting user:", err);
@@ -416,7 +443,7 @@ export default function ValidationDetailsPage() {
     }
   };
 
-  // src/app/validations/wholesale/[id]/page.tsx
+// src/app/validations/wholesale/[id]/page.tsx
 // ...
 const handleReview = async () => {
   if (!id) {
@@ -430,14 +457,13 @@ const handleReview = async () => {
     setModalContent({
       title: "Revisando Formulário...",
       description: "Aguarde enquanto o status do formulário é atualizado para revisão do cliente.",
-      isError: false,
     });
     setShowModal(true);
 
-    console.log("Revisando formulário para edição do cliente...", { customerId: id, feedback: reviewFeedback });
+    console.log("Revisando formulário para edição do cliente...", { customerId: id });
 
     // CHAMA A FUNÇÃO DEDICADA PARA REVISÃO
-    await api.reviewCustomer(id as string, reviewFeedback.trim() === "" ? null : reviewFeedback);
+    await api.reviewCustomer(id as string, null);
 
     if (customerForm) {
       setCustomerForm({
@@ -449,25 +475,23 @@ const handleReview = async () => {
     setModalContent({
       title: "Success!",
       description: "The form has been sent for the client's review. They can edit it now.",
-      isError: false,
     });
+    setShowModal(true);
     setTimeout(() => {
       closeModal();
       router.push("/validations/wholesale"); // Redirecione para a lista de validações, por exemplo
     }, 2000);
-  } catch (err: any) {
+
+  } catch (err: unknown) {
     console.error("Erro ao enviar para revisão:", err);
     setModalContent({
       title: "Erro!",
-      description: err.message || "Ocorreu um erro ao enviar para revisão. Tente novamente.",
-      isError: true,
+      description: err instanceof Error ? err.message : "Ocorreu um erro ao enviar para revisão. Tente novamente.",
     });
     setShowModal(true);
-  } finally {
     setLoading(false); // Desativa o loading no final
   }
 };
-// ...
 
 
 
@@ -872,7 +896,7 @@ const handleReview = async () => {
     Reject
   </S.Button>
 
-  <S.Button onClick={handleReview} variant="tertiary">
+  <S.Button onClick={handleReview} variant="secondary">
     Review
   </S.Button>
 

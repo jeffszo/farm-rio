@@ -13,6 +13,7 @@ class SupabaseAPI implements AuthAPI {
   signIn = auth.signIn
   signOut = auth.signOut
   getCurrentUser = auth.getCurrentUser
+  getCurrentUserClient = auth.getCurrentUserClient
 
   // Form methods
   submitForm = forms.submitForm

@@ -84,7 +84,7 @@ export default function StatusClient({
 
         {formStatus === "approved by the credit team" && (
           <div>
-            Your form has been <strong>approved by all teams!</strong> You're good to go!
+            Your form has been <strong>approved by all teams!</strong> You&apos;re good to go!
           </div>
         )}
 

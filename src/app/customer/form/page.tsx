@@ -117,7 +117,7 @@ export default function OnboardingForm() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const currentUser = await api.getCurrentUser();
+      const currentUser = await api.getCurrentUserClient();
       setUser(currentUser);
       setIsLoading(false);
     };
@@ -250,7 +250,7 @@ export default function OnboardingForm() {
       setIsUploading(true);
       console.log("isUploading set to true.");
 
-      const currentUser = user || (await api.getCurrentUser());
+      const currentUser = user || (await api.getCurrentUserClient());
       if (!currentUser || !currentUser.id) {
         console.error("User not authenticated. Redirecting to login."); // Traduzido
         
@@ -392,30 +392,30 @@ export default function OnboardingForm() {
       console.log("Form submitted successfully via API."); // Traduzido
 
       // --- NEW: Send email after successful form submission ---
-      try {
-        const emailResponse = await fetch("/api/send-form-submission-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            recipientEmail: "your-internal-email@example.com", // Or an email from formData (e.g., buyerInfo.email)
-            recipientName: "Admin Team", // Or the user's name from formData (e.g., buyerInfo.firstName)
-            formData: payload, // Send the full payload or a subset of it
-          }),
-        });
+      // try {
+      //   const emailResponse = await fetch("/api/send-form-submission-email", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       recipientEmail: "your-internal-email@example.com", // Or an email from formData (e.g., buyerInfo.email)
+      //       recipientName: "Admin Team", // Or the user's name from formData (e.g., buyerInfo.firstName)
+      //       formData: payload, // Send the full payload or a subset of it
+      //     }),
+      //   });
 
-        if (!emailResponse.ok) {
-          const errorData = await emailResponse.json();
-          console.error("Failed to send form submission email:", errorData); // Traduzido
-          // Optionally, set an API error for email sending, but don't prevent form submission success
-        } else {
-          console.log("Form submission email sent successfully."); // Traduzido
-        }
-      } catch (emailError) {
-        console.error("Error sending form submission email:", emailError); // Traduzido
-        // Handle email sending error, but again, don't necessarily fail the form submission itself
-      }
+      //   if (!emailResponse.ok) {
+      //     const errorData = await emailResponse.json();
+      //     console.error("Failed to send form submission email:", errorData); // Traduzido
+      //     // Optionally, set an API error for email sending, but don't prevent form submission success
+      //   } else {
+      //     console.log("Form submission email sent successfully."); // Traduzido
+      //   }
+      // } catch (emailError) {
+      //   console.error("Error sending form submission email:", emailError); // Traduzido
+      //   // Handle email sending error, but again, don't necessarily fail the form submission itself
+      // }
       // --- END NEW ---
 
       setModalTitle("Success!");

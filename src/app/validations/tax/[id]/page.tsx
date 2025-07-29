@@ -47,7 +47,6 @@ export default function TaxValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
     const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
-  const [setDunsCopied] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -55,7 +54,7 @@ export default function TaxValidationDetailsPage() {
     description: "",
   });
   const [feedback, setFeedback] = useState(""); // This will be tax_notes
-  const [taxStatus, setTaxStatus] = useState<string>("approved"); // State for tax_status
+  // Removed unused taxStatus state
   const router = useRouter();
 
   useEffect(() => {
@@ -65,9 +64,41 @@ export default function TaxValidationDetailsPage() {
         if (typeof id === "string") {
           const data = await api.getCustomerValidationDetails(id); // Ensure this function fetches all relevant data
           if (!data) throw new Error("Form not found.");
-          setCustomerForm(data);
+          setCustomerForm({
+            ...data,
+            financial_statements: "financial_statements" in data ? (typeof data.financial_statements === "string" ? data.financial_statements : JSON.stringify(data.financial_statements)) : "",
+            photo_urls: "photo_urls" in data
+              ? Array.isArray(data.photo_urls)
+                ? data.photo_urls
+                : typeof data.photo_urls === "string"
+                  ? JSON.parse(data.photo_urls)
+                  : typeof data.photo_urls === "object" && data.photo_urls !== null
+                    ? []
+                    : []
+              : [],
+            instagram: "instagram" in data
+              ? typeof data.instagram === "string"
+                ? data.instagram
+                : ""
+              : "",
+            website: "website" in data
+              ? typeof data.website === "string"
+                ? data.website
+                : typeof data.website === "object" && data.website !== null
+                  ? JSON.stringify(data.website)
+                  : ""
+              : "",
+            branding_mix: "branding_mix" in data
+              ? typeof data.branding_mix === "string"
+                ? data.branding_mix
+                : typeof data.branding_mix === "object" && data.branding_mix !== null
+                  ? JSON.stringify(data.branding_mix)
+                  : ""
+              : "",
+            // Add any other missing fields with default values if needed
+          });
           // setFeedback(data.csc_initial_feedback || "");// Initialize feedback with existing notes if any
-          setTaxStatus(data.tax_status || "approved"); // Initialize status with existing
+          // setTaxStatus(data.tax_status || "approved"); // Initialize status with existing
         }
       } catch (err) {
         console.error("Error fetching client details:", err);
@@ -240,21 +271,19 @@ export default function TaxValidationDetailsPage() {
 
 
 const handleCopyToClipboard = async (text: string, field: 'taxId') => {
+const handleCopyToClipboard = async (text: string, field: 'taxId') => {
     try {
         await navigator.clipboard.writeText(text);
         if (field === 'taxId') {
             setTaxIdCopied(true);
             setTimeout(() => setTaxIdCopied(false), 1000); // Volta ao ícone original após 2 segundos
-        } else if (field === 'duns') {
-            setDunsCopied(true);
-            setTimeout(() => setDunsCopied(false), 1000); // Volta ao ícone original após 2 segundos
         }
+        // Removed dunsCopied logic as it's unused
     } catch (err) {
         console.error("Erro ao copiar: ", err);
         // Você pode adicionar um tratamento visual para erro aqui se desejar, mas a requisição é para sucesso.
     }
 };
-
   return (
     <S.ContainerMain>
       <S.Container>
@@ -394,12 +423,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
             <S.SectionTitle>
               <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            {/* <S.FormRow>
-              <strong>AP:</strong> {customerForm.ap_contact_name}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>AP Email:</strong> {customerForm.ap_contact_email}
-            </S.FormRow> */}
+  
             <S.FormRow>
               <strong>Buyer Name:</strong> {customerForm.buyer_name}
             </S.FormRow>
@@ -463,3 +487,4 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
     </S.ContainerMain>
   );
 }
+
