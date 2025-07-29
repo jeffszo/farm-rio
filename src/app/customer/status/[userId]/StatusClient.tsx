@@ -49,8 +49,8 @@ export default function StatusClient({
 
   // Determine se o formulário está em um status que permite edição
   const canEditForm =
-    formStatus === "review requested by the CSC initial team" ||
-    formStatus === "review requested by the CSC final team" ||
+    formStatus === "review requested by the initial CSC team" ||
+    formStatus === "review requested by the csc final team" ||
     formStatus === "review requested by the tax team" ||
     formStatus === "review requested by the wholesale team";
 

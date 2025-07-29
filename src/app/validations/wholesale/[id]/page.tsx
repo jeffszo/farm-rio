@@ -251,7 +251,6 @@ export default function ValidationDetailsPage() {
           wholesale_feedback: data.wholesale_feedback || "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
-        initialTerms("");
         setInitialTerms(fetchedTerms); // Define initialTerms here
 
         setFeedback(data.wholesale_feedback || ""); // Initialize the feedback state for the textarea
@@ -339,6 +338,11 @@ export default function ValidationDetailsPage() {
       setTerms((prev) => ({ ...prev, [field]: value }));
     }
   };
+
+const handleCancelValidationTermsEdit = () => {
+    setTerms(initialTerms); // Reverte 'terms' para o valor original
+    setEditingValidationTerms(false); // Sai do modo de edição
+};
 
   const handleApproval = async (approved: boolean) => {
     console.log("Starting handleApproval. approved =", approved);
@@ -745,10 +749,15 @@ const handleReview = async () => {
         <S.TermsContainer>
           <S.TermsHeader>
             <S.TermsTitle>Validation Terms (Wholesale Team)</S.TermsTitle>
-            <S.EditButton onClick={() => setEditingValidationTerms(!editingValidationTerms)}>
-              {editingValidationTerms ? <X size={16} /> : <Pencil size={16} />}
-              {editingValidationTerms ? "Cancel" : "Edit"}
-            </S.EditButton>
+<S.EditButton onClick={() => {
+    if (editingValidationTerms) {
+        handleCancelValidationTermsEdit(); // Chama a função de cancelar
+    }
+    setEditingValidationTerms(!editingValidationTerms); // Alterna o estado de edição
+}}>
+    {editingValidationTerms ? <X size={16} /> : <Pencil size={16} />}
+    {editingValidationTerms ? "Cancel" : "Edit"}
+</S.EditButton>
           </S.TermsHeader>
           <S.TermsGrid>
             <S.TermsSection>
