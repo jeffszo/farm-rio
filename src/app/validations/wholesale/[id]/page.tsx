@@ -580,9 +580,6 @@ const handleReview = async () => {
               )}
             </S.FormRow>
 
-            {/* SEÇÃO DO BRANDING MIX - CONFORME SOLICITADO PARA USAR FORMROW */}
-
-
 
             <S.FormRow>
                <S.FormRow>

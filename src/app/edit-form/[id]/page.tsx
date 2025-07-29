@@ -23,7 +23,8 @@ const currencyOptions = [
   { value: "GBP", label: "GBP" },
 ];
 
-export default function OnboardingForm() {
+export default async function OnboardingForm() {
+  const { id: userId } = useParams();
   const [file, setFile] = useState<File | null>(null); // Para Resale Certificate
   const [imageFiles, setImageFiles] = useState<File[]>([]); // Para Multiple Images
   const [financialStatementsFile, setFinancialStatementsFile] =
@@ -34,7 +35,6 @@ export default function OnboardingForm() {
   const [isSameAsBilling, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
-  const params = useParams();
 const customerId = typeof params?.id === "string" ? params.id : "";
 
   const totalSteps = 4;
@@ -143,200 +143,137 @@ const customerId = typeof params?.id === "string" ? params.id : "";
     }
   };
 
-  const onSubmit = async (formData: IFormInputs) => {
-    console.log("Submit button clicked. Starting onSubmit function.");
-    try {
-      setApiError(null);
-      setIsUploading(true);
-      console.log("isUploading set to true.");
+ const onSubmit = async (formData: IFormInputs) => {
+  console.log("Submit button clicked. Starting onSubmit function.");
+  try {
+    setApiError(null);
+    setIsUploading(true);
+    console.log("isUploading set to true.");
 
-      const currentUser = user || (await api.getCurrentUser());
-      if (!currentUser || !currentUser.id) {
-        console.error("User not authenticated. Redirecting to login.");
-        setApiError(
-          "Your session has expired or you are not logged in. Please log in again.."
-        );
-        router.push("/");
+    // 🔽 Usa diretamente o ID do usuário já carregado
+    const userId = user?.id;
+
+    console.log("Dados recebidos no formulário (formData):", formData);
+
+    const termsSelected = formData.buyerInfo?.terms;
+
+    if (
+  termsSelected &&
+  termsSelected !== "100% Prior to Ship" &&
+  !financialStatementsFile
+) {
+  setError("buyerInfo.financialStatements", {
+    type: "required",
+    message:
+      "Financial Statements são obrigatórias se os termos não forem 100% Prior to Ship.",
+  });
+  console.log(
+    "Erro de validação (nextStep): Financial Statements obrigatórias para termos diferentes de 100%."
+  );
+} else if (
+  financialStatementsFile &&
+  financialStatementsFile.type !== "application/pdf"
+) {
+  setError("buyerInfo.financialStatements", {
+    type: "manual",
+    message: "Financial Statements devem ser um arquivo PDF.",
+  });
+  console.log(
+    "Erro de validação (nextStep): Financial Statements deve ser PDF."
+  );
+} else {
+  clearErrors("buyerInfo.financialStatements");
+}
+
+
+
+    let fileUrl: string | null = null;
+    if (file) {
+      try {
+        fileUrl = await api.uploadResaleCertificate(file, userId);
+      } catch (error) {
+        setApiError("Erro ao enviar o Resale Certificate.");
         setIsUploading(false);
         return;
       }
-      console.log("Current user ID:", currentUser.id);
-
-      console.log("Dados recebidos no formulário (formData):", formData);
-
-      const termsSelected = formData.buyerInfo?.terms;
-
-      // REFORÇO DA VALIDAÇÃO DE FINANCIAL STATEMENTS NO SUBMIT
-      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
-        setError("buyerInfo.financialStatements", {
-          type: "required",
-          message: "Financial Statements are required if terms are selected.",
-        });
-        setApiError(
-          "Financial Statements are required if terms are selected.."
-        );
-        setIsUploading(false);
-        console.error(
-          "Validação de Financial Statements falhou no onSubmit: Termos selecionados, mas arquivo ausente."
-        );
-        return;
-      }
-      if (
-        financialStatementsFile &&
-        financialStatementsFile.type !== "application/pdf"
-      ) {
-        setError("buyerInfo.financialStatements", {
-          type: "manual",
-          message: "Financial Statements devem ser um arquivo PDF.",
-        });
-        setApiError("Financial Statements devem ser um arquivo PDF.");
-        setIsUploading(false);
-        console.error(
-          "Validação de Financial Statements falhou no onSubmit: Arquivo não é PDF."
-        );
-        return;
-      }
-      // FIM DO REFORÇO DA VALIDAÇÃO
-
-      let fileUrl: string | null = null;
-      if (file) {
-        try {
-          console.log("Attempting to upload resale certificate.");
-          fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
-          console.log(
-            "Arquivo de certificado de revenda enviado com sucesso:",
-            fileUrl
-          );
-        } catch (error) {
-          console.error(
-            "Erro ao enviar o arquivo de certificado de revenda:",
-            error
-          );
-          setApiError(
-            error instanceof Error
-              ? error.message
-              : "Erro ao enviar o arquivo. Tente novamente."
-          );
-          setIsUploading(false);
-          return;
-        }
-      } else {
-        console.log("No resale certificate file to upload.");
-      }
-
-      const photoUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        console.log("Attempting to upload image files.");
-        for (const imageFile of imageFiles) {
-          try {
-            const imageUrl = await api.uploadImage(imageFile, currentUser.id);
-            photoUrls.push(imageUrl);
-            console.log(`Image ${imageFile.name} uploaded successfully.`);
-          } catch (error) {
-            console.error(`Erro ao enviar a imagem ${imageFile.name}:`, error);
-            setApiError(
-              error instanceof Error
-                ? error.message
-                : "Erro ao enviar imagens. Tente novamente."
-            );
-            setIsUploading(false);
-            return;
-          }
-        }
-      } else {
-        console.log("No image files to upload.");
-      }
-
-      let financialStatementsFileUrl: string | null = null;
-      if (financialStatementsFile) {
-        // Só tenta fazer upload se o estado do arquivo for válido e não nulo
-        try {
-          console.log("Attempting to upload financial statements.");
-          financialStatementsFileUrl = await api.uploadFinancialStatements(
-            financialStatementsFile,
-            currentUser.id
-          );
-          console.log(
-            "Arquivo de Financial Statements enviado com sucesso:",
-            financialStatementsFileUrl
-          );
-        } catch (error) {
-          console.error("Erro ao enviar Financial Statements:", error);
-          setApiError(
-            error instanceof Error
-              ? error.message
-              : "Erro ao enviar Financial Statements. Tente novamente."
-          );
-          setIsUploading(false);
-          return;
-        }
-      } else {
-        console.log("No financial statements file to upload or not required.");
-      }
-
-      // Garanta que os campos de select vazios sejam tratados como null, se necessário para o banco de dados
-      const termsValue =
-        formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
-      const currencyValue =
-        formData.buyerInfo?.currency === ""
-          ? null
-          : formData.buyerInfo?.currency;
-
-      const payload = {
-        user_id: currentUser.id,
-        customer_name: formData.customerInfo?.legalName || null,
-        sales_tax_id: formData.customerInfo?.taxId || null,
-        duns_number: formData.customerInfo?.dunNumber || null,
-        dba_number: formData.customerInfo?.dba || null,
-        resale_certificate: fileUrl,
-        billing_address: formData.billingAddress || [],
-        shipping_address: formData.shippingAddress || [],
-        ap_contact_name:
-          `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
-        ap_contact_email: formData.apContact?.email || null,
-        ap_contact_country_code: formData.apContact?.countryCode || null,
-        ap_contact_number: formData.apContact?.contactNumber || null,
-        buyer_name:
-          `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
-        buyer_email: formData.buyerInfo?.email || null,
-        buyer_country_code: formData.buyerInfo?.countryCode || null,
-        buyer_number: formData.buyerInfo?.buyerNumber || null,
-        status: "pending",
-        photo_urls: photoUrls,
-        branding_mix: formData.brandingMix
-  ? formData.brandingMix.split(",").map((s) => s.trim())
-  : null,
-
-        instagram: formData.instagram || null,
-        website: formData.website || null,
-        terms: termsValue, // Usando o valor tratado
-        currency: currencyValue, // Usando o valor tratado
-        estimated_purchase_amount:
-          formData.buyerInfo?.estimatedPurchaseAmount || null,
-        financial_statements: financialStatementsFileUrl,
-      };
-
-      console.log("Payload sendo enviado para submitForm:", payload);
-
-      await api.submitForm(payload, currentUser.id);
-      console.log("Form submitted successfully via API.");
-      setIsModalOpen(true);
-      console.log("Modal set to open.");
-    } catch (error: unknown) {
-      console.error(
-        "Erro GERAL ao enviar o formulário:",
-        error instanceof Error ? error.message : String(error)
-      );
-      setApiError(
-        error instanceof Error
-          ? error.message
-          : "Erro ao enviar o formulário. Tente novamente."
-      );
-    } finally {
-      setIsUploading(false);
-      console.log("isUploading set to false. End of onSubmit function.");
     }
-  };
+
+    const photoUrls: string[] = [];
+    if (imageFiles.length > 0) {
+      for (const imageFile of imageFiles) {
+        try {
+          const imageUrl = await api.uploadImage(imageFile, userId);
+          photoUrls.push(imageUrl);
+        } catch (error) {
+          setApiError("Erro ao enviar imagens.");
+          setIsUploading(false);
+          return;
+        }
+      }
+    }
+
+    let financialStatementsFileUrl: string | null = null;
+    if (financialStatementsFile) {
+      try {
+        financialStatementsFileUrl = await api.uploadFinancialStatements(
+          financialStatementsFile,
+          userId
+        );
+      } catch (error) {
+        setApiError("Erro ao enviar Financial Statements.");
+        setIsUploading(false);
+        return;
+      }
+    }
+
+    const termsValue =
+      formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+    const currencyValue =
+      formData.buyerInfo?.currency === ""
+        ? null
+        : formData.buyerInfo?.currency;
+
+    const payload = {
+      user_id: userId,
+      customer_name: formData.customerInfo?.legalName || null,
+      sales_tax_id: formData.customerInfo?.taxId || null,
+      duns_number: formData.customerInfo?.dunNumber || null,
+      dba_number: formData.customerInfo?.dba || null,
+      resale_certificate: fileUrl,
+      billing_address: formData.billingAddress || [],
+      shipping_address: formData.shippingAddress || [],
+      ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+      ap_contact_email: formData.apContact?.email || null,
+      ap_contact_country_code: formData.apContact?.countryCode || null,
+      ap_contact_number: formData.apContact?.contactNumber || null,
+      buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+      buyer_email: formData.buyerInfo?.email || null,
+      buyer_country_code: formData.buyerInfo?.countryCode || null,
+      buyer_number: formData.buyerInfo?.buyerNumber || null,
+      status: "pending",
+      photo_urls: photoUrls,
+      branding_mix: formData.brandingMix
+        ? formData.brandingMix.split(",").map((s) => s.trim())
+        : null,
+      instagram: formData.instagram || null,
+      website: formData.website || null,
+      terms: termsValue,
+      currency: currencyValue,
+      estimated_purchase_amount:
+        formData.buyerInfo?.estimatedPurchaseAmount || null,
+      financial_statements: financialStatementsFileUrl,
+    };
+
+    await api.submitForm(payload, userId);
+    setIsModalOpen(true);
+  } catch (error: unknown) {
+    console.error("Erro ao enviar formulário:", error);
+    setApiError("Erro ao enviar o formulário. Tente novamente.");
+  } finally {
+    setIsUploading(false);
+  }
+};
+
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof IFormInputs | string)[] = [];
@@ -532,16 +469,26 @@ useEffect(() => {
       setValue("buyerInfo.currency", data.currency || "");
       setValue("buyerInfo.estimatedPurchaseAmount", data.estimated_purchase_amount || "");
 
-      setValue("billingAddress", data.billing_address || []);
-      setbillingAddress(data.billing_address?.map((_, i) => i) || [0]);
+      const parsedBilling =
+        typeof data.billing_address === "string"
+          ? JSON.parse(data.billing_address)
+          : data.billing_address || [];
 
-      setValue("shippingAddress", data.shipping_address || []);
-      setshippingAddress(data.shipping_address?.map((_, i) => i) || [0]);
+      const parsedShipping =
+        typeof data.shipping_address === "string"
+          ? JSON.parse(data.shipping_address)
+          : data.shipping_address || [];
+
+          setValue("billingAddress", parsedBilling);
+setbillingAddress(parsedBilling.map((_, i) => i));
+
+setValue("shippingAddress", parsedShipping);
+setshippingAddress(parsedShipping.map((_, i) => i));
 
     } catch (err) {
       console.error("Erro ao popular dados:", err);
     }
-  };
+  }
 
   fetchCustomerData();
 }, [customerId, setValue]);
@@ -554,9 +501,9 @@ useEffect(() => {
     <S.ContainerMain>
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Customer Onboarding</S.FormTitle>
+          <S.FormTitle>Edit Customer Onboarding</S.FormTitle>
           <S.FormSubtitle>
-            Please fill out the form to create your account.
+            Please edit the form and submit again.
           </S.FormSubtitle>
         </S.FormHeader>
 
@@ -723,7 +670,7 @@ useEffect(() => {
                       alignItems:"center",
                       
                     }}>
-                  <S.Label htmlFor="brandingMix">Branding Mix</S.Label>
+                  <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
                   <S.InfoButton
                     style={{textAlign:"center"}}
                     type="button"
@@ -735,7 +682,8 @@ useEffect(() => {
                   <S.Input
                     style={{
                       width:"500px",
-                     
+                      height: "200px",
+                      paddingBottom:"170px",
                     }}
                     id="brandingMix"
                     {...register("brandingMix" as any, {

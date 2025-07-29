@@ -1,6 +1,12 @@
 import { supabase } from "./client"
 
 export async function submitForm(formData: unknown, userId: string) {
+
+  if (!userId || typeof userId !== "string") {
+  throw new Error("userId inválido ou ausente.");
+}
+
+
   interface FormData {
     customer_name: string;
     sales_tax_id: string;

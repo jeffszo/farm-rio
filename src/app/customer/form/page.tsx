@@ -815,7 +815,7 @@ export default function OnboardingForm() {
                   <div style={{
                       display: "flex",
                       alignItems:"center",
-                      marginBottom: "0.5rem",
+                      
                     }}>
                   <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
                   <S.InfoButton

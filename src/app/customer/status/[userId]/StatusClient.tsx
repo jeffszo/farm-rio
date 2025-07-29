@@ -136,7 +136,7 @@ export default function StatusClient({
       {canEditForm && (
         <S.EditButton
           onClick={() => router.push(`/edit-form/${initialUserId}`)}
-        >
+>
           <FileEdit size={18} />
           Edit your information
         </S.EditButton>

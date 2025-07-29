@@ -255,3 +255,12 @@ export async function resetFormStatus(id: string) {
 }
 
 
+export async function getCustomerFormById(customerId: string) {
+  const { data, error } = await supabase
+    .from("customer_forms")
+    .select("*")
+    .eq("user_id", customerId) // ou "id" se o ID do formulário for diferente do user
+    .single();
+
+  return { data, error };
+}
