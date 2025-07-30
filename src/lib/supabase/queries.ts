@@ -275,3 +275,21 @@ export async function resetFormStatus(id: string) {
      error: response?.error ?? null,
    };
  }
+
+export async function getFeedbackTeams(customerId: string) {
+  const response = await supabase
+    .from("customer_forms")
+    .select("status, user_id, wholesale_feedback, credit_feedback, tax_feedback, csc_initial_feedback, csc_final_feedback")
+    .eq("user_id", customerId)
+    .single();
+
+  console.log("Dados de feedback recebidos da Supabase:", response.data);
+  if (response.error) { // Adicione esta verificação
+    console.error("Erro ao buscar feedback no Supabase:", response.error); // Loga o erro
+  }
+
+  return {
+    data: response?.data ?? null,
+    error: response?.error ?? null,
+  };
+}

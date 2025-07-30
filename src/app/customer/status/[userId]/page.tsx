@@ -20,7 +20,6 @@ export default async function StatusPage({
       <StatusClient
         initialUserId={userId}
         initialFormStatus={formData?.status || "no_data_found"}
-        initialFeedback={formData?.csc_feedback || ""}
         initialIsLoading={false}
       />
     );
@@ -30,7 +29,6 @@ export default async function StatusPage({
       <StatusClient
         initialUserId={userId}
         initialFormStatus="error"
-        initialFeedback="Erro ao buscar status do formulário"
         initialIsLoading={false}
       />
     );

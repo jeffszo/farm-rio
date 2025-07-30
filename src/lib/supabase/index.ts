@@ -50,7 +50,8 @@ class SupabaseAPI implements AuthAPI {
   getCustomerValidationDetails = queries.getCustomerValidationDetails
   getPendingTaxValidations = queries.getPendingTaxValidations
   getPendingCSCValidations = queries.getPendingCSCValidations
-  getCustomerFormById   = queries.getCustomerFormById  
+  getCustomerFormById   = queries.getCustomerFormById
+  getFeedbackTeams = queries.getFeedbackTeams  
   resetFormStatus = queries.resetFormStatus
 
   uploadResaleCertificate = storage.uploadResaleCertificate
