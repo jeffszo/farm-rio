@@ -46,8 +46,8 @@ const customerId = typeof params?.id === "string" ? params.id : "";
   const router = useRouter();
 
   // Adicione esta linha para declarar e gerenciar o estado de validação do passo 4
-  const [stepFourAttemptedValidation, setStepFourAttemptedValidation] =
-    useState(false);
+  // const [stepFourAttemptedValidation, setStepFourAttemptedValidation] =
+  //   useState(false);
 
   const {
     register,
@@ -392,7 +392,7 @@ const customerId = typeof params?.id === "string" ? params.id : "";
         "buyerInfo.estimatedPurchaseAmount",
       ];
       const termsSelected = getValues("buyerInfo.terms");
-      let financialStatementsError = false; // Flag to track specific financial statements error
+      // let financialStatementsError = false; // Flag to track specific financial statements error
       let specificErrorMessage = ""; // To hold the specific error message for API error
 
       // Conditional validation for Financial Statements
