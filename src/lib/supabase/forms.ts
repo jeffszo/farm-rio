@@ -129,7 +129,6 @@ export async function submitForm(formData: unknown, userId: string) {
 
 interface FormStatusData {
   status: string
-  csc_feedback: string
 }
 
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {
