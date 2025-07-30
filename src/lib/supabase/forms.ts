@@ -135,7 +135,7 @@ interface FormStatusData {
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {
   const { data, error } = await supabase
     .from("customer_forms")
-    .select("status, csc_feedback")
+    .select("status")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1);
@@ -153,21 +153,6 @@ export async function getFormStatus(userId: string): Promise<FormStatusData | nu
 
 
 
-
-export async function getCustomerFormById(userId: string) {
-  const { data, error } = await supabase
-    .from("customer_forms")
-    .select("*")
-    .eq("id", userId)
-    .single()
-
-  if (error) {
-    console.log("Erro ao buscar formulário:", error)
-    return null
-  }
-
-  return data
-}
 
 
 

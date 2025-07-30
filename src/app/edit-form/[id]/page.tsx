@@ -31,7 +31,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [, setIsSameAsBilling] = useState(false); // Estado para "Same as Billing"
+ const [, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const params = useParams();
@@ -61,20 +61,14 @@ const customerId = typeof params?.id === "string" ? params.id : "";
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{}],
-      shippingAddress: [{}],
+      billingAddress: [{} as AddressInput],
+      shippingAddress: [{} as AddressInput],
       // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
-        firstName: "",
-        lastName: "",
-        email: "",
-        countryCode: "",
-        buyerNumber: "",
-        terms: "",
-        currency: "",
-        estimatedPurchaseAmount: undefined,
-        financialStatements: undefined,
-      },
+        terms: "", // Valor vazio para a opção "Select terms"
+        currency: "", // Valor vazio para a opção "Select currency"
+        // ... outros campos de buyerInfo
+      } as IFormInputs["buyerInfo"], // Use the correct type for buyerInfo
     },
   });
 
@@ -106,19 +100,16 @@ const customerId = typeof params?.id === "string" ? params.id : "";
     }
   };
 
-useEffect(() => {
-  const fetchUser = async () => {
-    setIsLoading(true); // Garanta que isLoading é true enquanto busca
-    const currentUser = await api.getCurrentUserClient();
-    console.log("currentUser fetched:", currentUser); // <--- ADICIONE ESTE LOG
-    setUser(currentUser);
-    setIsLoading(false);
-  };
-  fetchUser();
-}, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await api.getCurrentUser();
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // É importante usar event.target.files aqui, pois event.files não existe.
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
@@ -152,151 +143,200 @@ useEffect(() => {
     }
   };
 
- const onSubmit = async (formData: IFormInputs) => {
-  
-  console.log("Submit button clicked. Starting onSubmit function.");
-  try {
-    setApiError(null);
-    setIsUploading(true);
-    console.log("isUploading set to true.");
+  const onSubmit = async (formData: IFormInputs) => {
+    console.log("Submit button clicked. Starting onSubmit function.");
+    try {
+      setApiError(null);
+      setIsUploading(true);
+      console.log("isUploading set to true.");
 
-     let userIdToUse = user?.id;
-
-    if (!userIdToUse) {
-            // Se o ID do usuário autenticado não estiver disponível,
-            // usa o customerId da URL como fallback.
-            // ATENÇÃO: Considere as implicações de segurança mencionadas acima.
-            console.warn("Usuário não logado ou ID do usuário não disponível. Usando customerId da URL como fallback.");
-            userIdToUse = customerId; // Usa o ID capturado da URL
-        }
-
-        // Se mesmo com o fallback o ID ainda for nulo, então exibe o erro
-        if (!userIdToUse) {
-            setApiError("Erro: ID do usuário ou do formulário não disponível. Por favor, tente novamente.");
-            setIsUploading(false);
-            console.error("Erro: ID do usuário ou do formulário não disponível.");
-            return; // Impede a continuação
-        }
-
-        console.log("ID do usuário a ser usado para o payload:", userIdToUse);
-    const termsSelected = formData.buyerInfo?.terms;
-
-    if (
-  termsSelected &&
-  termsSelected !== "100% Prior to Ship" &&
-  !financialStatementsFile
-) {
-  setError("buyerInfo.financialStatements", {
-    type: "required",
-    message:
-      "Financial Statements são obrigatórias se os termos não forem 100% Prior to Ship.",
-  });
-  console.log(
-    "Erro de validação (nextStep): Financial Statements obrigatórias para termos diferentes de 100%."
-  );
-} else if (
-  financialStatementsFile &&
-  financialStatementsFile.type !== "application/pdf"
-) {
-  setError("buyerInfo.financialStatements", {
-    type: "manual",
-    message: "Financial Statements devem ser um arquivo PDF.",
-  });
-  console.log(
-    "Erro de validação (nextStep): Financial Statements deve ser PDF."
-  );
-} else {
-  clearErrors("buyerInfo.financialStatements");
-}
-
-
-    let fileUrl: string | null = null;
-    if (file) {
-      try {
-        fileUrl = await api.uploadResaleCertificate(file, userIdToUse );
-      } catch {
-        setApiError("Erro ao enviar o Resale Certificate.");
+      const currentUser = user || (await api.getCurrentUser());
+      if (!currentUser || !currentUser.id) {
+        console.error("User not authenticated. Redirecting to login.");
+        setApiError(
+          "Your session has expired or you are not logged in. Please log in again.."
+        );
+        router.push("/");
         setIsUploading(false);
         return;
       }
-    }
+      console.log("Current user ID:", currentUser.id);
 
-    const photoUrls: string[] = [];
-    if (imageFiles.length > 0) {
-      for (const imageFile of imageFiles) {
+      console.log("Dados recebidos no formulário (formData):", formData);
+
+      const termsSelected = formData.buyerInfo?.terms;
+
+      // REFORÇO DA VALIDAÇÃO DE FINANCIAL STATEMENTS NO SUBMIT
+      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+        setError("buyerInfo.financialStatements", {
+          type: "required",
+          message: "Financial Statements are required if terms are selected.",
+        });
+        setApiError(
+          "Financial Statements are required if terms are selected.."
+        );
+        setIsUploading(false);
+        console.error(
+          "Validação de Financial Statements falhou no onSubmit: Termos selecionados, mas arquivo ausente."
+        );
+        return;
+      }
+      if (
+        financialStatementsFile &&
+        financialStatementsFile.type !== "application/pdf"
+      ) {
+        setError("buyerInfo.financialStatements", {
+          type: "manual",
+          message: "Financial Statements devem ser um arquivo PDF.",
+        });
+        setApiError("Financial Statements devem ser um arquivo PDF.");
+        setIsUploading(false);
+        console.error(
+          "Validação de Financial Statements falhou no onSubmit: Arquivo não é PDF."
+        );
+        return;
+      }
+      // FIM DO REFORÇO DA VALIDAÇÃO
+
+      let fileUrl: string | null = null;
+      if (file) {
         try {
-          const imageUrl = await api.uploadImage(imageFile, userIdToUse );
-          photoUrls.push(imageUrl);
-        } catch {
-          setApiError("Erro ao enviar imagens.");
+          console.log("Attempting to upload resale certificate.");
+          fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
+          console.log(
+            "Arquivo de certificado de revenda enviado com sucesso:",
+            fileUrl
+          );
+        } catch (error) {
+          console.error(
+            "Erro ao enviar o arquivo de certificado de revenda:",
+            error
+          );
+          setApiError(
+            error instanceof Error
+              ? error.message
+              : "Erro ao enviar o arquivo. Tente novamente."
+          );
           setIsUploading(false);
           return;
         }
+      } else {
+        console.log("No resale certificate file to upload.");
       }
-    }
 
-    let financialStatementsFileUrl: string | null = null;
-    if (financialStatementsFile) {
-      try {
-        financialStatementsFileUrl = await api.uploadFinancialStatements(
-          financialStatementsFile,
-          userIdToUse 
-        );
-      } catch {
-        setApiError("Erro ao enviar Financial Statements.");
-        setIsUploading(false);
-        return;
+      const photoUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        console.log("Attempting to upload image files.");
+        for (const imageFile of imageFiles) {
+          try {
+            const imageUrl = await api.uploadImage(imageFile, currentUser.id);
+            photoUrls.push(imageUrl);
+            console.log(`Image ${imageFile.name} uploaded successfully.`);
+          } catch (error) {
+            console.error(`Erro ao enviar a imagem ${imageFile.name}:`, error);
+            setApiError(
+              error instanceof Error
+                ? error.message
+                : "Erro ao enviar imagens. Tente novamente."
+            );
+            setIsUploading(false);
+            return;
+          }
+        }
+      } else {
+        console.log("No image files to upload.");
       }
+
+      let financialStatementsFileUrl: string | null = null;
+      if (financialStatementsFile) {
+        // Só tenta fazer upload se o estado do arquivo for válido e não nulo
+        try {
+          console.log("Attempting to upload financial statements.");
+          financialStatementsFileUrl = await api.uploadFinancialStatements(
+            financialStatementsFile,
+            currentUser.id
+          );
+          console.log(
+            "Arquivo de Financial Statements enviado com sucesso:",
+            financialStatementsFileUrl
+          );
+        } catch (error) {
+          console.error("Erro ao enviar Financial Statements:", error);
+          setApiError(
+            error instanceof Error
+              ? error.message
+              : "Erro ao enviar Financial Statements. Tente novamente."
+          );
+          setIsUploading(false);
+          return;
+        }
+      } else {
+        console.log("No financial statements file to upload or not required.");
+      }
+
+      // Garanta que os campos de select vazios sejam tratados como null, se necessário para o banco de dados
+      const termsValue =
+        formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+      const currencyValue =
+        formData.buyerInfo?.currency === ""
+          ? null
+          : formData.buyerInfo?.currency;
+
+      const payload = {
+        user_id: currentUser.id,
+        customer_name: formData.customerInfo?.legalName || null,
+        sales_tax_id: formData.customerInfo?.taxId || null,
+        duns_number: formData.customerInfo?.dunNumber || null,
+        dba_number: formData.customerInfo?.dba || null,
+        resale_certificate: fileUrl,
+        billing_address: formData.billingAddress || [],
+        shipping_address: formData.shippingAddress || [],
+        ap_contact_name:
+          `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+        ap_contact_email: formData.apContact?.email || null,
+        ap_contact_country_code: formData.apContact?.countryCode || null,
+        ap_contact_number: formData.apContact?.contactNumber || null,
+        buyer_name:
+          `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+        buyer_email: formData.buyerInfo?.email || null,
+        buyer_country_code: formData.buyerInfo?.countryCode || null,
+        buyer_number: formData.buyerInfo?.buyerNumber || null,
+        status: "pending",
+        photo_urls: photoUrls,
+        branding_mix: formData.brandingMix
+  ? formData.brandingMix.split(",").map((s) => s.trim())
+  : null,
+
+        instagram: formData.instagram || null,
+        website: formData.website || null,
+        terms: termsValue, // Usando o valor tratado
+        currency: currencyValue, // Usando o valor tratado
+        estimated_purchase_amount:
+          formData.buyerInfo?.estimatedPurchaseAmount || null,
+        financial_statements: financialStatementsFileUrl,
+      };
+
+      console.log("Payload sendo enviado para submitForm:", payload);
+
+      await api.submitForm(payload, currentUser.id);
+      console.log("Form submitted successfully via API.");
+      setIsModalOpen(true);
+      console.log("Modal set to open.");
+    } catch (error: unknown) {
+      console.error(
+        "Erro GERAL ao enviar o formulário:",
+        error instanceof Error ? error.message : String(error)
+      );
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Erro ao enviar o formulário. Tente novamente."
+      );
+    } finally {
+      setIsUploading(false);
+      console.log("isUploading set to false. End of onSubmit function.");
     }
-
-    const termsValue =
-      formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
-    const currencyValue =
-      formData.buyerInfo?.currency === ""
-        ? null
-        : formData.buyerInfo?.currency;
-
-    const payload = {
-      user_id: userIdToUse,
-      customer_name: formData.customerInfo?.legalName || null,
-      sales_tax_id: formData.customerInfo?.taxId || null,
-      duns_number: formData.customerInfo?.dunNumber || null,
-      dba_number: formData.customerInfo?.dba || null,
-      resale_certificate: fileUrl,
-      billing_address: formData.billingAddress || [],
-      shipping_address: formData.shippingAddress || [],
-      ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
-      ap_contact_email: formData.apContact?.email || null,
-      ap_contact_country_code: formData.apContact?.countryCode || null,
-      ap_contact_number: formData.apContact?.contactNumber || null,
-      buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
-      buyer_email: formData.buyerInfo?.email || null,
-      buyer_country_code: formData.buyerInfo?.countryCode || null,
-      buyer_number: formData.buyerInfo?.buyerNumber || null,
-      status: "pending",
-      photo_urls: photoUrls,
-      branding_mix: formData.brandingMix
-        ? formData.brandingMix.split(",").map((s) => s.trim())
-        : null,
-      instagram: formData.instagram || null,
-      website: formData.website || null,
-      terms: termsValue,
-      currency: currencyValue,
-      estimated_purchase_amount:
-        formData.buyerInfo?.estimatedPurchaseAmount || null,
-      financial_statements: financialStatementsFileUrl,
-    };
-
-    await api.submitForm(payload, userIdToUse);
-    setIsModalOpen(true);
-  } catch (error: unknown) {
-    console.error("Erro ao enviar formulário:", error);
-    setApiError("Erro ao enviar o formulário. Tente novamente.");
-  } finally {
-    setIsUploading(false);
-  }
-};
-
+  };
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof IFormInputs | string)[] = [];
@@ -351,37 +391,47 @@ useEffect(() => {
         "buyerInfo.currency",
         "buyerInfo.estimatedPurchaseAmount",
       ];
-      setStepFourAttemptedValidation(true);
-
       const termsSelected = getValues("buyerInfo.terms");
-      // Validação de Financial Statements no nextStep
-      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+      let financialStatementsError = false; // Flag to track specific financial statements error
+      let specificErrorMessage = ""; // To hold the specific error message for API error
+
+      // Conditional validation for Financial Statements
+      if (
+        termsSelected &&
+        termsSelected !== "100% Prior to Ship" &&
+        !financialStatementsFile
+      ) {
+        specificErrorMessage =
+          "Financial Statements are required if terms are not 100% Prior to Ship."; // Traduzido
         setError("buyerInfo.financialStatements", {
           type: "required",
-          message:
-            "Declarações Financeiras são obrigatórias se os Termos forem selecionados.",
+          message: specificErrorMessage,
         });
+        financialStatementsError = true;
         console.log(
-          "Erro de validação (nextStep): Financial Statements são obrigatórias."
-        );
+          "Validation Error (nextStep): Financial Statements required for terms other than 100%."
+        ); // Traduzido
       } else if (
         financialStatementsFile &&
         financialStatementsFile.type !== "application/pdf"
       ) {
+        specificErrorMessage = "Financial Statements must be a PDF file."; // Traduzido
         setError("buyerInfo.financialStatements", {
           type: "manual",
-          message: "Financial Statements devem ser um arquivo PDF.",
+          message: specificErrorMessage,
         });
+        financialStatementsError = true;
         console.log(
-          "Erro de validação (nextStep): Financial Statements deve ser PDF."
-        );
+          "Validation Error (nextStep): Financial Statements must be PDF."
+        ); // Traduzido
       } else {
+        // Clear the error if conditions are met (e.g., file is present and PDF, or terms are '100% Prior to Ship')
         clearErrors("buyerInfo.financialStatements");
       }
     }
 
-    
-    const isValid = await trigger(fieldsToValidate as Parameters<typeof trigger>[0]);
+// @ts-expect-error (if fieldsToValidate can have types that don't directly match trigger, consider refactoring)
+    const isValid = await trigger(fieldsToValidate);
 
     // Se houver erros específicos no passo 4 (financialStatementsFile), impede o avanço
     if (currentStep === 4) {
@@ -416,7 +466,6 @@ useEffect(() => {
       prev.filter((_, index) => index !== indexToRemove)
     );
     setValue(`shippingAddress.${indexToRemove}`, {} as AddressInput);
-    
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
@@ -493,26 +542,40 @@ useEffect(() => {
       setValue("buyerInfo.currency", data.currency || "");
       setValue("buyerInfo.estimatedPurchaseAmount", data.estimated_purchase_amount || "");
 
-      const parsedBilling =
-        typeof data.billing_address === "string"
-          ? JSON.parse(data.billing_address)
-          : data.billing_address || [];
-
-      const parsedShipping =
-        typeof data.shipping_address === "string"
-          ? JSON.parse(data.shipping_address)
-          : data.shipping_address || [];
-
-          setValue("billingAddress", parsedBilling);
-          setbillingAddress(parsedBilling.map((_: AddressInput, i: number) => i));
-
-          setValue("shippingAddress", parsedShipping);
-          setshippingAddress(parsedShipping.map((_: AddressInput, i: number) => i));
-
-    } catch (err) {
-      console.error("Erro ao popular dados:", err);
+   let billingAddressData = data.billing_address;
+  if (typeof billingAddressData === "string") {
+    try {
+      billingAddressData = JSON.parse(billingAddressData);
+    } catch (e) {
+      console.error("Erro ao fazer parse do billing_address:", e);
+      billingAddressData = [];
     }
   }
+  if (!Array.isArray(billingAddressData)) billingAddressData = [];
+
+  setValue("billingAddress", billingAddressData);
+  setbillingAddress(billingAddressData.map((_: AddressInput, i: number) => i));
+
+  // Shipping Address
+  let shippingAddressData = data.shipping_address;
+  if (typeof shippingAddressData === "string") {
+    try {
+      shippingAddressData = JSON.parse(shippingAddressData);
+    } catch (e) {
+      console.error("Erro ao fazer parse do shipping_address:", e);
+      shippingAddressData = [];
+    }
+  }
+  if (!Array.isArray(shippingAddressData)) shippingAddressData = [];
+
+  setValue("shippingAddress", shippingAddressData);
+  setshippingAddress(shippingAddressData.map((_: AddressInput, i: number) => i));
+
+} catch (err) {
+  console.error("Erro ao popular dados:", err);
+}
+  };
+
 
   fetchCustomerData();
 }, [customerId, setValue]);
@@ -521,14 +584,13 @@ useEffect(() => {
     return <p>Loading...</p>;
   }
 
-
   return (
     <S.ContainerMain>
       <S.FormContainer>
         <S.FormHeader>
-          <S.FormTitle>Edit Customer Onboarding</S.FormTitle>
+          <S.FormTitle>Customer Onboarding</S.FormTitle>
           <S.FormSubtitle>
-            Please edit the form and submit again.
+            Please fill out the form to create your account.
           </S.FormSubtitle>
         </S.FormHeader>
 
@@ -538,11 +600,7 @@ useEffect(() => {
           <S.ProgressFill progress={(currentStep / totalSteps) * 100} />
         </S.ProgressBar>
 
-        <form onSubmit={hookFormSubmit(onSubmit)}  onKeyDown={(e) => {
-    if (currentStep === 4 && e.key === "Enter") {
-      e.preventDefault();
-    }
-  }}>
+        <form onSubmit={hookFormSubmit(onSubmit)}>
           {currentStep === 1 && (
             <S.Section>
               <S.SectionTitle>Customer Information</S.SectionTitle>
@@ -607,127 +665,121 @@ useEffect(() => {
                   )}
                 </S.InputGroup>
 
-                              <S.InputGroup>
-                                <S.Label htmlFor="instagram">Instagram</S.Label>
-                                <S.Input
-                                  id="instagram"
-                                  type="url"
-                                  placeholder="https://instagram.com/yourprofile"
-                                  {...register("instagram", {
-                                    pattern: {
-                                      value:
-                                        /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
-                                      message: "Please enter a valid Instagram URL.",
-                                    },
-                                  })}
-                                  error={!!(errors as typeof errors).instagram}
-                                />
-                                {errors.instagram && (
-                                  <S.ErrorMessage>
-                                    {errors.instagram.message}
-                                  </S.ErrorMessage>
-                                )}
-                              </S.InputGroup>
+                <S.InputGroup>
+                  <S.Label htmlFor="instagram">Instagram</S.Label>
+                  <S.Input
+                    id="instagram"
+                    type="url"
+                    placeholder="https://instagram.com/yourprofile"
+                    {...register("instagram", {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
+                        message: "Please enter a valid Instagram URL.",
+                      },
+                    })}
+                    error={!!errors.instagram}
+                  />
+                  {errors.instagram && (
+                    <S.ErrorMessage>
+                      {errors.instagram.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
 
                 <S.InputGroup>
-                                  <S.Label htmlFor="website">Website</S.Label>
-                                  <S.Input
-                                    id="website"
-                                    type="url"
-                                    placeholder="https://yourwebsite.com"
-                                    {...register("website", {
-                                      pattern: {
-                                        value:
-                                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-                                        message: "Please enter a valid Website URL.",
-                                      },
-                                    })}
-                                    error={!!errors.website}
-                                  />
-                                  {errors.website && (
-                                    <S.ErrorMessage>
-                                      {errors.website.message}
-                                    </S.ErrorMessage>
-                                  )}
-                                </S.InputGroup>
+                  <S.Label htmlFor="website">Website</S.Label>
+                  <S.Input
+                    id="website"
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    {...register("website", {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                        message: "Please enter a valid Website URL.",
+                      },
+                    })}
+                    error={!!errors.website}
+                  />
+                  {errors.website && (
+                    <S.ErrorMessage>
+                      {errors.website.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
+
                 <S.FileInputContainer>
-                                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-                                  <S.HiddenInput
-                                    id="file-upload"
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={handleFileChange}
-                                  />
-                                  <S.UploadButton htmlFor="file-upload">
-                                    <Upload size={16} />
-                                    {file ? file.name : "Attach file (PDF)"}
-                                  </S.UploadButton>
-                                  {/* No error message for resaleCertificate since it's not a form field */}
-                                </S.FileInputContainer>
-                                <S.FileInputContainer>
-                                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
-                                        <S.HiddenInput
-                                          id="image-upload"
-                                          type="file"
-                                          accept="image/*"
-                                          multiple
-                                          onChange={handleImageChange}
-                                        />
-                                  <S.UploadButton htmlFor="image-upload">
-                                    <Upload size={16} />
-                                    {imageFiles.length > 0
-                                      ? `${imageFiles.length} file(s) selected`
-                                      : "Attach image files"}
-                                  </S.UploadButton>
-                                  {imageFiles.length > 0 && (
-                                    <S.FilePreviewContainer>
-                                      {imageFiles.map((img, idx) => (
-                                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
-                                      ))}
-                                    </S.FilePreviewContainer>
-                                  )}
-                                </S.FileInputContainer>
+                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+                  <S.HiddenInput
+                    id="file-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileChange}
+                  />
+                  <S.UploadButton htmlFor="file-upload">
+                    <Upload size={16} />
+                    {file ? file.name : "Attach file (PDF)"}
+                  </S.UploadButton>
+                  {/* No error message for resaleCertificate since it's not a react-hook-form field */}
+                </S.FileInputContainer>
+                <S.FileInputContainer>
+                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+                        <S.HiddenInput
+                          id="image-upload"
+                          type="file"  // Remova o espaço extra aqui
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageChange}
+                        />
+                  <S.UploadButton htmlFor="image-upload">
+                    <Upload size={16} />
+                    {imageFiles.length > 0
+                      ? `${imageFiles.length} file(s) selected`
+                      : "Attach image files"}
+                  </S.UploadButton>
+                  {imageFiles.length > 0 && (
+                    <S.FilePreviewContainer>
+                      {imageFiles.map((img, idx) => (
+                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
+                      ))}
+                    </S.FilePreviewContainer>
+                  )}
+                </S.FileInputContainer>
 
                 <S.InputGroup >
-                                  <div style={{
-                                      display: "flex",
-                                      alignItems:"center",
-                                      
-                                    }}>
-                                  <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
-                                  <S.InfoButton
-                                   type="button"
-                                    title="list all the brands you work with (separate the brands by comma"
-                                    style={{
-                                      display: "flex",
-                                      // alignItems:"center",
-                                      // justifyContent: "center",
-                
-                                    }}
-                
-                                  >
-                                    <Info size={16} />
-                                  </S.InfoButton>
-                                  </div>
-                                  <S.Input
-                                    style={{
-                                      width:"562px",
-                                      height: "200px",
-                                      paddingBottom:"170px",
-                
-                                    }}
-                                    id="brandingMix"
-                                    {...register("brandingMix", {
-                                      required: "Brand/Branding Mix is required",
-                                    })}
-                                    error={!!errors.brandingMix}
-                                  />
-                                  {errors.brandingMix && (
-                                    <S.ErrorMessage>
-                                      {errors.brandingMix.message}
-                                    </S.ErrorMessage>
-                                  )}
-                                </S.InputGroup>
+                  <div style={{
+                      display: "flex",
+                      alignItems:"center",
+                      
+                    }}>
+                  <S.Label style={{marginBottom: 0}}  htmlFor="brandingMix">Branding Mix</S.Label>
+                  <S.InfoButton
+                    style={{textAlign:"center"}}
+                    type="button"
+                    title="list all the brands you work with (separate the brands by comma"
+                  >
+                    <Info size={16} />
+                  </S.InfoButton>
+                  </div>
+                  <S.Input
+                    style={{
+                      width:"500px",
+                      height: "200px",
+                      paddingBottom:"170px",
+                    }}
+                    id="brandingMix"
+                    {...register("brandingMix", {
+                      required: "Brand/Branding Mix is required",
+                    })}
+                    error={!!errors.brandingMix}
+                  />
+                  {errors.brandingMix && (
+                    <S.ErrorMessage>
+                      {errors.brandingMix.message}
+                    </S.ErrorMessage>
+                  )}
+                </S.InputGroup>
               </S.Grid>
             </S.Section>
           )}
@@ -1342,8 +1394,9 @@ useEffect(() => {
                     <S.InfoButton
                       type="button"
                       title="Most disclosed tax period"
+                      
                     >
-                      <Info size={16} />
+                      <Info size={16} style={{marginBottom: "0.5rem"}}  />
                     </S.InfoButton>
                   </div>
                   <S.HiddenInput

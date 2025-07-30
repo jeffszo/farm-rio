@@ -184,7 +184,13 @@ export async function getCustomerValidationDetails(id: string) {
       credit_currency,
       credit_terms,
       credit_credit,
-      credit_discount
+      credit_discount,
+      branding_mix,
+      instagram,
+      website,
+      photo_urls,
+      financial_statements,
+      estimated_purchase_amount
     `)
     .eq("id", id)
     .single();
@@ -255,12 +261,17 @@ export async function resetFormStatus(id: string) {
 }
 
 
-export async function getCustomerFormById(customerId: string) {
-  const { data, error } = await supabase
-    .from("customer_forms")
-    .select("*")
-    .eq("user_id", customerId) // ou "id" se o ID do formulário for diferente do user
-    .single();
+ export async function getCustomerFormById(customerId: string) {
+   const response = await supabase
+     .from("customer_forms")
+     .select("*")
+     .eq("user_id", customerId)
+     .single();
 
-  return { data, error };
-}
+
+
+   return {
+     data: response?.data ?? null,
+     error: response?.error ?? null,
+   };
+ }

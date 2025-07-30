@@ -64,12 +64,12 @@ interface CustomerForm {
   buyer_email: string;
   status: string;
   created_at: string;
-  atacado_invoicing_company?: string;
-  atacado_warehouse?: string;
-  atacado_currency?: string;
-  atacado_terms?: string;
-  atacado_credit?: number;
-  atacado_discount?: number;
+  wholesale_invoicing_company: string;
+  wholesale_warehouse: string;
+  wholesale_currency: string;
+  wholesale_terms: string;
+  wholesale_credit: number;
+  wholesale_discount: number;
   terms: string;
   currency: string;
 }
@@ -205,6 +205,8 @@ export default function ValidationDetailsPage() {
           return [addrData];
         };
 
+        console.log(data);
+
         const processedData: CustomerForm = {
           id: data.id ?? "",
           customer_name: data.customer_name ?? "",
@@ -269,12 +271,12 @@ export default function ValidationDetailsPage() {
           buyer_email: data.buyer_email ?? "",
           status: data.status ?? "",
           created_at: data.created_at ?? "",
-          atacado_invoicing_company: data.credit_invoicing_company ?? "",
-          atacado_warehouse: data.wholesale_warehouse ?? "",
-          atacado_currency: data.wholesale_currency ?? "",
-          atacado_terms: data.wholesale_terms ?? "",
-          atacado_credit: data.wholesale_credit ?? 0,
-          atacado_discount: data.credit_discount ?? 0,
+          wholesale_invoicing_company: data.credit_invoicing_company ?? "",
+          wholesale_warehouse: data.wholesale_warehouse ?? "",
+          wholesale_currency: data.wholesale_currency ?? "",
+          wholesale_terms: data.wholesale_terms ?? "",
+          wholesale_credit: data.wholesale_credit ?? 0,
+          wholesale_discount: data.credit_discount ?? 0,
           terms: data.wholesale_terms ?? "",
           currency: data.wholesale_currency ?? "",
         };
@@ -308,6 +310,21 @@ export default function ValidationDetailsPage() {
 
     if (id) fetchCustomerDetails();
   }, [id]);
+
+  useEffect(() => {
+  if (customerForm) {
+    setTerms({
+      wholesale_invoicing_company: customerForm.wholesale_invoicing_company || "",
+      wholesale_warehouse: customerForm.wholesale_warehouse || "",
+      wholesale_currency: customerForm.wholesale_currency || "",
+      wholesale_terms: customerForm.wholesale_terms || "",
+      // Usa estimated_purchase_amount se wholesale_credit for zero ou ausente
+      wholesale_credit: Number(customerForm.wholesale_credit ?? customerForm.estimated_purchase_amount) || 0,
+      wholesale_discount: customerForm.wholesale_discount || 0,
+      wholesale_feedback: "",
+    });
+  }
+}, [customerForm]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -500,17 +517,9 @@ const handleReview = async () => {
   }
 
   try {
-    setLoading(true); // Se você tem um estado de loading
-
-    setModalContent({
-      title: "Revisando Formulário...",
-      description: "Aguarde enquanto o status do formulário é atualizado para revisão do cliente.",
-    });
-    setShowModal(true);
-
+    setLoading(true);
     console.log("Revisando formulário para edição do cliente...", { customerId: id });
 
-    // CHAMA A FUNÇÃO DEDICADA PARA REVISÃO
     await api.reviewCustomer(id as string, null);
 
     if (customerForm) {
@@ -519,15 +528,15 @@ const handleReview = async () => {
         status: "review requested by the wholesale team",
       });
     }
-
     setModalContent({
       title: "Success!",
       description: "The form has been sent for the client's review. They can edit it now.",
     });
     setShowModal(true);
+
     setTimeout(() => {
       closeModal();
-      router.push("/validations/wholesale"); // Redirecione para a lista de validações, por exemplo
+      router.push("/validations/wholesale");
     }, 2000);
 
   } catch (err: unknown) {
@@ -537,9 +546,11 @@ const handleReview = async () => {
       description: err instanceof Error ? err.message : "Ocorreu um erro ao enviar para revisão. Tente novamente.",
     });
     setShowModal(true);
-    setLoading(false); // Desativa o loading no final
+  } finally {
+    setLoading(false);
   }
 };
+
 
 
 
