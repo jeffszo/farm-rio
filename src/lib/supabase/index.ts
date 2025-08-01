@@ -3,30 +3,30 @@ import * as forms from "./forms"
 import * as validations from "./validations"
 import * as queries from "./queries"
 import * as storage from "./storage"
-import { supabase } from "./client"
+import { supabaseServerClient } from "./client"
 import type { AuthAPI, User } from "../../types/api"
 
 // Create a class that implements the AuthAPI interface
 class SupabaseAPI implements AuthAPI {
   // Implementation for getCurrentUser
-  async getCurrentUser(): Promise<User | null> {
-    const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) return null
-    // Map supabase user to your User type if needed
-    return {
-      id: data.user.id,
-      email: data.user.email ?? "",
-      name: data.user.user_metadata?.name ?? "",
-      userType: data.user.user_metadata?.userType ?? "",
-      // Add other fields as needed
-    }
-  }
+  // async getCurrentUser(): Promise<User | null> {
+  //   const { data, error } = await supabase.auth.getUser()
+  //   if (error || !data?.user) return null
+  //   // Map supabase user to your User type if needed
+  //   return {
+  //     id: data.user.id,
+  //     email: data.user.email ?? "",
+  //     name: data.user.user_metadata?.name ?? "",
+  //     userType: data.user.user_metadata?.userType ?? "",
+  //     // Add other fields as needed
+  //   }
+  // }
 
   // Auth methods
   signUp = auth.signUp
   signIn = auth.signIn
   signOut = auth.signOut
-  getCurrentUserClient = auth.getCurrentUserClient
+  getCurrentUserServer = auth.getCurrentUserServer
 
   // Form methods
   submitForm = forms.submitForm
@@ -66,5 +66,5 @@ class SupabaseAPI implements AuthAPI {
 export const api = new SupabaseAPI()
 
 // Also export the raw supabase client for direct access if needed
-export { supabase }
+export { supabaseServerClient }
 

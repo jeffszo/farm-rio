@@ -120,8 +120,8 @@ export default function TaxValidationDetailsPage() {
 
       if (!approved && !feedback.trim()) {
         setModalContent({
-          title: "Error!",
-          description: "Feedback is required when rejecting a client.",
+          title: "Review!",
+          description: "The form has been sent for the client's review. They can edit it now",
         });
         setShowModal(true);
         return;
@@ -168,7 +168,7 @@ export default function TaxValidationDetailsPage() {
         title: "Success!",
         description: approved
           ? "Client approved! Forwarded to the credit team."
-          : "Feedback is required when requesting a customer review.",
+          : "The form has been sent for the client's review. They can edit it now",
       });
       setShowModal(true);
     } catch (err) {
@@ -452,7 +452,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               id="feedback"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Explain the reason for rejection or add relevant..."
+              placeholder="Explain the reason for review or add relevant..."
             />
           </S.FeedbackGroup>
         )}

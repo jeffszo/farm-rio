@@ -497,7 +497,7 @@ export default function ValidationDetailsPage() {
         title: "Ok!",
         description: approved
           ? "Customer approved! Forwarded to CSC team final."
-          : "Customer rejected!",
+          : "The form has been sent for the client's review. They can edit it now!",
       });
       setShowModal(true);
       console.log("Success modal displayed");

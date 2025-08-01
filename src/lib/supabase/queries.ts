@@ -1,8 +1,8 @@
-import { supabase } from "./client"
+import { supabaseServerClient } from "./index"
 //aaaa
 
 export async function getApprovedCustomers() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServerClient
     .from("customer_forms")
     .select(`
       created_at,
@@ -51,7 +51,7 @@ export async function getPendingCSCValidations(
     // Adicione outros status se houver mais que você deseja buscar nesta visão geral
   ];
 
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
     .in("status", statuses) // Usa o array de status combinado
@@ -72,7 +72,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const from = (page - 1) * itemsPerPage
   const to = from + itemsPerPage - 1
 
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
     .in("status", ["approved by the csc initial team"]) // From CSC initial or rejected by tax
@@ -94,7 +94,7 @@ export async function getPendingWholesaleValidations(page = 1, itemsPerPage = 10
   const from = (page - 1) * itemsPerPage
   const to = from + itemsPerPage - 1
 
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
     .in("status", ["pending"]) // From Tax or rejected by wholesale
@@ -116,7 +116,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
   const from = (page - 1) * itemsPerPage
   const to = from + itemsPerPage - 1
 
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
     .in("status", ["approved by the tax team"]) // From Wholesale or rejected by credit
@@ -137,7 +137,7 @@ export async function getPendingCreditValidations(page = 1, itemsPerPage = 10) {
 
 
 export async function getInvoicingCompanies() {
-  const { data, error } = await supabase.from("invoicing_companies").select("name")
+  const { data, error } = await supabaseServerClient.from("invoicing_companies").select("name")
 
   if (error) {
     console.error("Erro ao buscar empresas de faturamento:", error.message)
@@ -154,7 +154,7 @@ export async function getCustomerValidationDetails(id: string) {
     return null;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServerClient
     .from("customer_forms")
     .select(`
       id,
@@ -204,7 +204,7 @@ export async function getCustomerValidationDetails(id: string) {
 }
 
 export async function updateDunsNumber(customerId: string, duns: string) {
-  const { error } = await supabase.from("customer_forms").update({ duns_number: duns, updated_at: new Date().toISOString() }).eq("id", customerId) // Adiciona o timestamp de atualização
+  const { error } = await supabaseServerClient.from("customer_forms").update({ duns_number: duns, updated_at: new Date().toISOString() }).eq("id", customerId) // Adiciona o timestamp de atualização
 
   if (error) {
     console.error("Error updating D-U-N-S number:", error)
@@ -219,7 +219,7 @@ export async function updateDunsNumber(customerId: string, duns: string) {
 export async function getWarehousesByCompany(invoicingCompany: string) {
   if (!invoicingCompany) return [] // 🚨 Evita consultas inválidas
 
-  const { data, error } = await supabase.from("warehouses").select("name").eq("invoicing_company", invoicingCompany)
+  const { data, error } = await supabaseServerClient.from("warehouses").select("name").eq("invoicing_company", invoicingCompany)
 
   if (error) {
     console.error("Erro ao buscar armazéns:", error.message)
@@ -238,7 +238,7 @@ export async function resetFormStatus(id: string) {
   try {
     console.log("Resetting form status for ID:", id)
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServerClient
       .from("customer_forms")
       .update({
         status: "pending",
@@ -248,7 +248,7 @@ export async function resetFormStatus(id: string) {
       .select()
 
     if (error) {
-      console.error("Supabase reset status error:", error)
+      console.error("supabaseServerClient reset status error:", error)
       throw new Error(error.message || "Failed to reset form status")
     }
 
@@ -262,7 +262,7 @@ export async function resetFormStatus(id: string) {
 
 
  export async function getCustomerFormById(customerId: string) {
-   const response = await supabase
+   const response = await supabaseServerClient
      .from("customer_forms")
      .select("*")
      .eq("user_id", customerId)
@@ -277,15 +277,15 @@ export async function resetFormStatus(id: string) {
  }
 
 export async function getFeedbackTeams(customerId: string) {
-  const response = await supabase
+  const response = await supabaseServerClient
     .from("customer_forms")
     .select("status, user_id, wholesale_feedback, credit_feedback, tax_feedback, csc_initial_feedback, csc_final_feedback")
     .eq("user_id", customerId)
     .single();
 
-  console.log("Dados de feedback recebidos da Supabase:", response.data);
+  console.log("Dados de feedback recebidos da supabaseServerClient:", response.data);
   if (response.error) { // Adicione esta verificação
-    console.error("Erro ao buscar feedback no Supabase:", response.error); // Loga o erro
+    console.error("Erro ao buscar feedback no supabaseServerClient:", response.error); // Loga o erro
   }
 
   return {

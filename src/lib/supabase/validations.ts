@@ -1,5 +1,5 @@
 // validations.ts
-import { supabase } from "./client"
+import { supabaseServerClient } from "./client"
 
 
 // Helper function to determine the next status in the new flow
@@ -27,7 +27,7 @@ export async function validateCustomer(
   terms: Record<string, boolean> | null = null // Terms only for initial CSC if needed
 ) {
   // 1. Autenticação
-  const { data: userSession, error: sessionError } = await supabase.auth.getUser();
+  const { data: userSession, error: sessionError } = await supabaseServerClient.auth.getUser();
   if (sessionError || !userSession?.user) {
     throw new Error("Usuário não autenticado.");
   }
@@ -41,7 +41,7 @@ export async function validateCustomer(
     throw new Error("Usuário não autorizado para validar os clientes do time de Atacado.");
   }
 
-  const { data: teamUser, error: teamError } = await supabase
+  const { data: teamUser, error: teamError } = await supabaseServerClient
     .from("team_users")
     .select("id")
     .eq("user_id", userId)
@@ -89,7 +89,7 @@ export async function validateCustomer(
     updateFields.csc_final_status = approved ? "aprovado" : "reprovado";
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseServerClient
     .from("customer_forms")
     .update(updateFields)
     .eq("id", customerId);
@@ -103,7 +103,7 @@ export async function validateCustomer(
 // Nova função para validação inicial do CSC
 export async function validateCSCInitialCustomer(customerId: string, approved: boolean, feedback: string) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
-  const { data: customerData, error: fetchError } = await supabase
+  const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
     .eq("id", customerId)
@@ -126,7 +126,7 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
     updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabase
+  const { error } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
@@ -147,7 +147,7 @@ interface TaxDetails {
 
 export async function validateTaxCustomer(customerId: string, approved: boolean, taxDetails: TaxDetails) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
-  const { data: customerData, error: fetchError } = await supabase
+  const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
     .eq("id", customerId)
@@ -170,7 +170,7 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
     updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabase
+  const { error } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
@@ -196,7 +196,7 @@ export async function validateWholesaleCustomer(
   },
   isReview?: boolean
 ) {
-  const { data: customerData, error: fetchError } = await supabase
+  const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
     .eq("id", customerId)
@@ -227,7 +227,7 @@ export async function validateWholesaleCustomer(
     updated_at: new Date().toISOString(),
   };
 
-  const { error, data } = await supabase
+  const { error, data } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId)
@@ -254,7 +254,7 @@ interface CreditTerms {
 
 export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
-  const { data: customerData, error: fetchError } = await supabase
+  const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
     .eq("id", customerId)
@@ -267,7 +267,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("credit") : "review requested by the wholesale team"; // MODIFICAÇÃO AQUI
+  const newStatus = approved ? getNextStatus("credit") : "review requested by the credit team"; // MODIFICAÇÃO AQUI
   // const statusMessageForEmail = approved ? "aprovado pela equipe de Crédito" : "rejeitado pela equipe de Crédito";
 
   const updateData = {
@@ -283,7 +283,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabase
+  const { error } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
@@ -297,7 +297,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
 // Existing function, now for the final CSC review
 export async function validateCSCFinalCustomer(customerId: string, approved: boolean) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
-  const { data: customerData, error: fetchError } = await supabase
+  const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
     .eq("id", customerId)
@@ -319,7 +319,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
     updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabase
+  const { error } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);
@@ -344,7 +344,7 @@ export async function reviewCustomer(customerId: string, feedback: string | null
     updateData.wholesale_feedback = feedback; // Adiciona o feedback se houver
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseServerClient
     .from("customer_forms")
     .update(updateData)
     .eq("id", customerId);

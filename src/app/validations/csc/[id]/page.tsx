@@ -299,7 +299,7 @@ export default function ValidationDetailsPage() {
         title: "Ok!",
         description: approved
           ? "Customer approved!"
-          : "Customer rejected!",
+          : "The form has been sent for the client's review. They can edit it now!",
       });
       setShowModal(true);
     } catch (err) {
@@ -410,7 +410,7 @@ export default function ValidationDetailsPage() {
       await navigator.clipboard.writeText(text);
       setModalContent({
         title: "Sucesso!",
-        description: "Número de Tax ID copiado para a área de transferência!",
+        description: "Tax ID number copied to clipboard!",
       });
       setShowModal(true);
     } catch (err) {
