@@ -264,7 +264,7 @@ if (userError) {
         }
       }
 
-      setModalTitle("Submission Error");
+      setModalTitle("Submission failed!");
       setModalMessage(displayMessage);
       setModalIcon(() => CircleX); // Set the error icon component
       setIsModalOpen(true); // Open the modal with error content
