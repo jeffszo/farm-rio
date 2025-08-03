@@ -3,7 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as S from "../../customer/styles";
+import * as S from "../status/[userId]/styles";
 import type { IFormInputs, AddressInput } from "../../../types/form";
 import { createClient } from '@/lib/supabase/client';
 
@@ -49,6 +49,7 @@ export default function OnboardingForm() {
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(
     null
   );
@@ -171,6 +172,24 @@ export default function OnboardingForm() {
   const onSubmit = async (formData: IFormInputs) => {
     console.log("Submit button clicked. Starting onSubmit function.");
 
+    console.log("📥 Form submission started.");
+
+// Verifica sessão e token
+const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+console.log("🔐 Supabase session data:", sessionData);
+console.log("🧾 Access Token:", sessionData?.session?.access_token);
+if (sessionError) {
+  console.error("⚠️ Error getting session:", sessionError.message);
+}
+
+// Verifica o usuário
+const { data: userData, error: userError } = await supabase.auth.getUser();
+console.log("👤 Supabase user data:", userData?.user);
+if (userError) {
+  console.error("⚠️ Error getting user:", userError.message);
+}
+
+
     // Clear any previous API errors and modal states at the start of submission attempt
     setApiError(null);
     setModalTitle("");
@@ -262,9 +281,35 @@ export default function OnboardingForm() {
 
 let { data: { user: currentUser } } = await supabase.auth.getUser();
 
+
 if (!currentUser) {
   console.log("🔁 Buscando currentUser dentro do onSubmit...");
-  currentUser = await api.getCurrentUserServer();
+  const apiUser = await api.getCurrentUserServer();
+  if (apiUser && apiUser.id) {
+    // Only assign the properties that exist in Supabase's User type
+    currentUser = {
+      id: apiUser.id,
+      app_metadata: {},
+      user_metadata: {},
+      aud: "",
+      created_at: "",
+      email: "",
+      phone: "",
+      confirmation_sent_at: "",
+      recovery_sent_at: "",
+      email_change_sent_at: "",
+      last_sign_in_at: "",
+      role: "",
+      updated_at: "",
+      identities: [],
+      factors: [],
+      invited_at: "",
+      action_link: "",
+      email_confirmed_at: "",
+      phone_confirmed_at: "",
+      is_anonymous: false
+    };
+  }
 }
 
 if (!currentUser || !currentUser.id) {
@@ -281,7 +326,6 @@ if (!currentUser || !currentUser.id) {
 
   return;
 }
-
 
       console.log("Current user ID:", currentUser.id);
 

@@ -1,17 +1,15 @@
-import { notFound } from "next/navigation";
-import { api } from "../../../../lib/supabase";
+import { redirect } from "next/navigation";
+import { api } from "@/lib/supabase";
 import StatusClient from "./StatusClient";
 
-export default async function StatusPage({
-  params,
-}: {
-  params: Promise<{ userId: string }>;
-}) {
-  const { userId } = await params;
+export default async function StatusPage() {
+  const currentUser = await api.getCurrentUserServer();
 
-  if (!userId) {
-    notFound();
+  if (!currentUser?.id) {
+    redirect("/login");
   }
+
+  const userId = currentUser.id;
 
   try {
     const formData = await api.getFormStatus(userId);

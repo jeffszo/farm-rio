@@ -297,7 +297,7 @@ export default function ValidationDetailsPage() {
 
     const fetchUser = async () => {
       try {
-        const currentUser = await api.getCurrentUserClient();
+        const currentUser = await api.getCurrentUserServer();
         if (!currentUser) return;
         // setUser({ email: currentUser.email, role: currentUser.userType });
       } catch (err) {

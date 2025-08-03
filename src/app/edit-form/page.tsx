@@ -9,6 +9,7 @@ import type { IFormInputs } from "@/types/form";
 import { api } from "@/lib/supabase/index";
 import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react";
 
+
 const termsOptions = [
   { value: "", label: "Select terms" },
   { value: "100% Prior to Ship", label: "100% Prior to Ship" },
@@ -30,7 +31,7 @@ export default function OnboardingForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [isSameAsBilling, setIsSameAsBilling] = useState(false);
+  const [, setIsSameAsBilling] = useState(false);
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -57,12 +58,12 @@ export default function OnboardingForm() {
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
-      billingAddress: [{} as any],
-      shippingAddress: [{} as any],
+      billingAddress: [{} as IFormInputs["billingAddress"][number]],
+      shippingAddress: [{} as IFormInputs["shippingAddress"][number]],
       buyerInfo: {
         terms: "",
         currency: "",
-      } as any,
+      } as IFormInputs["buyerInfo"],
     },
   });
 
@@ -131,9 +132,9 @@ export default function OnboardingForm() {
             const parsedShipping = typeof data.shipping_address === "string" ? JSON.parse(data.shipping_address) : data.shipping_address || [];
 
             setValue("billingAddress", parsedBilling);
-            setbillingAddress(parsedBilling.map((_, i) => i));
+            setbillingAddress(parsedBilling.map((_: unknown, i: number) => i));
             setValue("shippingAddress", parsedShipping);
-            setshippingAddress(parsedShipping.map((_, i) => i));
+            setshippingAddress(parsedShipping.map((_: unknown, i: number) => i));
           }
         } catch (err) {
           console.error("Erro ao buscar e popular dados do cliente:", err);
@@ -287,6 +288,7 @@ export default function OnboardingForm() {
         clearErrors("buyerInfo.financialStatements");
       }
     }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     const isValid = await trigger(fieldsToValidate);
     if (currentStep === 4 && (errors.buyerInfo?.financialStatements || !isValid)) {
@@ -309,13 +311,13 @@ export default function OnboardingForm() {
   const removeShippingAddress = (indexToRemove: number) => {
     if (shippingAddress.length <= 1) return;
     setshippingAddress((prev) => prev.filter((_, index) => index !== indexToRemove));
-    setValue(`shippingAddress.${indexToRemove}`, {} as any);
+    setValue(`shippingAddress.${indexToRemove}`, {} as IFormInputs["shippingAddress"][number]);
   };
 
   const removeBillingAddress = (indexToRemove: number) => {
     if (billingAddress.length <= 1) return;
     setbillingAddress((prev) => prev.filter((_, index) => index !== indexToRemove));
-    setValue(`billingAddress.${indexToRemove}`, {} as any);
+    setValue(`billingAddress.${indexToRemove}`, {} as IFormInputs["billingAddress"][number]);
   };
 
   const handleSameAsBilling = () => {
@@ -408,15 +410,15 @@ export default function OnboardingForm() {
                     id="instagram"
                     type="url"
                     placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram" as any, {
+                    {...register("instagram", {
                       pattern: {
                         value: /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
                         message: "Please enter a valid Instagram URL.",
                       },
                     })}
-                    error={!!(errors as any).instagram}
+                    error={!!errors.instagram}
                   />
-                  {(errors as any).instagram && <S.ErrorMessage>{(errors as any).instagram.message}</S.ErrorMessage>}
+                  {errors.instagram && <S.ErrorMessage>{errors.instagram.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="website">Website</S.Label>
@@ -424,15 +426,15 @@ export default function OnboardingForm() {
                     id="website"
                     type="url"
                     placeholder="https://yourwebsite.com"
-                    {...register("website" as any, {
+                    {...register("website", {
                       pattern: {
                         value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
                         message: "Please enter a valid Website URL.",
                       },
                     })}
-                    error={!!(errors as any).website}
+                    error={!!errors.website}
                   />
-                  {(errors as any).website && <S.ErrorMessage>{(errors as any).website.message}</S.ErrorMessage>}
+                  {errors.website && <S.ErrorMessage>{errors.website.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.FileInputContainer>
                   <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
@@ -441,7 +443,7 @@ export default function OnboardingForm() {
                     <Upload size={16} />
                     {file ? file.name : "Attach file (PDF)"}
                   </S.UploadButton>
-                  {errors.customerInfo?.resaleCertificate && <S.ErrorMessage>{errors.customerInfo.resaleCertificate.message}</S.ErrorMessage>}
+                  {/* No resaleCertificate error in customerInfo, so nothing to render here */}
                 </S.FileInputContainer>
                 <S.FileInputContainer>
                   <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
@@ -464,12 +466,12 @@ export default function OnboardingForm() {
                     </S.InfoButton>
                   </div>
                   <S.Input
-                    style={{ width: "500px", height: "200px", paddingBottom: "170px" }}
+                    style={{ width: "562px", height: "200px", paddingBottom: "170px" }}
                     id="brandingMix"
-                    {...register("brandingMix" as any, { required: "Brand/Branding Mix is required" })}
-                    error={!!(errors as any).brandingMix}
+                    {...register("brandingMix", { required: "Brand/Branding Mix is required" })}
+                    error={!!errors.brandingMix}
                   />
-                  {(errors as any).brandingMix && <S.ErrorMessage>{(errors as any).brandingMix.message}</S.ErrorMessage>}
+                  {errors.brandingMix && <S.ErrorMessage>{errors.brandingMix.message}</S.ErrorMessage>}
                 </S.InputGroup>
               </S.Grid>
             </S.Section>
@@ -609,7 +611,7 @@ export default function OnboardingForm() {
                     {errors.apContact?.countryCode && <S.ErrorMessage>{errors.apContact.countryCode.message}</S.ErrorMessage>}
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="apContactNumber">Phone:</S.Label>
+                    <S.Label htmlFor="apContactNumber">Phone</S.Label>
                     <S.Input id="apContactNumber" type="number" min={0} {...register("apContact.contactNumber", { required: "Contact number is required", valueAsNumber: true })} error={!!errors.apContact?.contactNumber} />
                     {errors.apContact?.contactNumber && <S.ErrorMessage>{errors.apContact.contactNumber.message}</S.ErrorMessage>}
                   </S.InputGroup>
@@ -623,28 +625,28 @@ export default function OnboardingForm() {
               <S.SectionTitleBuyer>Buyer Information</S.SectionTitleBuyer>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerFirstName">First name:</S.Label>
+                  <S.Label htmlFor="buyerFirstName">First name</S.Label>
                   <S.Input id="buyerFirstName" {...register("buyerInfo.firstName", { required: "First name is required" })} error={!!errors.buyerInfo?.firstName} />
                   {errors.buyerInfo?.firstName && <S.ErrorMessage>{errors.buyerInfo.firstName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerLastName">Last name:</S.Label>
+                  <S.Label htmlFor="buyerLastName">Last name</S.Label>
                   <S.Input id="buyerLastName" {...register("buyerInfo.lastName", { required: "Last name is required" })} error={!!errors.buyerInfo?.lastName} />
                   {errors.buyerInfo?.lastName && <S.ErrorMessage>{errors.buyerInfo.lastName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerEmail">E-mail:</S.Label>
+                  <S.Label htmlFor="buyerEmail">E-mail</S.Label>
                   <S.Input id="buyerEmail" type="email" placeholder="example@hotmail.com" {...register("buyerInfo.email", { required: "Email is required", pattern: { value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: "Please enter a valid email address." } })} error={!!errors.buyerInfo?.email} />
                   {errors.buyerInfo?.email && <S.ErrorMessage>{errors.buyerInfo.email.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.PhoneInputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="buyerCountryCode">Country Code:</S.Label>
+                    <S.Label htmlFor="buyerCountryCode">Country Code</S.Label>
                     <S.Input id="buyerCountryCode" type="number" min={0} {...register("buyerInfo.countryCode", { required: "Code is required", valueAsNumber: true })} error={!!errors.buyerInfo?.countryCode} />
                     {errors.buyerInfo?.countryCode && <S.ErrorMessage>{errors.buyerInfo.countryCode.message}</S.ErrorMessage>}
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="buyerNumber">Phone:</S.Label>
+                    <S.Label htmlFor="buyerNumber">Phone</S.Label>
                     <S.Input type="number" id="buyerNumber" min={0} {...register("buyerInfo.buyerNumber", { required: "Phone number is required", valueAsNumber: true })} error={!!errors.buyerInfo?.buyerNumber} />
                     {errors.buyerInfo?.buyerNumber && <S.ErrorMessage>{errors.buyerInfo.buyerNumber.message}</S.ErrorMessage>}
                   </S.InputGroup>
@@ -671,7 +673,7 @@ export default function OnboardingForm() {
                 <S.FileInputContainer>
                   <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                     <S.Label htmlFor="financialStatements-upload">Financial Statements</S.Label>
-                    <S.InfoButton type="button" title="Most disclosed tax period"><Info size={16} /></S.InfoButton>
+                    <S.InfoButton type="button" title="Most disclosed tax period"><Info size={16} style={{marginBottom: "0.5rem"}}/></S.InfoButton>
                   </div>
                   <S.HiddenInput id="financialStatements-upload" type="file" accept="application/pdf" onChange={handleFinancialStatementsFileChange} />
                   <S.UploadButton htmlFor="financialStatements-upload">
