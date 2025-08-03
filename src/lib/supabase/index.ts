@@ -39,7 +39,7 @@ class SupabaseAPI implements AuthAPI {
   validateCreditCustomer = validations.validateCreditCustomer
   validateCSCInitialCustomer = validations.validateCSCInitialCustomer
   validateCSCFinalCustomer = validations.validateCSCFinalCustomer
-  requestReview = validations.requestReview 
+  reviewCustomer = validations.reviewCustomer
 
   // Query methods
   getPendingWholesaleValidations = queries.getPendingWholesaleValidations
