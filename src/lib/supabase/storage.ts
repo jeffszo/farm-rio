@@ -109,7 +109,7 @@ export async function uploadImage(file: File, customerId: string): Promise<strin
 
   console.log("✅ Upload realizado com sucesso!");
 
-  const { data: signedUrlData, error: signedUrlError } = await supabaseServerClient.storage
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from("customerimages")
     .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10); // 10 anos
 

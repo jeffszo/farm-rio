@@ -351,17 +351,33 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               )}
             </S.FormRow>
 
-            <S.FormRow>
-              <strong>Instagram: </strong>
-              <a target="_blank" href={customerForm.instagram}>
-                {customerForm.instagram}
-              </a>
+<S.FormRow>
+              <strong>Instagram:</strong>{" "}
+              {customerForm.instagram ? (
+                <a
+                  href={customerForm.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Instagram
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
             <S.FormRow>
-              <strong>Website: </strong>
-              <a target="_blank" href={customerForm.website}>
-                {customerForm.website}
-              </a>
+              <strong>Website:</strong>{" "}
+              {customerForm.website ? (
+                <a
+                  href={customerForm.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Website
+                </a>
+              ) : (
+                "N/A"
+              )}
             </S.FormRow>
             <S.FormRow>
               <strong>Photos:</strong>{" "}

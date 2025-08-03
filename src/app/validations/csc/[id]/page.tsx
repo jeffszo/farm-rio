@@ -606,30 +606,34 @@ export default function ValidationDetailsPage() {
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
-            <S.AddressContainer>
-              <S.AddressBlock>
-                <S.AddressTitle>Billing Address</S.AddressTitle>
-                {parsedBillingAddresses.length > 0 ? (
-                  parsedBillingAddresses.map((address, index) => (
-                    <div key={index}>{renderAddress(address)}</div>
-                  ))
-                ) : (
-                  <p>No billing address provided.</p>
-                )}
-              </S.AddressBlock>
-              <S.AddressBlock>
-                <S.AddressTitle>Shipping Address</S.AddressTitle>
-                {parsedShippingAddresses.length > 0 ? (
-                  parsedShippingAddresses.map((address, index) => (
-                    <div key={index}>{renderAddress(address)}</div>
-                  ))
-                ) : (
-                  <p>No shipping address provided.</p>
-                )}
-              </S.AddressBlock>
-            </S.AddressContainer>
-          </S.FormSection>
+            {parsedBillingAddresses.length > 0 ? (
+              parsedBillingAddresses.map((address, index) => (
+                <S.AddressBlock key={`billing-${index}`}>
+                  <S.AddressTitle>
+                    Billing Address{" "}
+                    {parsedBillingAddresses.length > 1 ? index + 1 : ""}:
+                  </S.AddressTitle>
+                  {renderAddress(address)}
+                </S.AddressBlock>
+              ))
+            ) : (
+              <S.AddressBlock>No billing address provided.</S.AddressBlock>
+            )}
 
+            {parsedShippingAddresses.length > 0 ? (
+              parsedShippingAddresses.map((address, index) => (
+                <S.AddressBlock key={`shipping-${index}`}>
+                  <S.AddressTitle>
+                    Shipping Address{" "}
+                    {parsedShippingAddresses.length > 1 ? index + 1 : ""}:
+                  </S.AddressTitle>
+                  {renderAddress(address)}
+                </S.AddressBlock>
+              ))
+            ) : (
+              <S.AddressBlock>No shipping address provided.</S.AddressBlock>
+            )}
+          </S.FormSection>
           {/* Contact Information Section */}
           <S.FormSection>
             <S.SectionTitle>
@@ -669,7 +673,7 @@ export default function ValidationDetailsPage() {
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team") && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "finished"| customerForm.status === "approved by the wholesale team") && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
