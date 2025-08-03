@@ -1,8 +1,14 @@
-import { supabase } from "./client"
+'use server'
+
+import { supabaseServerClient } from "./client"
 import type { User } from "../../types/api"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+
+
 
 export async function signUp(name: string, email: string, password: string): Promise<User> {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabaseServerClient.auth.signUp({
     email,
     password,
     options: { data: { name } },
@@ -12,7 +18,7 @@ export async function signUp(name: string, email: string, password: string): Pro
   if (!data.user) throw new Error("Erro inesperado: Usuário não retornado.")
 
   // ✅ Insere o usuário na tabela correta (`users` e não `profiles`)
-  const { error: profileError } = await supabase
+  const { error: profileError } = await supabaseServerClient
     .from("users")
     .insert([
       {
@@ -36,12 +42,12 @@ export async function signUp(name: string, email: string, password: string): Pro
 }
 
 export async function signIn(email: string, password: string): Promise<User> {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabaseServerClient.auth.signInWithPassword({ email, password })
 
   if (error) throw new Error(`Erro ao fazer login: ${error.message}`)
   if (!data.user) throw new Error("Usuário não encontrado.")
 
-  const { data: userData, error: userError } = await supabase
+  const { data: userData, error: userError } = await supabaseServerClient
     .from("users")
     .select("role")
     .eq("id", data.user.id)
@@ -58,11 +64,11 @@ export async function signIn(email: string, password: string): Promise<User> {
 }
 
 export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut()
+  const { error } = await supabaseServerClient.auth.signOut()
   if (error) throw new Error(`Erro ao sair: ${error.message}`)
 }
 
-// No arquivo: ../../../lib/supabase/index.ts (ou onde a função está)
+// No arquivo: ../../../lib/supabaseServerClient/index.ts (ou onde a função está)
 
 export async function getCurrentUser(userId: string): Promise<User | null> {
   console.log("Iniciando getCurrentUser() para Time de Validação com ID:", userId); // Log 1
@@ -75,7 +81,7 @@ export async function getCurrentUser(userId: string): Promise<User | null> {
     }
 
     // 2. Buscar o usuário diretamente na tabela 'users'
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabaseServerClient
       .from("users")
       .select("id, name, email, role") // Seleciona todas as colunas necessárias para o tipo User
       .eq("id", userId)
@@ -115,20 +121,25 @@ export async function getCurrentUser(userId: string): Promise<User | null> {
 }
 
 
-export async function getCurrentUserClient(): Promise<User | null> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError || !sessionData.session || !sessionData.session.user) return null
 
-  const user = sessionData.session.user
+export async function getCurrentUserServer(): Promise<User | null> {
+  const supabase = createServerComponentClient({ cookies })
 
-  const { data: userData, error: userError } = await supabase
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const user = session?.user
+  if (!user) return null
+
+  const { data: userData, error } = await supabase
     .from("users")
     .select("role")
     .eq("id", user.id)
     .single()
 
-  if (userError) {
-    console.error("Erro ao buscar tipo de usuário:", userError)
+  if (error) {
+    console.error("Erro ao buscar tipo de usuário:", error)
     return null
   }
 

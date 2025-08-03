@@ -3,7 +3,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    userType: 'cliente' | 'atacado' | 'credito' | 'csc';
+    userType: 'cliente' | 'atacado' | 'credito' | 'csc' | 'tax';
   }
   
   export interface AuthAPI {

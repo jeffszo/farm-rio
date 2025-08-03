@@ -3,8 +3,10 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as S from "../../customer/styles";
+import * as S from "../status/[userId]/styles";
 import type { IFormInputs, AddressInput } from "../../../types/form";
+import { createClient } from '@/lib/supabase/client';
+
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
@@ -18,6 +20,8 @@ import {
 } from "lucide-react";
 import { api } from "../../../lib/supabase/index";
 
+
+const supabase = createClient();
 // Opções para os selects (adicione/ajuste conforme suas telas de validação)
 const termsOptions = [
   { value: "", label: "Select terms" },
@@ -45,6 +49,7 @@ export default function OnboardingForm() {
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(
     null
   );
@@ -123,7 +128,7 @@ export default function OnboardingForm() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const currentUser = await api.getCurrentUserClient();
+      const currentUser = await api.getCurrentUserServer();
       setUser(currentUser);
       setIsLoading(false);
     };
@@ -166,6 +171,24 @@ export default function OnboardingForm() {
 
   const onSubmit = async (formData: IFormInputs) => {
     console.log("Submit button clicked. Starting onSubmit function.");
+
+    console.log("📥 Form submission started.");
+
+// Verifica sessão e token
+const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+console.log("🔐 Supabase session data:", sessionData);
+console.log("🧾 Access Token:", sessionData?.session?.access_token);
+if (sessionError) {
+  console.error("⚠️ Error getting session:", sessionError.message);
+}
+
+// Verifica o usuário
+const { data: userData, error: userError } = await supabase.auth.getUser();
+console.log("👤 Supabase user data:", userData?.user);
+if (userError) {
+  console.error("⚠️ Error getting user:", userError.message);
+}
+
 
     // Clear any previous API errors and modal states at the start of submission attempt
     setApiError(null);
@@ -256,19 +279,54 @@ export default function OnboardingForm() {
       setIsUploading(true);
       console.log("isUploading set to true.");
 
-      const currentUser = user || (await api.getCurrentUserClient());
-      if (!currentUser || !currentUser.id) {
-        console.error("User not authenticated. Redirecting to login."); // Traduzido
-        
-        setModalTitle("Authentication Error");
-        setModalMessage("Your session has expired or you are not logged in. Please log in again.");
-        setModalIcon(() => CircleX);
-        setIsModalOpen(true);
+let { data: { user: currentUser } } = await supabase.auth.getUser();
 
-        setIsUploading(false);
-        router.push("/");
-        return;
-      }
+
+if (!currentUser) {
+  console.log("🔁 Buscando currentUser dentro do onSubmit...");
+  const apiUser = await api.getCurrentUserServer();
+  if (apiUser && apiUser.id) {
+    // Only assign the properties that exist in Supabase's User type
+    currentUser = {
+      id: apiUser.id,
+      app_metadata: {},
+      user_metadata: {},
+      aud: "",
+      created_at: "",
+      email: "",
+      phone: "",
+      confirmation_sent_at: "",
+      recovery_sent_at: "",
+      email_change_sent_at: "",
+      last_sign_in_at: "",
+      role: "",
+      updated_at: "",
+      identities: [],
+      factors: [],
+      invited_at: "",
+      action_link: "",
+      email_confirmed_at: "",
+      phone_confirmed_at: "",
+      is_anonymous: false
+    };
+  }
+}
+
+if (!currentUser || !currentUser.id) {
+  console.error("⚠️ Usuário não autenticado no momento do submit.");
+  setModalTitle("Authentication Error");
+  setModalMessage("Your session has expired or you are not logged in. Please log in again.");
+  setModalIcon(() => CircleX);
+  setIsModalOpen(true);
+  setIsUploading(false);
+
+  setTimeout(() => {
+    router.push("/");
+  }, 30000); // 30 segundos de espera
+
+  return;
+}
+
       console.log("Current user ID:", currentUser.id);
 
       console.log("Data received in form (formData):", formData); // Traduzido
@@ -397,38 +455,13 @@ export default function OnboardingForm() {
       await api.submitForm(payload, currentUser.id);
       console.log("Form submitted successfully via API."); // Traduzido
 
-      // --- NEW: Send email after successful form submission ---
-      // try {
-      //   const emailResponse = await fetch("/api/send-form-submission-email", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       recipientEmail: "your-internal-email@example.com", // Or an email from formData (e.g., buyerInfo.email)
-      //       recipientName: "Admin Team", // Or the user's name from formData (e.g., buyerInfo.firstName)
-      //       formData: payload, // Send the full payload or a subset of it
-      //     }),
-      //   });
-
-      //   if (!emailResponse.ok) {
-      //     const errorData = await emailResponse.json();
-      //     console.error("Failed to send form submission email:", errorData); // Traduzido
-      //     // Optionally, set an API error for email sending, but don't prevent form submission success
-      //   } else {
-      //     console.log("Form submission email sent successfully."); // Traduzido
-      //   }
-      // } catch (emailError) {
-      //   console.error("Error sending form submission email:", emailError); // Traduzido
-      //   // Handle email sending error, but again, don't necessarily fail the form submission itself
-      // }
-      // --- END NEW ---
-
+    
       setModalTitle("Success!");
       setModalMessage("Your form has been submitted successfully!");
       setModalIcon(() => CircleCheck); // Set the success icon component
       setIsModalOpen(true); // Open the modal with success content
       console.log("Modal set to open with success message.");
+      router.push("/")
 
     } catch (error: unknown) {
       console.error(
@@ -436,10 +469,11 @@ export default function OnboardingForm() {
         error instanceof Error ? error.message : String(error)
       ); // Traduzido
       
-      setModalTitle("Submission Error");
-      setModalMessage(error instanceof Error ? error.message : "Error submitting the form. Please try again.");
+      // setModalTitle("Submission Error");
+      // setModalMessage(error instanceof Error ? error.message : "Error submitting the form. Please try again.");
       setModalIcon(() => CircleX); // Set the error icon component
       setIsModalOpen(true); // Open the modal with error content
+      router.push("/")
 
     } finally {
       setIsUploading(false);

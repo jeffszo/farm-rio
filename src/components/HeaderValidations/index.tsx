@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React from 'react'
 import { useRouter, usePathname } from "next/navigation"
@@ -6,7 +6,9 @@ import * as S from "./styles"
 import Image from "next/image"
 import Logo from "../../../public/logo.png"
 import { LogOut } from "lucide-react"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client" // Importe createClient
+
+const supabase = createClient(); // Crie a instância do cliente Supabase aqui
 
 export default function HeaderValidations() {
   const router = useRouter()

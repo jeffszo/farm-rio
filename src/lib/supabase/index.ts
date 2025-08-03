@@ -3,14 +3,14 @@ import * as forms from "./forms"
 import * as validations from "./validations"
 import * as queries from "./queries"
 import * as storage from "./storage"
-import { supabase } from "./client"
 import type { AuthAPI, User } from "../../types/api"
+import { supabaseServerClient } from "./client"
 
 // Create a class that implements the AuthAPI interface
 class SupabaseAPI implements AuthAPI {
   // Implementation for getCurrentUser
   async getCurrentUser(): Promise<User | null> {
-    const { data, error } = await supabase.auth.getUser()
+    const { data, error } = await supabaseServerClient.auth.getUser()
     if (error || !data?.user) return null
     // Map supabase user to your User type if needed
     return {
@@ -26,7 +26,7 @@ class SupabaseAPI implements AuthAPI {
   signUp = auth.signUp
   signIn = auth.signIn
   signOut = auth.signOut
-  getCurrentUserClient = auth.getCurrentUserClient
+  getCurrentUserServer = auth.getCurrentUserServer
 
   // Form methods
   submitForm = forms.submitForm
@@ -50,7 +50,8 @@ class SupabaseAPI implements AuthAPI {
   getCustomerValidationDetails = queries.getCustomerValidationDetails
   getPendingTaxValidations = queries.getPendingTaxValidations
   getPendingCSCValidations = queries.getPendingCSCValidations
-  getCustomerFormById   = queries.getCustomerFormById  
+  getCustomerFormById   = queries.getCustomerFormById
+  getFeedbackTeams = queries.getFeedbackTeams  
   resetFormStatus = queries.resetFormStatus
 
   uploadResaleCertificate = storage.uploadResaleCertificate
@@ -65,5 +66,4 @@ class SupabaseAPI implements AuthAPI {
 export const api = new SupabaseAPI()
 
 // Also export the raw supabase client for direct access if needed
-export { supabase }
-
+export { supabaseServerClient }

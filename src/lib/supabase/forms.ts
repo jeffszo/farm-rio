@@ -1,4 +1,4 @@
-import { supabase } from "./client"
+import { supabaseServerClient } from "./client"
 
 export async function submitForm(formData: unknown, userId: string) {
 
@@ -63,7 +63,7 @@ export async function submitForm(formData: unknown, userId: string) {
     } = formData as FormData;
 
     // 🔍 Verifica se já existe formulário
-    const { data: existingForm, error: checkError } = await supabase
+    const { data: existingForm, error: checkError } = await supabaseServerClient
       .from("customer_forms")
       .select("id")
       .eq("user_id", userId)
@@ -104,7 +104,7 @@ export async function submitForm(formData: unknown, userId: string) {
 
     if (existingForm) {
       // 🔄 Atualiza formulário existente
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseServerClient
         .from("customer_forms")
         .update(payload)
         .eq("id", existingForm.id);
@@ -113,7 +113,7 @@ export async function submitForm(formData: unknown, userId: string) {
       return { id: existingForm.id, updated: true };
     } else {
       // 🆕 Insere novo formulário
-      const { data, error } = await supabase
+      const { data, error } = await supabaseServerClient
         .from("customer_forms")
         .insert([payload])
         .select()
@@ -133,7 +133,7 @@ interface FormStatusData {
 }
 
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServerClient
     .from("customer_forms")
     .select("status")
     .eq("user_id", userId)
@@ -162,7 +162,7 @@ export async function updateForm(formData: string, formId: string) {
     const parsedData = JSON.parse(formData)
 
     // Perform the update using the correct column (id, not user_id)
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServerClient
       .from("customer_forms")
       .update(parsedData)
       .eq("id", formId) // Use "id" instead of "user_id"
