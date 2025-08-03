@@ -78,12 +78,12 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
   });
-  const [feedback, setFeedback] = useState("");
   const router = useRouter();
 
   // States for editable DUNS field ONLY
@@ -252,92 +252,51 @@ export default function ValidationDetailsPage() {
     }
   };
 
-  const handleApproval = async (approved: boolean) => {
-    try {
-      setLoading(true);
-      // Ensure id is a string before passing to API
-      if (typeof id !== "string") {
-        throw new Error("ID do cliente inválido.");
-      }
+const handleApproval = async (approved: boolean) => {
+    if (!id || typeof id !== "string") {
+        console.error("ID do cliente não encontrado.");
+        return;
+    }
 
-      if (!approved && !feedback.trim()) {
+    // Validação: Se reprovado, exige um feedback
+    if (!approved && feedback.trim() === "") {
+      alert("Por favor, forneça um feedback para a rejeição.");
+      return;
+    }
+
+    try {
+        setLoading(true);
+
+        // AQUI ESTÁ A CORREÇÃO: o estado `feedback` é passado como argumento.
+        await api.validateCSCFinalCustomer(id, approved, feedback);
+
         setModalContent({
-          title: "Error!",
-          description: "Feedback is required when requesting a customer review.",
+            title: approved ? "Approved!" : "Review!",
+            description: approved
+                ? "Customer approved!"
+                : "The form has been sent for the client's review. They can edit it now."
         });
         setShowModal(true);
-        return;
-      }
-
-      let statusUpdated = false;
-
-      if (customerForm?.status === "approved by the credit team") {
-        await api.validateCSCFinalCustomer(id, approved); // Etapa 6
-        statusUpdated = true;
-      } else {
-        await api.validateCSCInitialCustomer(id, approved, feedback); // Etapa 2
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        statusUpdated = true;
-      }
-
-      // --- NOVA ADIÇÃO: Enviar e-mail após a validação CSC ---
-      // if (statusUpdated && customerForm) {
-      //   try {
-      //     const emailResponse = await fetch("/api/send-csc-validation-email", {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //       body: JSON.stringify({
-      //         customerId: id,
-      //         customerName: customerForm.customer_name,
-      //         customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
-      //         validationStatus: approved,
-      //         feedback: feedback,
-      //         currentStatus: customerForm.status, // Envia o status atual para a rota para diferenciar os e-mails
-      //       }),
-      //     });
-
-      //     if (!emailResponse.ok) {
-      //       const errorData = await emailResponse.json();
-      //       console.error("Falha ao enviar e-mail de validação CSC:", errorData);
-      //       // Você pode optar por mostrar um erro aqui ou apenas logar, dependendo da criticidade do e-mail
-      //     } else {
-      //       console.log("E-mail de validação CSC enviado com sucesso.");
-      //     }
-      //   } catch (emailError) {
-      //     console.error("Erro ao enviar e-mail de validação CSC:", emailError);
-      //   }
-      // }
-      // --- FIM DA NOVA ADIÇÃO ---
-
-      setModalContent({
-        title: "Ok!",
-        description: approved
-          ? "Customer approved!"
-          : "The form has been sent for the client's review. They can edit it now!",
-      });
-      setShowModal(true);
-    } catch (err) {
-      console.error("Erro ao validar cliente:", err);
-      setModalContent({
-        title: "Erro!",
-        description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-      setShowModal(true);
+    } catch (error) {
+        console.error("Erro ao validar cliente:", error);
+        setModalContent({
+            title: "Erro",
+            description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`
+        });
+        setShowModal(true);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
 
-  const closeModal = () => {
-    setShowModal(false);
-    // If modal is for success/rejection, redirect
-    if (modalContent.title === "Ok!" || modalContent.title === "Error!") {
-      router.push("/validations/csc");
-    }
-    // If modal is for update errors, just close it.
-  };
+     const closeModalAndRedirect = () => {
+        setShowModal(false);
+        router.push('/csc/'); // Redireciona para a página 'csc'
+    };
+
+};
+
+// ... O restante do seu componente
+
 
   // Helper function to render an address
   const renderAddress = (address: Address) => (
@@ -840,7 +799,7 @@ export default function ValidationDetailsPage() {
                 <CircleCheck size={48} />
               </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
-              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
+              <S.ModalButton onClick={closeModalAndRedirect}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}

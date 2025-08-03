@@ -38,6 +38,7 @@ export default function OnboardingForm() {
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [previousFormStatus, setPreviousFormStatus] = useState<string | null>(null);
   const router = useRouter();
 
   // Removendo 'useParams' e 'customerId' para que o ID não seja mais extraído da URL
@@ -54,6 +55,7 @@ export default function OnboardingForm() {
     getValues,
     setValue,
     clearErrors,
+    reset,
     setError,
   } = useForm<IFormInputs>({
     mode: "onChange",
@@ -85,6 +87,8 @@ export default function OnboardingForm() {
       clearErrors("buyerInfo.financialStatements");
     }
   };
+
+
 
   // Unindo as lógicas de buscar o usuário e os dados do formulário
   useEffect(() => {
@@ -160,6 +164,35 @@ export default function OnboardingForm() {
     }
   };
 
+useEffect(() => {
+  async function fetchCustomerData() {
+    // Certifique-se de que o objeto 'user' está disponível no escopo do seu componente
+    const userId = user?.id;
+
+    if (userId) {
+      try {
+        // CORREÇÃO: Usar a função que busca o formulário pelo ID do usuário
+        const { data, error } = await api.getCurrentUserServer(userId);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (data) {
+          // Salva o status do formulário antes de qualquer edição
+          setPreviousFormStatus(data.status || null);
+          // O restante da lógica para preencher o formulário (ex: reset com os dados do data)
+          reset(data);
+        }
+      } catch (error: any) {
+        console.error("Erro ao buscar dados do cliente:", error);
+        setApiError(error.message || "Erro ao carregar dados do formulário.");
+      }
+    }
+  }
+  fetchCustomerData();
+}, [user?.id, reset]); // CORREÇÃO: A dependência agora é o user.id
+
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
@@ -167,95 +200,119 @@ export default function OnboardingForm() {
     }
   };
 
-  const onSubmit = async (formData: IFormInputs) => {
-    try {
-      setApiError(null);
-      setIsUploading(true);
+const onSubmit = async (formData: IFormInputs) => {
+  try {
+    setApiError(null);
+    setIsUploading(true);
 
-      const userIdToUse = user?.id;
-      if (!userIdToUse) {
-        setApiError("Erro: ID do usuário não disponível. Por favor, faça login novamente.");
-        setIsUploading(false);
-        return;
-      }
-
-      const termsSelected = formData.buyerInfo?.terms;
-      if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
-        setError("buyerInfo.financialStatements", {
-          type: "required",
-          message: "Financial Statements são obrigatórias se os termos não forem 100% Prior to Ship.",
-        });
-        setIsUploading(false);
-        return;
-      } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
-        setError("buyerInfo.financialStatements", {
-          type: "manual",
-          message: "Financial Statements devem ser um arquivo PDF.",
-        });
-        setIsUploading(false);
-        return;
-      } else {
-        clearErrors("buyerInfo.financialStatements");
-      }
-
-      let fileUrl: string | null = null;
-      if (file) {
-        fileUrl = await api.uploadResaleCertificate(file, userIdToUse);
-      }
-
-      const photoUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        for (const imageFile of imageFiles) {
-          const imageUrl = await api.uploadImage(imageFile, userIdToUse);
-          photoUrls.push(imageUrl);
-        }
-      }
-
-      let financialStatementsFileUrl: string | null = null;
-      if (financialStatementsFile) {
-        financialStatementsFileUrl = await api.uploadFinancialStatements(financialStatementsFile, userIdToUse);
-      }
-
-      const termsValue = formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
-      const currencyValue = formData.buyerInfo?.currency === "" ? null : formData.buyerInfo?.currency;
-
-      const payload = {
-        user_id: userIdToUse,
-        customer_name: formData.customerInfo?.legalName || null,
-        sales_tax_id: formData.customerInfo?.taxId || null,
-        duns_number: formData.customerInfo?.dunNumber || null,
-        dba_number: formData.customerInfo?.dba || null,
-        resale_certificate: fileUrl,
-        billing_address: formData.billingAddress || [],
-        shipping_address: formData.shippingAddress || [],
-        ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
-        ap_contact_email: formData.apContact?.email || null,
-        ap_contact_country_code: formData.apContact?.countryCode || null,
-        ap_contact_number: formData.apContact?.contactNumber || null,
-        buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
-        buyer_email: formData.buyerInfo?.email || null,
-        buyer_country_code: formData.buyerInfo?.countryCode || null,
-        buyer_number: formData.buyerInfo?.buyerNumber || null,
-        status: "pending",
-        photo_urls: photoUrls,
-        branding_mix: formData.brandingMix ? formData.brandingMix.split(",").map((s) => s.trim()) : null,
-        instagram: formData.instagram || null,
-        website: formData.website || null,
-        terms: termsValue,
-        currency: currencyValue,
-        estimated_purchase_amount: formData.buyerInfo?.estimatedPurchaseAmount || null,
-        financial_statements: financialStatementsFileUrl,
-      };
-
-      await api.submitForm(payload, userIdToUse);
-      setIsModalOpen(true);
-    } catch (error: unknown) {
-      console.error("Erro ao enviar formulário:", error);
-      setApiError("Erro ao enviar o formulário. Tente novamente.");
-    } finally {
+    const userIdToUse = user?.id;
+    if (!userIdToUse) {
+      setApiError("Erro: ID do usuário não disponível. Por favor, faça login novamente.");
       setIsUploading(false);
+      return;
     }
-  };
+
+    const { data: customerData, error: fetchError } = await api.getCustomerFormById(userIdToUse);
+    if (fetchError || !customerData) {
+        setApiError("Não foi possível encontrar um formulário existente para este usuário.");
+        setIsUploading(false);
+        return;
+    }
+
+    const previousFormStatus = customerData.status;
+
+    const termsSelected = formData.buyerInfo?.terms;
+    if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
+      setError("buyerInfo.financialStatements", {
+        type: "required",
+        message: "Financial Statements são obrigatórias se os termos não forem 100% Prior to Ship.",
+      });
+      setIsUploading(false);
+      return;
+    } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
+      setError("buyerInfo.financialStatements", {
+        type: "manual",
+        message: "Financial Statements devem ser um arquivo PDF.",
+      });
+      setIsUploading(false);
+      return;
+    } else {
+      clearErrors("buyerInfo.financialStatements");
+    }
+
+    let fileUrl: string | null = null;
+    if (file) {
+      fileUrl = await api.uploadResaleCertificate(file, userIdToUse);
+    }
+
+    const photoUrls: string[] = [];
+    if (imageFiles.length > 0) {
+      for (const imageFile of imageFiles) {
+        const imageUrl = await api.uploadImage(imageFile, userIdToUse);
+        photoUrls.push(imageUrl);
+      }
+    }
+
+    let financialStatementsFileUrl: string | null = null;
+    if (financialStatementsFile) {
+      financialStatementsFileUrl = await api.uploadFinancialStatements(financialStatementsFile, userIdToUse);
+    }
+
+    const termsValue = formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
+    const currencyValue = formData.buyerInfo?.currency === "" ? null : formData.buyerInfo?.currency;
+
+    // Lógica para determinar o novo status com a extração corrigida do nome do time
+    let newStatus = "pending";
+    if (previousFormStatus && previousFormStatus.includes("review requested by the ")) {
+        const teamToReview = previousFormStatus.substring("review requested by the ".length);
+        newStatus = `review requested by the ${teamToReview}`;
+    } else if (previousFormStatus && previousFormStatus.includes("rejected by the ")) {
+        const teamToReview = previousFormStatus.substring("rejected by the ".length);
+        newStatus = `review requested by the ${teamToReview}`;
+    } else if (previousFormStatus && previousFormStatus.includes("pending analysis by the ")) {
+        const teamToReview = previousFormStatus.substring("pending analysis by the ".length);
+        newStatus = `review requested by the ${teamToReview}`;
+    }
+
+
+    const payload = {
+      user_id: userIdToUse,
+      customer_name: formData.customerInfo?.legalName || null,
+      sales_tax_id: formData.customerInfo?.taxId || null,
+      duns_number: formData.customerInfo?.dunNumber || null,
+      dba_number: formData.customerInfo?.dba || null,
+      resale_certificate: fileUrl,
+      billing_address: formData.billingAddress || [],
+      shipping_address: formData.shippingAddress || [],
+      ap_contact_name: `${formData.apContact?.firstName || ""} ${formData.apContact?.lastName || ""}`.trim(),
+      ap_contact_email: formData.apContact?.email || null,
+      ap_contact_country_code: formData.apContact?.countryCode || null,
+      ap_contact_number: formData.apContact?.contactNumber || null,
+      buyer_name: `${formData.buyerInfo?.firstName || ""} ${formData.buyerInfo?.lastName || ""}`.trim(),
+      buyer_email: formData.buyerInfo?.email || null,
+      buyer_country_code: formData.buyerInfo?.countryCode || null,
+      buyer_number: formData.buyerInfo?.buyerNumber || null,
+      status: newStatus, // O status é agora dinâmico
+      photo_urls: photoUrls,
+      branding_mix: formData.brandingMix ? formData.brandingMix.split(",").map((s) => s.trim()) : null,
+      instagram: formData.instagram || null,
+      website: formData.website || null,
+      terms: termsValue,
+      currency: currencyValue,
+      estimated_purchase_amount: formData.buyerInfo?.estimatedPurchaseAmount || null,
+      financial_statements: financialStatementsFileUrl,
+    };
+
+    await api.submitForm(payload, userIdToUse);
+
+    setIsModalOpen(true);
+  } catch (error: unknown) {
+    console.error("Erro ao enviar formulário:", error);
+    setApiError("Erro ao enviar o formulário. Tente novamente.");
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof IFormInputs | string)[] = [];

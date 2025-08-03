@@ -870,8 +870,8 @@ export default function ValidationDetailsPage() {
         </S.TermsContainer>
 
 
-                {(customerForm.status === "approved by the tax team" ||
-                          customerForm.status === "rejected by the wholesale team") && ( // Condição para exibir o feedback
+                {/* {(customerForm.status === "approved by the tax team" ||
+                          customerForm.status === "rejected by the wholesale team") && ( // Condição para exibir o feedback */}
                           <S.FeedbackGroup>
                             <S.Label htmlFor="feedback">
                               Observation
@@ -883,7 +883,7 @@ export default function ValidationDetailsPage() {
                               placeholder="Explain the reason for rejection or add relevant..."
                             />
                           </S.FeedbackGroup>
-                        )}
+                        
 
 
         <S.ButtonContainer>

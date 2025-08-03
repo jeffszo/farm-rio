@@ -331,17 +331,18 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
 
 
 
-export async function reviewCustomer(customerId: string, feedback: string | null = null) {
-  console.log(`Revisando cliente ${customerId} para edição...`);
+export async function requestReview(customerId: string, teamRole: string, feedback: string | null = null) {
+  console.log(`Enviando cliente ${customerId} para revisão pelo time ${teamRole}...`);
+  const reviewStatus = `review requested by the ${teamRole} team`;
 
-
-  const updateData: { status: string; updated_at: string; wholesale_feedback?: string | null; } = {
-    status: "review requested by the wholesale team", // O NOVO STATUS
+  const updateData: { status: string; updated_at: string; feedback?: string | null } = {
+    status: reviewStatus,
     updated_at: new Date().toISOString(),
   };
 
+  // Anexa o feedback ao campo correto (se existir)
   if (feedback) {
-    updateData.wholesale_feedback = feedback; // Adiciona o feedback se houver
+    updateData.feedback = feedback;
   }
 
   const { error } = await supabaseServerClient
@@ -350,11 +351,9 @@ export async function reviewCustomer(customerId: string, feedback: string | null
     .eq("id", customerId);
 
   if (error) {
-    console.error("Erro ao enviar formulário para revisão do cliente:", error);
+    console.error("Erro ao enviar formulário para revisão:", error);
     throw new Error(`Falha ao enviar formulário para revisão: ${error.message}`);
   }
 
   return { success: true };
 }
-
-

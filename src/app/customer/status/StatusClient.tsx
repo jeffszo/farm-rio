@@ -56,6 +56,7 @@ export default function StatusClient({
     formStatus === 'review requested by the initial CSC team' ||
     formStatus === 'review requested by the CSC final team' ||
     formStatus === 'review requested by the tax team' ||
+    formStatus === 'review requested by the credit team' ||
     formStatus === 'review requested by the wholesale team';
 
   // Função para redirecionar sem o ID na URL
@@ -103,7 +104,7 @@ export default function StatusClient({
         )}
         {formStatus === 'review requested by the CSC final team' && (
           <div>
-            Your corrected form has been <strong>requested again by the CSC team</strong>. Please review carefully.
+            Your corrected form has been <strong>requested by the CSC team</strong>. Please review carefully.
             {cscFinalFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>

@@ -458,8 +458,8 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
         </S.FormDetails>
 
         {/* Feedback/Notes field for the Tax team */}
-        {(customerForm.status === "approved by the csc initial team" ||
-          customerForm.status === "rejected by the tax team") && (
+        {/* {(customerForm.status === "approved by the csc initial team" ||
+          customerForm.status === "rejected by the tax team") && ( */}
           <S.FeedbackGroup>
             <S.Label htmlFor="feedback">
               Observation
@@ -471,7 +471,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               placeholder="Explain the reason for review or add relevant..."
             />
           </S.FeedbackGroup>
-        )}
+        {/* )} */}
 
         {/* Approve/Reject buttons for the Tax team
         {(customerForm.status === "approved by the CSC team initial" || customerForm.status === "rejected by the tax team") && ( */}

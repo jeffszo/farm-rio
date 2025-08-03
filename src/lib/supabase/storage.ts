@@ -227,3 +227,4 @@ export async function uploadFinancialStatements(file: File, customerId: string):
 
   return signedUrl;
 }
+
