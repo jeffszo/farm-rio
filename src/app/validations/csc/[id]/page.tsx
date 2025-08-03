@@ -54,6 +54,8 @@ interface CustomerForm {
   created_at: string;
   wholesale_feedback: string;
   credit_feedback: string;
+  csc_initial_feedback: string;
+  csc_final_feedback: string;
 }
 
 interface ValidationDetails {
@@ -194,6 +196,20 @@ export default function ValidationDetailsPage() {
                 ? data.credit_feedback
                 : data.credit_feedback
                 ? JSON.stringify(data.credit_feedback)
+                : ""
+              : "",
+            csc_initial_feedback: "csc_initial_feedback" in data
+              ? typeof data.csc_initial_feedback === "string"
+                ? data.csc_initial_feedback
+                : data.csc_initial_feedback
+                ? JSON.stringify(data.csc_initial_feedback)
+                : ""
+              : "",
+            csc_final_feedback: "csc_final_feedback" in data
+              ? typeof data.csc_final_feedback === "string"
+                ? data.csc_final_feedback
+                : data.csc_final_feedback
+                ? JSON.stringify(data.csc_final_feedback)
                 : ""
               : "",
           };

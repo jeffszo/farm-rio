@@ -72,13 +72,6 @@ interface CustomerForm {
   credit_credit?: number;
   credit_discount?: number;
   credit_feedback?: string; // Added new field for credit feedback
-  // Campos relacionados ao atacado (mantidos para referência se ambos os fluxos estiverem na mesma página)
-  atacado_invoicing_company?: string;
-  atacado_warehouse?: string;
-  atacado_currency?: string;
-  atacado_terms?: string;
-  atacado_credit?: number;
-  atacado_discount?: number;
 }
 
 

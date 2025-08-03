@@ -113,16 +113,16 @@ export default function LoginForm() {
       <S.InputWrapper>
         <S.Label>Email:</S.Label>
         <S.Input
-          {...register("email", { required: "Email é obrigatório" })}
+          {...register("email", { required: "Email is required" })}
           type="email"
         />
         {errors.email && <S.ErrorMessage>{errors.email.message}</S.ErrorMessage>}
       </S.InputWrapper>
 
       <S.InputWrapper>
-        <S.Label>Senha:</S.Label>
+        <S.Label>Password:</S.Label>
         <S.Input
-          {...register("password", { required: "Senha é obrigatória" })}
+          {...register("password", { required: "Password is required" })}
           type="password"
         />
         {errors.password && <S.ErrorMessage>{errors.password.message}</S.ErrorMessage>}

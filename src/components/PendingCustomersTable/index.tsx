@@ -1,7 +1,6 @@
 "use client"
 
-import React from 'react';
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import { Users, ChevronLeft, ChevronRight, Download, Filter } from "lucide-react"
 import * as S from "./styles"
 import { useMediaQuery } from "react-responsive"
@@ -38,44 +37,35 @@ export default function PendingCustomersTable({
   const pathname = usePathname()
   const isCSCValidationsRoute = pathname?.includes("/validations/csc")
   const [filterStatus, setFilterStatus] = useState<string>("all")
+  // Estado para rastrear qual botão está carregando
+  const [loadingCustomerId, setLoadingCustomerId] = useState<string | null>(null)
 
-  // Filter customers based on selected status
   const filteredCustomers = useMemo(() => {
     if (filterStatus === "all") return customers
 
-    // Garanta que essas strings batem EXATAMENTE com as do banco de dados
     const statusMap = {
       pending: "pending",
       approvedByWholesale: "approved by the wholesale team",
-      // CORRIGIDO: Use a string exata do banco de dados para rejeições
-      rejectedByWholesale: "rejected by the wholesale team", // <-- Verifique esta string no seu DB
+      rejectedByWholesale: "rejected by the wholesale team",
       approvedByCredit: "approved by the credit team",
-      approvedByTax:"approved by the tax team",
-      // CORRIGIDO: Use a string exata do banco de dados para rejeições
-      rejectedByCredit: "rejected by the credit team", // <-- Verifique esta string no seu DB
+      approvedByTax: "approved by the tax team",
+      rejectedByCredit: "rejected by the credit team",
       approvedByCSC: "approved by the CSC team",
       finished: "finished",
-      dataByClient: "data corrected by client", // <-- Esta string deve bater EXATAMENTE com o DB
+      dataByClient: "data corrected by client",
     }
-
-    // Adicione console.log para depuração
-    console.log("Current filterStatus:", filterStatus);
-    console.log("Target status from map:", statusMap[filterStatus as keyof typeof statusMap]);
-    customers.forEach(customer => {
-      if (customer.status === statusMap[filterStatus as keyof typeof statusMap]) {
-        console.log("MATCH FOUND for customer:", customer.customer_name, "with status:", customer.status);
-      }
-    });
 
     return customers.filter((customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap])
   }, [customers, filterStatus])
 
-  // 🔹 Função para exportar os clientes aprovados para um arquivo Excel
-  const exportToExcel = async () => {
-    // 🔹 Busca os clientes aprovados no banco de dados
-    const customers = await api.getApprovedCustomers()
+  const handleViewDetails = (id: string) => {
+    setLoadingCustomerId(id)
+    // Chama a função de navegação, que deve ser responsável por levar à próxima página
+    onViewDetails(id)
+  }
 
-    // 🔹 Filtra apenas os clientes aprovados pelo CSC (caso o banco tenha inconsistências)
+  const exportToExcel = async () => {
+    const customers = await api.getApprovedCustomers()
     const approvedCustomers = customers.filter((customer) => customer.status === "finished")
 
     if (approvedCustomers.length === 0) {
@@ -83,12 +73,10 @@ export default function PendingCustomersTable({
       return
     }
 
-    // 🔹 Gera a planilha Excel
     const worksheet = XLSX.utils.json_to_sheet(approvedCustomers)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers")
 
-    // 🔹 Converte para Blob e salva o arquivo
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
     const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
     saveAs(data, "approved_customers.xlsx")
@@ -110,7 +98,6 @@ export default function PendingCustomersTable({
         )}
       </S.TitleWrapper>
 
-      {/* 🔹 Exibe a quantidade total de clientes pendentes */}
       <S.TotalCount>
         Total pending customers: {filterStatus === "all" ? totalCount : filteredCustomers.length}
       </S.TotalCount>
@@ -127,14 +114,10 @@ export default function PendingCustomersTable({
                     <option value="all">all status</option>
                     <option value="pending">pending</option>
                     <option value="approvedByWholesale">approved by the wholesale team</option>
-                    {/* <option value="rejectedByWholesale">Rejected by Wholesale</option> */}
-                     <option value="approvedByCSC">approved by the tax team</option>
+                    <option value="approvedByCSC">approved by the tax team</option>
                     <option value="approvedByCredit">approved by the credit team</option>
-                    {/* <option value="rejectedByCredit">Rejected by Credit</option> */}
                     <option value="approvedByCSC">approved by the csc initial team</option>
                     <option value="finished">finished</option>
-
-                    {/* <option value="dataByClient">Data corrected by client</option> */}
                   </S.TableFilterSelect>
                 </S.TableHeaderFilter>
               </S.TableHeader>
@@ -152,26 +135,21 @@ export default function PendingCustomersTable({
                   </S.TableData>
                   <S.TableData>
                     {new Date(customer.created_at).toLocaleString(
-                      navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+                      navigator.language,
                       {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
-                        // hour: '2-digit',
-                        // minute: '2-digit',
-                        // second: '2-digit',
-                        // hour12: false, // Opcional: define formato 24h
-                        // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
-                        // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
                       }
                     )}
                   </S.TableData>
                   <S.TableData>
                     <S.Button
-                      onClick={() => onViewDetails(customer.id)}
-                      aria-label={`Ver detalhes de ${customer.customer_name}`}
+                      onClick={() => handleViewDetails(customer.id)}
+                      disabled={loadingCustomerId === customer.id}
+                      aria-label={`See details of ${customer.customer_name}`}
                     >
-                      See details
+                      {loadingCustomerId === customer.id ? 'Loading...' : 'See details'}
                     </S.Button>
                   </S.TableData>
                 </S.TableRow>
@@ -187,7 +165,6 @@ export default function PendingCustomersTable({
         </S.Table>
       ) : (
         <>
-          {/* Mobile filter */}
           <S.MobileFilterContainer>
             <S.FilterLabel>
               <Filter size={16} />
@@ -215,25 +192,20 @@ export default function PendingCustomersTable({
                   </S.MobileListItemContent>
                   <S.MobileListItemContent>
                     Date: {new Date(customer.created_at).toLocaleString(
-                      navigator.language, // Usa a linguagem do navegador (ex: 'pt-BR', 'en-US')
+                      navigator.language,
                       {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
-                        // hour: '2-digit',
-                        // minute: '2-digit',
-                        // second: '2-digit',
-                        // hour12: false, // Opcional: define formato 24h
-                        // timezone: 'America/Sao_Paulo' // NÃO use uma timezone fixa se quer a do navegador
-                        // timezoneName: 'short' // Opcional: mostra 'GMT-3' ou 'BRT'
                       }
                     )}
                   </S.MobileListItemContent>
                   <S.Button
-                    onClick={() => onViewDetails(customer.id)}
-                    aria-label={`Ver detalhes de ${customer.customer_name}`}
+                    onClick={() => handleViewDetails(customer.id)}
+                    disabled={loadingCustomerId === customer.id}
+                    aria-label={`See details of ${customer.customer_name}`}
                   >
-                    See details
+                    {loadingCustomerId === customer.id ? 'Loading...' : 'See details'}
                   </S.Button>
                 </S.MobileListItem>
               ))
@@ -246,7 +218,6 @@ export default function PendingCustomersTable({
         </>
       )}
 
-      {/* 🔹 PAGINAÇÃO */}
       <S.Pagination>
         <S.PageButton
           onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
