@@ -503,7 +503,7 @@ const handleReview = async () => {
     setLoading(true);
     console.log("Revisando formulário para edição do cliente...", { customerId: id });
 
-    await api.reviewCustomer(id as string, feedback);
+    await api.requestReview(id as string, feedback);
 
     if (customerForm) {
       setCustomerForm({

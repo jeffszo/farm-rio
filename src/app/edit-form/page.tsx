@@ -38,7 +38,7 @@ export default function OnboardingForm() {
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [previousFormStatus, setPreviousFormStatus] = useState<string | null>(null);
+  const [, setPreviousFormStatus] = useState<string | null>(null);
   const router = useRouter();
 
   // Removendo 'useParams' e 'customerId' para que o ID não seja mais extraído da URL
@@ -172,7 +172,7 @@ useEffect(() => {
     if (userId) {
       try {
         // CORREÇÃO: Usar a função que busca o formulário pelo ID do usuário
-        const { data, error } = await api.getCurrentUserServer(userId);
+        const { data, error } = await api.getCustomerFormById(userId);
 
         if (error) {
           throw new Error(error.message);
@@ -184,9 +184,13 @@ useEffect(() => {
           // O restante da lógica para preencher o formulário (ex: reset com os dados do data)
           reset(data);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Erro ao buscar dados do cliente:", error);
-        setApiError(error.message || "Erro ao carregar dados do formulário.");
+        if (error instanceof Error) {
+          setApiError(error.message || "Erro ao carregar dados do formulário.");
+        } else {
+          setApiError("Erro ao carregar dados do formulário.");
+        }
       }
     }
   }

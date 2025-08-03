@@ -268,7 +268,7 @@ const handleApproval = async (approved: boolean) => {
         setLoading(true);
 
         // AQUI ESTÁ A CORREÇÃO: o estado `feedback` é passado como argumento.
-        await api.validateCSCFinalCustomer(id, approved, feedback);
+        await api.validateCSCFinalCustomer(id, approved);
 
         setModalContent({
             title: approved ? "Approved!" : "Review!",
@@ -288,15 +288,15 @@ const handleApproval = async (approved: boolean) => {
         setLoading(false);
     }
 
-     const closeModalAndRedirect = () => {
-        setShowModal(false);
-        router.push('/csc/'); // Redireciona para a página 'csc'
-    };
+
 
 };
 
 // ... O restante do seu componente
-
+     const closeModalAndRedirect = () => {
+        setShowModal(false);
+        router.push('/csc/'); // Redireciona para a página 'csc'
+    };
 
   // Helper function to render an address
   const renderAddress = (address: Address) => (
@@ -632,7 +632,7 @@ const handleApproval = async (approved: boolean) => {
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "finished"| customerForm.status === "approved by the wholesale team") && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "finished"|| customerForm.status === "approved by the wholesale team") && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
