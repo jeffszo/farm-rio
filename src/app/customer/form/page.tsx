@@ -3,7 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import * as S from "../status/[userId]/styles";
+import * as S from "./styles";
 import type { IFormInputs, AddressInput } from "../../../types/form";
 import { createClient } from '@/lib/supabase/client';
 

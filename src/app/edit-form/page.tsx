@@ -144,7 +144,7 @@ export default function OnboardingForm() {
       setIsLoading(false);
     };
     fetchUserAndData();
-  }, [setValue]);
+  }, [setError, setValue]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];

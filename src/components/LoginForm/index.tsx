@@ -4,47 +4,29 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import * as S from "./styles"; // seu styled components
+import * as S from "./styles";
 import { api } from "@/lib/supabase";
 
 const supabase = createClient();
 
+type LoginFormInputs = {
+  email: string;
+  password: string;
+};
+
 export default function LoginForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
   const router = useRouter();
   const [apiError, setApiError] = useState("");
-<<<<<<< HEAD
-
-  const onSubmit = async (data: { email: string; password: string; }) => {
-  setApiError("");
-  const { email, password } = data;
-
-  try {
-    await supabase.auth.signOut();
-
-    document.cookie = "sb-access-token=; Max-Age=0; path=/;";
-    document.cookie = "sb-refresh-token=; Max-Age=0; path=/;";
-
-    const { data: authResult, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError || !authResult.user) {
-      setApiError("Email ou senha inválidos.");
-      return;
-=======
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (data: { email: string; password: string; }) => {
+  const onSubmit = async (data: { email: string; password: string }) => {
     setApiError("");
     const { email, password } = data;
 
     try {
-      setIsSubmitting(true); // ✅ Inicia o estado de carregamento
+      setIsSubmitting(true);
       await supabase.auth.signOut();
-      // document.cookie = "sb-access-token=; Max-Age=0; path=/;";
-      // document.cookie = "sb-refresh-token=; Max-Age=0; path=/;";
 
       const { data: authResult, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -53,12 +35,13 @@ export default function LoginForm() {
 
       if (authError || !authResult.user) {
         setApiError("Email ou senha inválidos.");
-        setIsSubmitting(false); // ✅ Reseta o estado em caso de erro
+        setIsSubmitting(false);
         return;
       }
 
       const { user } = authResult;
 
+      // Primeiro tenta buscar no team_users
       const { data: teamUser, error: teamError } = await supabase
         .from("team_users")
         .select("id, team_role")
@@ -69,20 +52,21 @@ export default function LoginForm() {
       let userId = teamUser?.id;
 
       if (!teamUser || teamError) {
+        // Se não achou no team_users, busca em users
+        if (teamError && teamError.code !== "PGRST116") {
+          console.error("Erro na busca de team_users:", teamError);
+        }
+
         const { data: cliente, error: clienteError } = await supabase
           .from("users")
           .select("id, role")
           .eq("email", user.email)
           .single();
-        
-        if (teamError && teamError.code !== "PGRST116") {
-        console.error("Erro na busca de team_users:", teamError);
-}
 
         if (clienteError || !cliente) {
           await supabase.auth.signOut();
           setApiError("Usuário não autorizado ou não encontrado na base de dados.");
-          setIsSubmitting(false); // ✅ Reseta o estado em caso de erro
+          setIsSubmitting(false);
           return;
         }
 
@@ -91,7 +75,8 @@ export default function LoginForm() {
       }
 
       router.refresh();
-      
+
+      // Redireciona com base no papel
       if (finalRole === "cliente") {
         const formStatus = await api.getFormStatus(userId);
         console.log("📦 STATUS DO FORMULÁRIO:", formStatus);
@@ -112,83 +97,16 @@ export default function LoginForm() {
       } else {
         await supabase.auth.signOut();
         setApiError("Papel de usuário inválido.");
+        setIsSubmitting(false);
       }
-      
-      // ✅ O estado de carregamento não é mais resetado aqui.
-      // A navegação do Next.js se encarregará de descarregar este componente.
 
     } catch (error) {
       const e = error as { message?: string; status?: number };
       console.error("Erro no login:", e);
       setApiError(e.message || "Erro desconhecido");
-      setIsSubmitting(false); // ✅ Reseta o estado em caso de erro na rede ou na API
->>>>>>> demos
+      setIsSubmitting(false);
     }
-
-    const { user } = authResult;
-
-    const { data: teamUser, error: teamError } = await supabase
-      .from("team_users")
-      .select("id, team_role")
-      .eq("email", user.email)
-      .single();
-
-    let finalRole = teamUser?.team_role;
-    let userId = teamUser?.id;
-
-    if (!teamUser || teamError) {
-      const { data: cliente, error: clienteError } = await supabase
-        .from("users")
-        .select("id, role")
-        .eq("email", user.email)
-        .single();
-      
-      console.error("Erro na busca de team_users:", teamError);
-
-      if (clienteError || !cliente) {
-        await supabase.auth.signOut();
-        setApiError("Usuário não autorizado ou não encontrado na base de dados.");
-        return;
-      }
-
-      finalRole = cliente.role;
-      userId = cliente.id;
-    }
-
-    // -----------------------------------------------------------
-    // ✅ Ponto de ajuste crucial
-    // Força o Next.js a revalidar o cache e re-renderizar a página
-    router.refresh();
-    // -----------------------------------------------------------
-
-    if (finalRole === "cliente") {
-      const formStatus = await api.getFormStatus(userId);
-      console.log("📦 STATUS DO FORMULÁRIO:", formStatus);
-
-      if (formStatus?.status) {
-        router.push(`/customer/status/${userId}`);
-      } else {
-        router.push("/customer/form");
-      }
-    } else if (finalRole === "tax") {
-      router.push("/validations/tax");
-    } else if (finalRole === "atacado" || finalRole === "wholesale") {
-      router.push("/validations/wholesale");
-    } else if (finalRole === "credito") {
-      router.push("/validations/credit");
-    } else if (finalRole === "csc") {
-      router.push("/validations/csc");
-    } else {
-      await supabase.auth.signOut();
-      setApiError("Papel de usuário inválido.");
-    }
-
-  } catch (error) {
-    const e = error as { message?: string; status?: number };
-    console.error("Erro no login:", e);
-    setApiError(e.message || "Erro desconhecido");
-  }
-};
+  };
 
   return (
     <S.Form onSubmit={handleSubmit(onSubmit)}>
@@ -212,13 +130,9 @@ export default function LoginForm() {
 
       {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
 
-<<<<<<< HEAD
-      <S.Button type="submit">Entrar</S.Button>
-=======
       <S.Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Loading..." : "Enter"}
       </S.Button>
->>>>>>> demos
     </S.Form>
   );
 }

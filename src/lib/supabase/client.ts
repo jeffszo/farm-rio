@@ -7,15 +7,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 export const supabaseServerClient = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-<<<<<<< HEAD
-);
-
-// ✅ Este é o que deve ser usado no CLIENTE
-export const createClient = () => createClientComponentClient();
-=======
   
 );
 
 // ✅ Este é o que deve ser usado no CLIENTE
 export const createClient = () => createClientComponentClient();
->>>>>>> demos

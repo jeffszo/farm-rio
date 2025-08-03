@@ -70,6 +70,8 @@ interface CustomerForm {
   wholesale_terms: string;
   wholesale_credit: number;
   wholesale_discount: number;
+  wholesale_feedback?: string; // ✅ Adicione isso
+
   terms: string;
   currency: string;
 }
@@ -163,6 +165,8 @@ export default function ValidationDetailsPage() {
     wholesale_credit: 0,
     wholesale_discount: 0,
     wholesale_feedback: "",
+
+
   });
 
   const [warehouses, setWarehouses] = useState<string[]>([]);
@@ -311,20 +315,20 @@ export default function ValidationDetailsPage() {
     if (id) fetchCustomerDetails();
   }, [id]);
 
-  useEffect(() => {
-  if (customerForm) {
-    setTerms({
-      wholesale_invoicing_company: customerForm.wholesale_invoicing_company || "",
-      wholesale_warehouse: customerForm.wholesale_warehouse || "",
-      wholesale_currency: customerForm.wholesale_currency || "",
-      wholesale_terms: customerForm.wholesale_terms || "",
-      // Usa estimated_purchase_amount se wholesale_credit for zero ou ausente
-      wholesale_credit: Number(customerForm.wholesale_credit ?? customerForm.estimated_purchase_amount) || 0,
-      wholesale_discount: customerForm.wholesale_discount || 0,
-      wholesale_feedback: "",
-    });
-  }
-}, [customerForm]);
+//   useEffect(() => {
+//   if (customerForm) {
+//     setTerms({
+//       wholesale_invoicing_company: customerForm.wholesale_invoicing_company || "",
+//       wholesale_warehouse: customerForm.wholesale_warehouse || "",
+//       wholesale_currency: customerForm.wholesale_currency || "",
+//       wholesale_terms: customerForm.wholesale_terms || "",
+//       // Usa estimated_purchase_amount se wholesale_credit for zero ou ausente
+//       wholesale_credit: Number(customerForm.wholesale_credit ?? customerForm.estimated_purchase_amount) || 0,
+//       wholesale_discount: customerForm.wholesale_discount || 0,
+//       wholesale_feedback: customerForm.wholesale_feedback || "",
+//     });
+//   }
+// }, [customerForm]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -486,11 +490,20 @@ const handleReview = async () => {
     return;
   }
 
+  if (!feedback.trim()) {
+    setModalContent({
+      title: "Error!",
+      description: "Feedback is required when sending to review.",
+    });
+    setShowModal(true);
+    return;
+  }
+
   try {
     setLoading(true);
     console.log("Revisando formulário para edição do cliente...", { customerId: id });
 
-    await api.reviewCustomer(id as string, null);
+    await api.reviewCustomer(id as string, feedback);
 
     if (customerForm) {
       setCustomerForm({
@@ -498,6 +511,7 @@ const handleReview = async () => {
         status: "review requested by the wholesale team",
       });
     }
+
     setModalContent({
       title: "Success!",
       description: "The form has been sent for the client's review. They can edit it now.",
@@ -520,6 +534,7 @@ const handleReview = async () => {
     setLoading(false);
   }
 };
+
 
 
 

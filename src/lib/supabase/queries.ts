@@ -1,5 +1,6 @@
 import { supabaseServerClient } from "./index"
-//aaaa
+import {createClient} from "./client";
+
 
 export async function getApprovedCustomers() {
   const { data, error } = await supabaseServerClient
@@ -277,7 +278,10 @@ export async function resetFormStatus(id: string) {
  }
 
 export async function getFeedbackTeams(customerId: string) {
-  const response = await supabaseServerClient
+  console.log("📌 ID recebido:", customerId);
+
+  const supabase = createClient();
+  const response = await supabase
     .from("customer_forms")
     .select("status, user_id, wholesale_feedback, credit_feedback, tax_feedback, csc_initial_feedback, csc_final_feedback")
     .eq("user_id", customerId)

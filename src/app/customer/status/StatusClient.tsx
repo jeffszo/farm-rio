@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import * as S from "./[userId]/styles";
+import * as S from "./styles";
 import { FileEdit } from 'lucide-react';
 import { api } from '@/lib/supabase/index';
 
