@@ -34,7 +34,7 @@ export default function LoginForm() {
       });
 
       if (authError || !authResult.user) {
-        setApiError("Email ou senha inválidos.");
+        setApiError("Invalid email or password.");
         setIsSubmitting(false);
         return;
       }
