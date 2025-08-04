@@ -298,7 +298,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               <User size={16} /> Customer Information
             </S.SectionTitle>
             <S.FormRow>
-              <strong>Legal Name:</strong> {customerForm.customer_name}
+              <strong>Name:</strong> {customerForm.customer_name}
             </S.FormRow>
 <S.FormRow>
   <strong>Tax ID:</strong>
