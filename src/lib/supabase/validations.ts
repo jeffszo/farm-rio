@@ -295,7 +295,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
 }
 
 // Existing function, now for the final CSC review
-export async function validateCSCFinalCustomer(customerId: string, approved: boolean) {
+export async function validateCSCFinalCustomer(customerId: string, approved: boolean, feedback: string | null = null) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
@@ -307,17 +307,21 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // const customerEmail = customerData.email;
-  // const customerName = customerData.customer_name;
-
+  // Define o novo status com base na aprovação
   const newStatus = approved ? getNextStatus("csc_final") : "review requested by the CSC final team";
-  // const statusMessageForEmail = approved ? "finalizado e aprovado" : "rejeitado pela equipe CSC Final";
-
-  const updateData = {
+  
+  const updateData: { status: string; updated_at: string; csc_final_status?: string; csc_final_feedback?: string | null; } = {
     status: newStatus,
-    // csc_final_status: approved ? "aprovado" : "reprovado", 
     updated_at: new Date().toISOString()
   };
+
+  // Adiciona o status final do CSC ao objeto de atualização
+  updateData.csc_final_status = approved ? "aprovado" : "reprovado";
+
+  // Adiciona o feedback se ele existir
+  if (feedback && feedback.trim() !== "") {
+    updateData.csc_final_feedback = feedback;
+  }
 
   const { error } = await supabaseServerClient
     .from("customer_forms")
