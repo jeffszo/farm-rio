@@ -100,7 +100,7 @@ export async function getPendingWholesaleValidations(page = 1, itemsPerPage = 10
   const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["pending"]) // From Tax or rejected by wholesale
+    .in("status", ["pending", "review requested by the wholesale team"]) // From Tax or rejected by wholesale
     .range(from, to)
     .order("created_at", { ascending: true })
 

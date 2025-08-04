@@ -146,13 +146,14 @@ export default function StatusClient({
             )}
           </div>
         )}
-        {formStatus === 'data corrected by the client' && (
+        {formStatus === 'rejected by the wholesale team' && (
           <div>
-            Your corrected data is awaiting validation by the CSC team.
-            {cscInitialFeedback && (
+           Unfortunately, your submission for new customer registration was not approved by our team at this time.
+For more information, please contact our wholesale team at wholesale@farmrio.com
+            {wholesaleFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
-                <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
+                <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
+                <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
           </div>

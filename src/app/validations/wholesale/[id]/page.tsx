@@ -924,8 +924,6 @@ const handleReview = async () => {
           </S.TermsGrid>
         </S.TermsContainer>
 
-        {(customerForm.status === "pending" ||
-                  customerForm.status === "rejected by the tax team") && (
                   <S.FeedbackGroup>
                     <S.Label htmlFor="feedback">
                       Observation
@@ -937,7 +935,7 @@ const handleReview = async () => {
                       placeholder="Explain the reason for rejection or add relevant..."
                     />
                   </S.FeedbackGroup>
-                )}
+              
 
 
 <S.ButtonContainer>

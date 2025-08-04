@@ -37,7 +37,6 @@ export default function PendingCustomersTable({
   const pathname = usePathname()
   const isCSCValidationsRoute = pathname?.includes("/validations/csc")
   const [filterStatus, setFilterStatus] = useState<string>("all")
-  // Estado para rastrear qual botão está carregando
   const [loadingCustomerId, setLoadingCustomerId] = useState<string | null>(null)
 
   const filteredCustomers = useMemo(() => {
@@ -45,14 +44,18 @@ export default function PendingCustomersTable({
 
     const statusMap = {
       pending: "pending",
+      reviewRequestedByWholesale: "review requested by the wholesale team",
+      reviewRequestedByTax: "review requested by the tax team",
+      reviewRequestedByCredit: "review requested by the credit team",
+      reviewRequestedByCSC: "review requested by the csc initial team",
       approvedByWholesale: "approved by the wholesale team",
-      rejectedByWholesale: "rejected by the wholesale team",
+      // rejectedByWholesale: "rejected by the wholesale team",
       approvedByCredit: "approved by the credit team",
+      // Opção de rejectedByCredit removida
       approvedByTax: "approved by the tax team",
-      rejectedByCredit: "rejected by the credit team",
-      approvedByCSC: "approved by the CSC team",
+      approvedByCSC: "approved by the csc final team",
       finished: "finished",
-      dataByClient: "data corrected by client",
+      // dataByClient: "data corrected by client",
     }
 
     return customers.filter((customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap])
@@ -60,7 +63,6 @@ export default function PendingCustomersTable({
 
   const handleViewDetails = (id: string) => {
     setLoadingCustomerId(id)
-    // Chama a função de navegação, que deve ser responsável por levar à próxima página
     onViewDetails(id)
   }
 
@@ -113,11 +115,17 @@ export default function PendingCustomersTable({
                   <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                     <option value="all">all status</option>
                     <option value="pending">pending</option>
+                    <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
+                    <option value="reviewRequestedByTax">review requested by the tax team</option>
+                    <option value="reviewRequestedByCredit">review requested by the credit team</option>
+                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option>
                     <option value="approvedByWholesale">approved by the wholesale team</option>
-                    <option value="approvedByCSC">approved by the tax team</option>
+                    {/* <option value="rejectedByWholesale">rejected by the wholesale team</option> */}
                     <option value="approvedByCredit">approved by the credit team</option>
-                    <option value="approvedByCSC">approved by the csc initial team</option>
+                    <option value="approvedByTax">approved by the tax team</option>
+                    <option value="approvedByCSC">approved by the csc final team</option>
                     <option value="finished">finished</option>
+                    {/* <option value="dataByClient">data corrected by client</option> */}
                   </S.TableFilterSelect>
                 </S.TableHeaderFilter>
               </S.TableHeader>
@@ -173,12 +181,17 @@ export default function PendingCustomersTable({
             <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All status</option>
               <option value="pending">Pending</option>
-              <option value="approvedByWholesale">Approved by Wholesale</option>
-              <option value="rejectedByWholesale">Rejected by Wholesale</option>
-              <option value="approvedByCredit">Approved by Credit</option>
-              <option value="rejectedByCredit">Rejected by Credit</option>
-              <option value="approvedByCSC">Approved by CSC</option>
-              <option value="dataByClient">Data corrected by client</option>
+              <option value="reviewRequestedByWholesale">review by wholesale</option>
+              <option value="reviewRequestedByTax">review by tax</option>
+              <option value="reviewRequestedByCredit">review by credit</option>
+              <option value="reviewRequestedByCSC">review by csc initial</option>
+              <option value="approvedByWholesale">approved by wholesale</option>
+              {/* <option value="rejectedByWholesale">Rejected by wholesale</option> */}
+              <option value="approvedByCredit">approved by credit</option>
+              <option value="approvedByTax">approved by tax</option>
+              <option value="approvedByCSC">approved by csc final</option>
+              <option value="finished">finished</option>
+              {/* <option value="dataByClient">Data corrected by client</option> */}
             </S.TableFilterSelect>
           </S.MobileFilterContainer>
 

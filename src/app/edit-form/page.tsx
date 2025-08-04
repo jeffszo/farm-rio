@@ -34,6 +34,7 @@ export default function OnboardingForm() {
   const [, setIsSameAsBilling] = useState(false);
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
+  const [modalContent, setModalContent] = useState({ title: "", description: "" });
   const totalSteps = 4;
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -205,6 +206,8 @@ useEffect(() => {
   };
 
 const onSubmit = async (formData: IFormInputs) => {
+  console.log("🧪 termsSelected:", formData.buyerInfo?.terms);
+
   try {
     setApiError(null);
     setIsUploading(true);
@@ -216,33 +219,37 @@ const onSubmit = async (formData: IFormInputs) => {
       return;
     }
 
+       const termsSelected = formData.buyerInfo?.terms;
+        if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
+            // Lógica para exibir o modal de erro
+            setModalContent({
+                title: "Error uploading Financial Statements:",
+                description: "Financial Statements are mandatory if terms are not 100% Prior to Ship.",
+            });
+            setIsModalOpen(true); 
+            setIsUploading(false);
+            return;
+        } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
+            // Lógica para exibir o modal de erro
+            setModalContent({
+                title: "Error uploading Financial Statements:",
+                description: "Financial Statements must be a PDF file.",
+            });
+            setIsModalOpen(true);
+            setIsUploading(false);
+            return;
+        }
+
+
     const { data: customerData, error: fetchError } = await api.getCustomerFormById(userIdToUse);
     if (fetchError || !customerData) {
-        setApiError("Não foi possível encontrar um formulário existente para este usuário.");
+        setApiError("We couldn't find an existing form for this user.");
         setIsUploading(false);
         return;
     }
 
     const previousFormStatus = customerData.status;
 
-    const termsSelected = formData.buyerInfo?.terms;
-    if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
-      setError("buyerInfo.financialStatements", {
-        type: "required",
-        message: "Financial Statements são obrigatórias se os termos não forem 100% Prior to Ship.",
-      });
-      setIsUploading(false);
-      return;
-    } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
-      setError("buyerInfo.financialStatements", {
-        type: "manual",
-        message: "Financial Statements devem ser um arquivo PDF.",
-      });
-      setIsUploading(false);
-      return;
-    } else {
-      clearErrors("buyerInfo.financialStatements");
-    }
 
     let fileUrl: string | null = null;
     if (file) {
@@ -309,7 +316,16 @@ const onSubmit = async (formData: IFormInputs) => {
 
     await api.submitForm(payload, userIdToUse);
 
-    setIsModalOpen(true);
+  setModalContent({
+  title: "Success!",
+  description: "Your form has been submitted successfully!",
+});
+setIsModalOpen(true);
+
+setTimeout(() => {
+  router.push("/");
+}, 3000); 
+
   } catch (error: unknown) {
     console.error("Erro ao enviar formulário:", error);
     setApiError("Erro ao enviar o formulário. Tente novamente.");
@@ -775,14 +791,31 @@ const onSubmit = async (formData: IFormInputs) => {
         </form>
       </S.FormContainer>
       {isModalOpen && (
-        <S.ModalOverlay>
-          <S.ModalContent>
-            <S.ModalTitle><CircleCheck size={48} /></S.ModalTitle>
-            <S.ModalMessage>Your form has been submitted successfully!</S.ModalMessage>
-            <S.ModalButton onClick={() => { setIsModalOpen(false); router.push("/"); }}>OK</S.ModalButton>
-          </S.ModalContent>
-        </S.ModalOverlay>
-      )}
+  <S.ModalOverlay>
+    <S.ModalContent>
+      <S.ModalTitle>
+  {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={48} />}
+  <span style={{ marginTop: "10px", fontSize: "1.2rem" }}>{modalContent.title}</span>
+</S.ModalTitle>
+<S.ModalMessage>{modalContent.description}</S.ModalMessage>
+
+      <S.ModalButton
+onClick={() => {
+    setIsModalOpen(false);
+    if (modalContent?.title !== "Error uploading Financial Statements:") {
+        setTimeout(() => {
+            router.push("/");
+        }, 2000); 
+    }
+}}
+      >
+        OK
+      </S.ModalButton>
+    </S.ModalContent>
+  </S.ModalOverlay>
+)}
+
+
     </S.ContainerMain>
   );
 }

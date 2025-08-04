@@ -322,7 +322,7 @@ if (!currentUser || !currentUser.id) {
 
   setTimeout(() => {
     router.push("/");
-  }, 30000); // 30 segundos de espera
+  }, 2); // 30 segundos de espera
 
   return;
 }
@@ -461,7 +461,9 @@ if (!currentUser || !currentUser.id) {
       setModalIcon(() => CircleCheck); // Set the success icon component
       setIsModalOpen(true); // Open the modal with success content
       console.log("Modal set to open with success message.");
-      router.push("/")
+        setTimeout(() => {
+        router.push('/');
+      }, 3000);
 
     } catch (error: unknown) {
       console.error(
@@ -1565,13 +1567,14 @@ if (!currentUser || !currentUser.id) {
             <S.ModalMessage>{modalTitle}</S.ModalMessage> {/* e.g., "Success!" or "Submission Error" */}
             <S.ModalMessage>{modalMessage}</S.ModalMessage> {/* Detailed message */}
             <S.ModalButton
-              onClick={() => {
-                setIsModalOpen(false);
-                // Only redirect on success
-                if (modalTitle === "Success!") {
-                  router.push("/");
-                }
-              }}
+onClick={() => {
+    setIsModalOpen(false);
+    if (modalTitle === "Success!") {
+        setTimeout(() => {
+            router.push("/");
+        }); 
+    }
+}}
             >
               OK
             </S.ModalButton>

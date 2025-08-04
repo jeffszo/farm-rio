@@ -65,7 +65,7 @@ export default function LoginForm() {
 
         if (clienteError || !cliente) {
           await supabase.auth.signOut();
-          setApiError("Usuário não autorizado ou não encontrado na base de dados.");
+          setApiError("User not authorized or not found in the database.");
           setIsSubmitting(false);
           return;
         }
