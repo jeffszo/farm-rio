@@ -213,8 +213,8 @@ export async function validateWholesaleCustomer(
     : "rejected by the wholesale team";
 
   // CORREÇÃO: Trata valores nulos ou vazios para os campos numéricos
-  const wholesaleCreditValue = terms.wholesale_credit === "" ? null : terms.wholesale_credit;
-  const wholesaleDiscountValue = terms.wholesale_discount === "" ? null : terms.wholesale_discount;
+  const wholesaleCreditValue = (typeof terms.wholesale_credit === "string" && terms.wholesale_credit === "") ? null : terms.wholesale_credit;
+  const wholesaleDiscountValue = (typeof terms.wholesale_discount === "string" && terms.wholesale_discount === "") ? null : terms.wholesale_discount;
 
   const updateData = {
     status: newStatus,

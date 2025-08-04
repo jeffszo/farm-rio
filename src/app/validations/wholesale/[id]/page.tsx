@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
@@ -141,7 +142,6 @@ export default function ValidationDetailsPage() {
   const [newDuns, setNewDuns] = useState("");
   const [editingDuns, setEditingDuns] = useState(false);
   const [savingDuns, setSavingDuns] = useState(false);
-  const [editingValidationTerms, setEditingValidationTerms] = useState(false);
   const [initialTerms, setInitialTerms] = useState<WholesaleTerms>({
     wholesale_invoicing_company: "",
     wholesale_warehouse: "",
@@ -281,8 +281,8 @@ export default function ValidationDetailsPage() {
           wholesale_terms: data.wholesale_terms ?? "",
           wholesale_credit: data.wholesale_credit ?? 0,
           wholesale_discount: data.credit_discount ?? 0,
-          terms: data.wholesale_terms ?? "",
-          currency: data.wholesale_currency ?? "",
+          terms: data.terms ?? "",
+          currency: data.currency ?? "",
         };
 
         setCustomerForm(processedData);
@@ -294,8 +294,8 @@ export default function ValidationDetailsPage() {
           wholesale_warehouse: "",
           wholesale_currency: "",
           wholesale_terms: "",
-          wholesale_credit: "",
-          wholesale_discount: "",
+          wholesale_credit: 0,
+          wholesale_discount: 0,
           wholesale_feedback: "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
@@ -354,15 +354,8 @@ export default function ValidationDetailsPage() {
     } else {
       setAvailableInvoicingCompanies([]);
     }
-    if (!editingValidationTerms) {
-      setTerms((prev) => ({
-        ...prev,
-        wholesale_invoicing_company: "",
-        wholesale_warehouse: "",
-      }));
-      setWarehouses([]);
-    }
-  }, [terms.wholesale_currency, editingValidationTerms]);
+   
+  }, [terms.wholesale_currency]);
 
   useEffect(() => {
     const fetchWarehouses = async () => {

@@ -24,7 +24,8 @@ export async function getApprovedCustomers() {
       credit_warehouse,
       credit_currency,
       credit_credit,
-      credit_discount
+      credit_discount,
+
     `)
     .eq("status", "finished"); // Alterado para "finished" como status final do fluxo
 
@@ -197,7 +198,9 @@ export async function getCustomerValidationDetails(id: string) {
       website,
       photo_urls,
       financial_statements,
-      estimated_purchase_amount
+      estimated_purchase_amount,
+      currency,
+      terms
     `)
     .eq("id", id)
     .single();

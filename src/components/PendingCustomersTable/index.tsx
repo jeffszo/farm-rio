@@ -67,7 +67,20 @@ export default function PendingCustomersTable({
   }
 
   const exportToExcel = async () => {
-    const customers = await api.getApprovedCustomers()
+    const result = await api.getApprovedCustomers()
+    // Check if result is an array and has expected properties
+    const customers: Customer[] = Array.isArray(result)
+      ? result.filter(
+          (item) =>
+            typeof item === "object" &&
+            item !== null &&
+            "id" in item &&
+            "customer_name" in item &&
+            "status" in item &&
+            "created_at" in item
+        ) as Customer[]
+      : []
+
     const approvedCustomers = customers.filter((customer) => customer.status === "finished")
 
     if (approvedCustomers.length === 0) {
