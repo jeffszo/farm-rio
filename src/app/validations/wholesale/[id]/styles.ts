@@ -473,28 +473,25 @@ export const TermsCardsContainer = styled.div`
 
 
 export const TermsCard = styled.div`
-  background-color: #e6fffa; /* Light teal for terms card */
+    background: #f8fafc;
+ /* Light teal for terms card */
   padding: 1.2rem;
   border-radius: 8px;
-  border: 1px solid #81e6d9;
+  border: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   h3 {
     font-size: 1rem;
     font-weight: 600;
-    color: #2c7a7b; /* Darker teal */
     margin-bottom: 0.8rem;
-    border-bottom: 1px solid #b2f5ea;
     padding-bottom: 0.5rem;
   }
 
   p {
     font-size: 0.9rem;
-    color: #38b2ac; /* Medium teal */
     margin-bottom: 0.4rem;
 
     strong {
-      color: #2c7a7b;
     }
   }
 `;
@@ -514,9 +511,13 @@ export const FeedbackGroup = styled.div`
 
 
 export const Label = styled.label`
-  font-size: 0.95rem;
+  font-weight: 600;
+    font-size: 0.9rem;
   font-weight: 600;
   color: #2d3748;
+   display: flex; // Transforma o Label em um contêiner flexível
+  align-items: center; 
+  gap: 0.5rem;
 `;
 
 export const Textarea = styled.textarea`
@@ -527,4 +528,41 @@ export const Textarea = styled.textarea`
   border-radius: 0.375rem;
   border: 1px solid #cbd5e0;
   resize: vertical;
+`;
+
+
+// NOVO COMPONENTE ESTILIZADO PARA O CARD DE TERMOS
+export const TermsCardTitle = styled.h3`
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid;
+  padding-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #2d3748;
+`;
+
+export const TermsCardContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const FieldGroup = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0; // Adicionando uma linha para separar cada item
+  padding-bottom: 0.5rem;
+`;
+
+
+export const Value = styled.div`
+      font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+    color: #4a5568;
 `;

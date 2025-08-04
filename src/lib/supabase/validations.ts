@@ -190,8 +190,8 @@ export async function validateWholesaleCustomer(
     wholesale_warehouse: string;
     wholesale_currency: string;
     wholesale_terms?: string | string[];
-    wholesale_credit: number;
-    wholesale_discount: number;
+    wholesale_credit: number | null; // Alterado para aceitar null
+    wholesale_discount: number | null; // Alterado para aceitar null
     wholesale_feedback?: string;
   },
   isReview?: boolean
@@ -212,6 +212,10 @@ export async function validateWholesaleCustomer(
     ? getNextStatus("wholesale")
     : "rejected by the wholesale team";
 
+  // CORREÇÃO: Trata valores nulos ou vazios para os campos numéricos
+  const wholesaleCreditValue = terms.wholesale_credit === "" ? null : terms.wholesale_credit;
+  const wholesaleDiscountValue = terms.wholesale_discount === "" ? null : terms.wholesale_discount;
+
   const updateData = {
     status: newStatus,
     wholesale_status: approved ? "aprovado" : "reprovado",
@@ -221,8 +225,8 @@ export async function validateWholesaleCustomer(
     wholesale_terms: Array.isArray(terms.wholesale_terms)
       ? terms.wholesale_terms.join(", ")
       : terms.wholesale_terms ?? null,
-    wholesale_credit: terms.wholesale_credit,
-    wholesale_discount: terms.wholesale_discount,
+    wholesale_credit: wholesaleCreditValue, // Usa o valor corrigido
+    wholesale_discount: wholesaleDiscountValue, // Usa o valor corrigido
     wholesale_feedback: terms.wholesale_feedback ?? null,
     updated_at: new Date().toISOString(),
   };

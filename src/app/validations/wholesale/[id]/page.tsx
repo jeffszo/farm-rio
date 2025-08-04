@@ -290,13 +290,12 @@ export default function ValidationDetailsPage() {
         console.log("Processed Shipping Addresses (after parse):", processedData.shipping_address);
 
         const fetchedTerms: WholesaleTerms = {
-          wholesale_invoicing_company: data.credit_invoicing_company || "",
-          wholesale_warehouse: data.wholesale_warehouse || "",
-          wholesale_currency: data.wholesale_currency || "",
-          wholesale_terms: data.wholesale_terms || "",
-          // CORREÇÃO: Inicializa wholesale_credit com atacado_credit
-          wholesale_credit: Number(data.wholesale_credit) || 0,
-          wholesale_discount: data.credit_discount || 0,
+          wholesale_invoicing_company: "",
+          wholesale_warehouse: "",
+          wholesale_currency: "",
+          wholesale_terms: "",
+          wholesale_credit: "",
+          wholesale_discount: "",
           wholesale_feedback: "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
@@ -403,10 +402,7 @@ export default function ValidationDetailsPage() {
     }
   };
 
-const handleCancelValidationTermsEdit = () => {
-    setTerms(initialTerms); // Reverte 'terms' para o valor original
-    setEditingValidationTerms(false); // Sai do modo de edição
-};
+
 
   const handleApproval = async (approved: boolean) => {
     console.log("Starting handleApproval. approved =", approved);
@@ -799,20 +795,32 @@ const handleReview = async () => {
           </S.FormSection>
         </S.FormDetails>
 
+        {/* NOVO CARD PARA EXIBIR TERMOS E CONDIÇÕES */}
+        <S.TermsCard>
+            <S.TermsTitle>
+                Terms (filled in by the customer)
+            </S.TermsTitle>
+            <S.TermsCardContent>
+                <S.FieldGroup>
+                    <S.Label> <Calendar size={16} /> Terms</S.Label>
+                    <S.Value>{customerForm.terms || 'N/A'}</S.Value>
+                </S.FieldGroup>
+                <S.FieldGroup>
+                    <S.Label> <CreditCard size={16} /> Currency</S.Label>
+                    <S.Value>{customerForm.currency || 'N/A'}</S.Value>
+                </S.FieldGroup>
+                <S.FieldGroup>
+                    <S.Label> <DollarSign size={16} /> Estimated Amount</S.Label>
+                    <S.Value>{customerForm.estimated_purchase_amount || 'N/A'}</S.Value>
+                </S.FieldGroup>
+            </S.TermsCardContent>
+        </S.TermsCard>
+
         
         <S.TermsContainer>
-          <S.TermsHeader>
-            <S.TermsTitle>Validation Terms (Wholesale Team)</S.TermsTitle>
-<S.EditButton onClick={() => {
-    if (editingValidationTerms) {
-        handleCancelValidationTermsEdit(); // Chama a função de cancelar
-    }
-    setEditingValidationTerms(!editingValidationTerms); // Alterna o estado de edição
-}}>
-    {editingValidationTerms ? <X size={16} /> : <Pencil size={16} />}
-    {editingValidationTerms ? "Cancel" : "Edit"}
-</S.EditButton>
-          </S.TermsHeader>
+         <S.TermsHeader>
+  <S.TermsTitle>Validation Terms (Wholesale Team)</S.TermsTitle>
+</S.TermsHeader>
           <S.TermsGrid>
             <S.TermsSection>
               <label>
@@ -824,7 +832,6 @@ const handleReview = async () => {
   onChange={(e) =>
     handleTermChange("wholesale_currency", e.target.value)
   }
-  disabled={!editingValidationTerms}
 >
   <option value="">Select currency</option>
   {CURRENCIES.map((currency) => (
@@ -835,74 +842,64 @@ const handleReview = async () => {
 </S.Select> 
             </S.TermsSection>
 
-            <S.TermsSection>
-              <label>
-                <Building2 size={16} /> Invoicing Company
-              </label>
-              <S.Select
-                value={terms.wholesale_invoicing_company}
-                onChange={(e) =>
-                  handleTermChange("wholesale_invoicing_company", e.target.value)
-                }
-                disabled={!editingValidationTerms || !terms.wholesale_currency}
-              >
-                <option value="">Select company</option>
-                {availableInvoicingCompanies.map((company) => (
-                  <option key={company} value={company}>
-                    {company}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
+<S.TermsSection>
+    <label>
+        <Building2 size={16} /> Invoicing Company
+    </label>
+    <S.Select
+        value={terms.wholesale_invoicing_company}
+        onChange={(e) => handleTermChange("wholesale_invoicing_company", e.target.value)}
+        disabled={!terms.wholesale_currency} 
+    >
+        <option value="">Select company</option>
+        {availableInvoicingCompanies.map((company) => (
+            <option key={company} value={company}>
+                {company}
+            </option>
+        ))}
+    </S.Select>
+</S.TermsSection>
 
-            
-            <S.TermsSection>
-              <label>
-                <Warehouse size={16} /> Warehouse
-              </label>
-              <S.Select
-                value={terms.wholesale_warehouse}
-                onChange={(e) =>
-                  handleTermChange("wholesale_warehouse", e.target.value)
-                }
-                disabled={!editingValidationTerms || !terms.wholesale_invoicing_company}
-              >
-                <option value="">Select warehouse</option>
-                {warehouses.length > 0 ? (
-                    warehouses.map((warehouse) => (
-                        <option key={warehouse} value={warehouse}>
-                            {warehouse}
-                        </option>
-                    ))
-                ) : (
-                    <option value="" disabled>
-                        Select an Invoicing Company first
-                    </option>
-                )}
-              </S.Select>
-            </S.TermsSection>
+<S.TermsSection>
+    <label>
+        <Warehouse size={16} /> Warehouse
+    </label>
+    <S.Select
+        value={terms.wholesale_warehouse}
+        onChange={(e) => handleTermChange("wholesale_warehouse", e.target.value)}
+        disabled={!terms.wholesale_invoicing_company} 
+    >
+        <option value="">Select warehouse</option>
+        {warehouses.length > 0 ? (
+            warehouses.map((warehouse) => (
+                <option key={warehouse} value={warehouse}>
+                    {warehouse}
+                </option>
+            ))
+        ) : (
+            <option value="" disabled>
+                Select an Invoicing Company first
+            </option>
+        )}
+    </S.Select>
+</S.TermsSection>
 
-            
-            <S.TermsSection>
-              <label>
-                <Calendar size={16} /> Payment Terms
-              </label>
-              
-<S.Select
-  value={terms.wholesale_terms}
-  onChange={(e) =>
-    handleTermChange("wholesale_terms", e.target.value)
-  }
-  disabled={!editingValidationTerms}
->
-  <option value="">Select payment terms</option>
-  {PAYMENT_TERMS.map((term, index) => (
-    <option key={`${term}-${index}`} value={term}>
-      {term}
-    </option>
-  ))}
-</S.Select>
-            </S.TermsSection>
+<S.TermsSection>
+    <label>
+        <Calendar size={16} /> Payment Terms
+    </label>
+    <S.Select
+        value={terms.wholesale_terms}
+        onChange={(e) => handleTermChange("wholesale_terms", e.target.value)}
+    >
+        <option value="">Select payment terms</option>
+        {PAYMENT_TERMS.map((term, index) => (
+            <option key={`${term}-${index}`} value={term}>
+                {term}
+            </option>
+        ))}
+    </S.Select>
+</S.TermsSection>
 
             {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
             <S.TermsSection>
@@ -916,7 +913,6 @@ const handleReview = async () => {
                 }
                 min="0"
                 step="0.01" // Ajuste o passo conforme a precisão desejada para o valor monetário
-                disabled={!editingValidationTerms}
               />
             </S.TermsSection>
 
@@ -932,7 +928,6 @@ const handleReview = async () => {
                 min="0"
                 max="100"
                 step="0.1"
-                disabled={!editingValidationTerms}
               />
             </S.TermsSection>
             
