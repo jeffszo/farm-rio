@@ -273,17 +273,19 @@ const onSubmit = async (formData: IFormInputs) => {
     const currencyValue = formData.buyerInfo?.currency === "" ? null : formData.buyerInfo?.currency;
 
     // Lógica para determinar o novo status com a extração corrigida do nome do time
-    let newStatus = "pending";
-    if (previousFormStatus && previousFormStatus.includes("review requested by the ")) {
-        const teamToReview = previousFormStatus.substring("review requested by the ".length);
-        newStatus = `review requested by the ${teamToReview}`;
-    } else if (previousFormStatus && previousFormStatus.includes("rejected by the ")) {
-        const teamToReview = previousFormStatus.substring("rejected by the ".length);
-        newStatus = `review requested by the ${teamToReview}`;
-    } else if (previousFormStatus && previousFormStatus.includes("pending analysis by the ")) {
-        const teamToReview = previousFormStatus.substring("pending analysis by the ".length);
-        newStatus = `review requested by the ${teamToReview}`;
-    }
+     let newStatus = "pending";
+        // Lógica para diferenciar o status quando o cliente reenvia o formulário
+        if (previousFormStatus === "review requested by the wholesale team") {
+            newStatus = "review requested by the wholesale team - customer";
+        } else if (previousFormStatus === "review requested by the tax team") {
+            newStatus = "review requested by the tax team - customer";
+        } else if (previousFormStatus === "review requested by the credit team") {
+            newStatus = "review requested by the credit team - customer";
+        } else if (previousFormStatus === "review requested by the csc initial team") {
+            newStatus = "review requested by the csc initial team - customer";
+        } else if (previousFormStatus === "review requested by the csc final team") {
+          newStatus = "review requested by the csc final team - customer";
+        }
 
 
     const payload = {
@@ -794,7 +796,7 @@ setTimeout(() => {
   <S.ModalOverlay>
     <S.ModalContent>
       <S.ModalTitle>
-  {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={48} />}
+  {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={28} />}
   <span style={{ marginTop: "10px", fontSize: "1.2rem" }}>{modalContent.title}</span>
 </S.ModalTitle>
 <S.ModalMessage>{modalContent.description}</S.ModalMessage>
