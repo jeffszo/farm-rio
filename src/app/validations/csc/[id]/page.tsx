@@ -253,44 +253,47 @@ export default function ValidationDetailsPage() {
   };
 
 const handleApproval = async (approved: boolean) => {
-    if (!id || typeof id !== "string") {
-        console.error("ID do cliente não encontrado.");
-        return;
+  if (!id || typeof id !== "string") {
+    console.error("ID do cliente não encontrado.");
+    return;
+  }
+
+  if (!approved && feedback.trim() === "") {
+    alert("Por favor, forneça um feedback para a rejeição.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // Chamar a função adequada com base no status
+    if (customerForm?.status === "approved by the wholesale team") {
+      await api.validateCSCInitialCustomer(id, approved, feedback);
+    } else if (customerForm?.status === "approved by the credit team") {
+      await api.validateCSCFinalCustomer(id, approved);
+    } else {
+      throw new Error("Status do cliente não é válido para validação CSC.");
     }
 
-    // Validação: Se reprovado, exige um feedback
-    if (!approved && feedback.trim() === "") {
-      alert("Por favor, forneça um feedback para a rejeição.");
-      return;
-    }
-
-    try {
-        setLoading(true);
-
-        // AQUI ESTÁ A CORREÇÃO: o estado `feedback` é passado como argumento.
-        await api.validateCSCFinalCustomer(id, approved);
-
-        setModalContent({
-            title: approved ? "Approved!" : "Review!",
-            description: approved
-                ? "Customer approved!"
-                : "The form has been sent for the client's review. They can edit it now."
-        });
-        setShowModal(true);
-    } catch (error) {
-        console.error("Erro ao validar cliente:", error);
-        setModalContent({
-            title: "Erro",
-            description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`
-        });
-        setShowModal(true);
-    } finally {
-        setLoading(false);
-    }
-
-
-
+    setModalContent({
+      title: approved ? "Approved!" : "Review!",
+      description: approved
+        ? "Customer approved!"
+        : "The form has been sent for the client's review. They can edit it now."
+    });
+    setShowModal(true);
+  } catch (error) {
+    console.error("Erro ao validar cliente:", error);
+    setModalContent({
+      title: "Erro",
+      description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`
+    });
+    setShowModal(true);
+  } finally {
+    setLoading(false);
+  }
 };
+
 
 // ... O restante do seu componente
      const closeModalAndRedirect = () => {
@@ -632,7 +635,7 @@ const handleApproval = async (approved: boolean) => {
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "finished"|| customerForm.status === "approved by the wholesale team") && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale tea") && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
