@@ -622,7 +622,13 @@ const handleApproval = async (approved: boolean) => {
 </S.SectionTitle>
 
 <S.FormRow>
-  <strong>Feedback:</strong>{" "}
+  <strong>
+    {customerForm.status === "approved by the wholesale team"
+      ? "Wholesale Feedback:"
+      : customerForm.status === "approved by the credit team"
+      ? "Credit Feedback:"
+      : "Team Feedback:"}
+  </strong>{" "}
   {customerForm.status === "approved by the wholesale team" ? (
     customerForm.wholesale_feedback || "No feedback provided by Wholesale Team."
   ) : customerForm.status === "approved by the credit team" ? (
@@ -631,6 +637,7 @@ const handleApproval = async (approved: boolean) => {
     "No feedback available."
   )}
 </S.FormRow>
+
 
           </S.FormSection>
 

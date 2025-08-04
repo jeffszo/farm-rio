@@ -750,8 +750,9 @@ export default function ValidationDetailsPage() {
               <MessageSquare  size={16} /> Team Feedback
             </S.SectionTitle>
                                    <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
-            </S.FormRow>
+  <strong>Tax Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
+</S.FormRow>
+
 
           </S.FormSection>
 
@@ -878,7 +879,6 @@ export default function ValidationDetailsPage() {
                             </S.Label>
                             <S.Textarea
                               id="feedback"
-                              value={feedback}
                               onChange={(e) => setFeedback(e.target.value)}
                               placeholder="Explain the reason for rejection or add relevant..."
                             />
