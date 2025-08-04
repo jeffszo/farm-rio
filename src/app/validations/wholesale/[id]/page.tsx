@@ -722,13 +722,28 @@ const handleReview = async () => {
 
             </S.FormRow>
 
-                        <S.FormRow>
-              <strong>Branding Mix:</strong>{" "}
-              {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
-                String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
-                "Not provided"
-              }
-            </S.FormRow>
+<S.FormRow>
+  <strong>Branding Mix:</strong>{" "}
+  {(() => {
+    try {
+      const parsed = JSON.parse(customerForm.branding_mix);
+      if (Array.isArray(parsed)) {
+        return (
+          <ul style={{ marginTop: "0.5rem", paddingLeft: "1.2rem", listStyleType: "disc" }}>
+            {parsed.map((item: string, index: number) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        );
+      }
+      return customerForm.branding_mix || "Not provided";
+    } catch {
+      return customerForm.branding_mix || "Not provided";
+    }
+  })()}
+</S.FormRow>
+
+
           </S.FormSection>
           <S.FormSection>
             <S.SectionTitle>
