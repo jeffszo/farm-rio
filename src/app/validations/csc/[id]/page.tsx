@@ -267,13 +267,17 @@ const handleApproval = async (approved: boolean) => {
   setLoading(true);
 
   // Chamar a função adequada com base no status, passando o feedback
-  if (customerForm?.status === "approved by the wholesale team") {
+if (customerForm?.status === "approved by the wholesale team") {
     await api.validateCSCInitialCustomer(id, approved, feedback);
-  } else if (customerForm?.status === "approved by the credit team") {
+  } else if (
+    customerForm?.status === "approved by the credit team" ||
+    customerForm?.status === "review requested by the csc final team - customer"
+  ) {
     await api.validateCSCFinalCustomer(id, approved, feedback);
   } else {
-    throw new Error("Status do cliente não é válido para validação CSC.");
+    throw new Error("Customer status is not valid for CSC validation");
   }
+
 
   // Exibe modal com mensagens diferentes para Aprovação e Revisão
   setModalContent({
