@@ -907,7 +907,7 @@ const handleReview = async () => {
             {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
             <S.TermsSection>
               <label>
-                <DollarSign size={16} /> Credit Limit
+                <DollarSign size={16} /> Estimated Amount
               </label>
               <S.NumericInput
                 value={terms.wholesale_credit}

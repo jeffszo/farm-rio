@@ -844,7 +844,7 @@ export default function ValidationDetailsPage() {
 
             <S.TermsSection>
               <label>
-                <DollarSign size={16} /> Credit Limit
+                <DollarSign size={16} /> Estimated Amount
               </label>
               <S.NumericInput
                 value={creditTerms.credit_limit} // Usa creditTerms

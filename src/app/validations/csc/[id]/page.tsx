@@ -635,7 +635,7 @@ const handleApproval = async (approved: boolean) => {
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale tea") && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team" || customerForm.status === "finished" ) && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
@@ -737,7 +737,7 @@ const handleApproval = async (approved: boolean) => {
 
                   <S.TermsSection>
                     <label>
-                      <DollarSign size={16} /> Credit Limit
+                      <DollarSign size={16} /> Estimated Amount
                     </label>
                     <S.InfoText>
                       {validation.credit_credit !== undefined &&
