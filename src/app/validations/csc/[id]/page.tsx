@@ -295,7 +295,7 @@ const handleApproval = async (approved: boolean) => {
 // ... O restante do seu componente
      const closeModalAndRedirect = () => {
         setShowModal(false);
-        router.push('/csc/'); // Redireciona para a página 'csc'
+        router.push("/validations/csc") // Redireciona para a página 'csc'
     };
 
   // Helper function to render an address
