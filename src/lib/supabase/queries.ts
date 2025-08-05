@@ -3,7 +3,8 @@ import {createClient} from "./client";
 
 
 export async function getApprovedCustomers() {
-  const { data, error } = await supabaseServerClient
+  const supabase = createClient();
+  const { data, error } = await supabase
     .from("customer_forms")
     .select(`
       created_at,

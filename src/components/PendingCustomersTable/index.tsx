@@ -68,6 +68,7 @@ export default function PendingCustomersTable({
 
   const exportToExcel = async () => {
     const result = await api.getApprovedCustomers()
+    console.log('Dados da API:', result);
     // Check if result is an array and has expected properties
     const customers: Customer[] = Array.isArray(result)
       ? result.filter(
