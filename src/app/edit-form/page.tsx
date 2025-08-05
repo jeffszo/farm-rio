@@ -219,7 +219,7 @@ const onSubmit = async (formData: IFormInputs) => {
       return;
     }
 
-       const termsSelected = formData.buyerInfo?.terms;
+        const termsSelected = formData.buyerInfo?.terms?.trim().toLowerCase();
         if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
             // Lógica para exibir o modal de erro
             setModalContent({
@@ -797,7 +797,7 @@ setTimeout(() => {
     <S.ModalContent>
       <S.ModalTitle>
   {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={28} />}
-  <span style={{ marginTop: "10px", fontSize: "1.2rem" }}>{modalContent.title}</span>
+  <span style={{ marginTop: "10px", fontSize: "1rem", fontWeight: "bold" }}>{modalContent.title}</span>
 </S.ModalTitle>
 <S.ModalMessage>{modalContent.description}</S.ModalMessage>
 
