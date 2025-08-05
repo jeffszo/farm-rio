@@ -82,8 +82,14 @@ export default function PendingCustomersTable({
         ) as Customer[]
       : []
 
-    const approvedCustomers = customers.filter((customer) => customer.status === "finished")
+     
+  console.log('Clientes após o primeiro filtro:', customers);
+  customers.forEach(c => {
+    console.log(`Status: '${c.status}', Tipo: ${typeof c.status}`);
+  });
 
+
+const approvedCustomers = customers.filter((customer) => customer.status.trim().toLowerCase() === "finished")
     if (approvedCustomers.length === 0) {
       alert("No customers approved for export!")
       return

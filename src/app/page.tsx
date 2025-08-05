@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Container, FormContainer, FormLink, FormTitle, Main } from "../styles/global"
-import LoginForm from "../components/LoginForm"
+import LoginForm from "../_components/LoginForm"
 import Link from "next/link"
 
 

@@ -6,7 +6,27 @@ export async function getApprovedCustomers() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("customer_forms")
-    .select("id, status")
+    .select(`
+      created_at,
+      status,
+      customer_name,
+      dba_number,
+      duns_number,
+      ap_contact_name,
+      ap_contact_email,
+      buyer_name,
+      buyer_email,
+      sales_tax_id,
+      resale_certificate,
+      billing_address,
+      shipping_address,
+      id,
+      credit_invoicing_company,
+      credit_warehouse,
+      credit_currency,
+      credit_credit,
+      credit_discount
+    `)
     .eq("status", "finished"); // Alterado para "finished" como status final do fluxo
 
   if (error) {

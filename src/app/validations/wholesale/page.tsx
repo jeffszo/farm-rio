@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../lib/supabase/index";
-import PendingCustomersTable from "../../../components/PendingCustomersTable";
-import TableSkeleton from "../../../components/TableSkeleton";
+import PendingCustomersTable from "../../../_components/PendingCustomersTable";
+import TableSkeleton from "../../../_components/TableSkeleton";
 
 export default function WholesaleValidationsPage() {
   // Definindo o tipo de Customer, com as propriedades que são esperadas

@@ -1,6 +1,6 @@
 import { Nunito_Sans } from "next/font/google";
-import ClientLayout from "@/components/ClientWrapper";
-import HeaderValidations from "@/components/HeaderValidations";
+import ClientLayout from "@/_components/ClientWrapper";
+import HeaderValidations from "@/_components/HeaderValidations";
 
 
 
