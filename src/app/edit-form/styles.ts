@@ -319,6 +319,8 @@ export const ModalTitle = styled.h2`
   font-weight: 600;
   margin-bottom: 16px;
   display: flex;
+  justify-content: center;
+  gap: 8px;
   align-items: center;
 `
 

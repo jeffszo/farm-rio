@@ -795,9 +795,13 @@ setTimeout(() => {
       {isModalOpen && (
   <S.ModalOverlay>
     <S.ModalContent>
-      <S.ModalTitle>
+      <S.ModalTitle style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+}}>
   {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={28} />}
-  <span style={{ marginTop: "10px", fontSize: "1rem", fontWeight: "bold" }}>{modalContent.title}</span>
+  <span style={{ fontSize: "1rem", fontWeight: "bold" }}>{modalContent.title}</span>
 </S.ModalTitle>
 <S.ModalMessage>{modalContent.description}</S.ModalMessage>
 
