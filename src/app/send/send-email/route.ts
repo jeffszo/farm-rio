@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const { data, error } = await resend.emails.send({
       from: 'FARM RIO <contact@customer.farmrio.com>',
       to: email, 
-      subject: `Welcome to FARM RIO, ${name}!`, 
+      subject: `Welcome to FARM RIO`, 
       react: WelcomeEmail({ name })
     });
 

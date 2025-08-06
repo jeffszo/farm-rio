@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     // 2. ✅ Envia o e-mail para o e-mail do usuário autenticado
     const { data, error } = await resend.emails.send({
-      from: 'FARM RIO <contato@customer.farmrio.com>',
+      from: 'FARM RIO <contact@customer.farmrio.com>',
       to: recipientEmail, 
       subject: `Contact Confirmation - FARM RIO`, 
       react: FormSubmissionConfirmationEmail({ name }),
