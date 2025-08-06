@@ -62,3 +62,15 @@ export const ErrorMessage = styled.p`
   font-size: ${theme.fontSizes.sm};
 `
 
+
+export const ForgotPassword = styled.a`
+  font-size: 14px;
+  color: #586b7fff; 
+  text-decoration: none; 
+  margin-top: 0.25px;
+  cursor: pointer;
+
+  &:hover {
+      opacity: 0.8;
+  }
+`;

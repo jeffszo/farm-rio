@@ -708,7 +708,7 @@ if (!currentUser || !currentUser.id) {
               <S.SectionTitle>Customer Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="legalName">Legal Name</S.Label>
+                  <S.Label htmlFor="legalName">Name</S.Label>
                   <S.Input
                     id="legalName"
                     {...register("customerInfo.legalName", {

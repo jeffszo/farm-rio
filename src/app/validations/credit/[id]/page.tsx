@@ -1,3 +1,4 @@
+// src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -69,8 +70,8 @@ interface CustomerForm {
   credit_warehouse?: string;
   credit_currency?: string;
   credit_terms?: string;
-  credit_credit?: number;
-  credit_discount?: number;
+  credit_credit?: string;
+  credit_discount?: string;
   credit_feedback?: string; // Added new field for credit feedback
 }
 
@@ -82,8 +83,8 @@ interface CreditTerms {
   warehouse: string;
   currency: string;
   payment_terms: string;
-  credit_limit: number;
-  discount: number;
+  credit_limit: string;
+  discount: string;
 }
 
 interface ValidationDetails { // Interface para dados de validação existentes (se houver)
@@ -98,7 +99,7 @@ interface ValidationDetails { // Interface para dados de validação existentes 
   credit_currency: string;
   credit_terms: string;
   credit_credit: string;
-  credit_discount: number;
+  credit_discount: string;
 }
 
 
@@ -160,6 +161,7 @@ export default function ValidationDetailsPage() {
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
+    shouldRedirect: false 
   });
   const router = useRouter();
   const [newDuns, setNewDuns] = useState("");
@@ -183,8 +185,8 @@ export default function ValidationDetailsPage() {
     warehouse: "",
     currency: "",
     payment_terms: "",
-    credit_limit: 0,
-    discount: 0,
+    credit_limit: "",
+    discount: "",
   });
 
   // Estado para os armazéns disponíveis para o time de CRÉDITO
@@ -311,24 +313,38 @@ export default function ValidationDetailsPage() {
     if (id) fetchValidationDetails()
   }, [id])
 
-
   // NOVO useEffect para o time de CRÉDITO: atualizar empresas de faturamento disponíveis com base na moeda selecionada
   useEffect(() => {
-    const selectedCurrency = creditTerms.currency; // Usa o estado de termos do CRÉDITO
-    if (selectedCurrency && INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]) {
-      setAvailableCreditInvoicingCompanies(INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]);
+    const selectedCurrency = creditTerms.currency;
+    if (selectedCurrency) {
+        // Obtenha as empresas de faturamento diretamente da constante
+        const companies = INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency] || [];
+        setAvailableCreditInvoicingCompanies(companies);
+        
+        // Se houver apenas uma empresa, pré-seleciona ela
+        if (companies.length === 1) {
+            setCreditTerms(prev => ({ 
+                ...prev, 
+                invoicing_company: companies[0],
+                warehouse: '' // Limpa o warehouse ao mudar a currency
+            }));
+        } else {
+            // Limpa a empresa se houver mais de uma ou nenhuma
+            setCreditTerms(prev => ({ 
+                ...prev, 
+                invoicing_company: "",
+                warehouse: ""
+            }));
+        }
     } else {
-      setAvailableCreditInvoicingCompanies([]);
+        setAvailableCreditInvoicingCompanies([]);
+        setCreditTerms(prev => ({
+            ...prev,
+            invoicing_company: "",
+            warehouse: ""
+        }));
     }
-    // Resetar empresa de faturamento e armazém do CRÉDITO quando a moeda muda
-    setCreditTerms((prev) => ({
-      ...prev,
-      invoicing_company: "",
-      warehouse: "",
-    }));
-    // Limpar armazéns do CRÉDITO também
-    setCreditWarehouses([]);
-  }, [creditTerms.currency]); // Dependência na moeda do CRÉDITO
+  }, [creditTerms.currency]);
 
   // useEffect para o time de CRÉDITO: buscar armazéns quando a empresa de faturamento muda
   useEffect(() => {
@@ -337,7 +353,6 @@ export default function ValidationDetailsPage() {
         setCreditWarehouses([]);
         return;
       }
-
       try {
         const warehouses = await api.getWarehousesByCompany(
           creditTerms.invoicing_company
@@ -350,9 +365,8 @@ export default function ValidationDetailsPage() {
         setCreditWarehouses([]);
       }
     };
-
     fetchWarehouses();
-  }, [creditTerms.invoicing_company]); // Dependência na empresa de faturamento do CRÉDITO
+  }, [creditTerms.invoicing_company]);
 
   const handleSaveDuns = async () => {
     try {
@@ -390,10 +404,8 @@ export default function ValidationDetailsPage() {
     value: string | number
   ) => {
     if (field === "credit_limit" || field === "discount") {
-      const numericValue = value === "" ? 0 : Number(value);
-
-      if (isNaN(numericValue)) return;
-
+      const numericValue = value === "" ? "" : Number(value);
+      if (value !== "" && typeof numericValue === "number" && isNaN(numericValue)) return;
       setCreditTerms((prev) => ({ ...prev, [field]: numericValue }));
     } else {
       setCreditTerms((prev) => ({ ...prev, [field]: value }));
@@ -418,21 +430,24 @@ export default function ValidationDetailsPage() {
         const missingFields = requiredFields.filter((field) => !creditTerms[field]); // Usa creditTerms
         if (missingFields.length > 0) {
           throw new Error(
-            `⚠️ Por favor, preencha todos os campos obrigatórios: ${missingFields.join(", ")}`
+            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
           );
         }
-        if (creditTerms.credit_limit < 0 || creditTerms.discount < 0) { // Usa creditTerms
-          throw new Error("⚠️ O limite de crédito e o desconto devem ser não-negativos!");
+        const creditLimitNum = Number(creditTerms.credit_limit);
+        const discountNum = Number(creditTerms.discount);
+        if (isNaN(creditLimitNum) || isNaN(discountNum) || creditLimitNum < 0 || discountNum < 0) {
+          throw new Error("⚠️ The credit limit and discount must be non-negative");
         }
       } else { // If rejecting, feedback is required
-          if (!feedback.trim()) {
-              setModalContent({
-                  title: "Error!",
-                  description: "Feedback is required when rejecting a customer.",
-              });
-              setShowModal(true);
-              return;
-          }
+          if (!approved && feedback.trim() === "") {
+    setModalContent({
+      title: "Error!",
+      description: "Feedback is required when sending to review.",
+      shouldRedirect: false, // Não redireciona em caso de erro
+    });
+    setShowModal(true);
+    return;
+  }
       }
 
       console.log("Calling validateCreditCustomer");
@@ -441,42 +456,12 @@ export default function ValidationDetailsPage() {
         credit_warehouse: creditTerms.warehouse, // Usa creditTerms
         credit_currency: creditTerms.currency, // Usa creditTerms
         credit_terms: creditTerms.payment_terms, // Usa creditTerms
-        credit_credit: creditTerms.credit_limit, // Usa creditTerms
-        credit_discount: creditTerms.discount, // Usa creditTerms
+        credit_credit: Number(creditTerms.credit_limit), // Usa creditTerms
+        credit_discount: Number(creditTerms.discount), // Usa creditTerms, convertido para number
         credit_feedback: feedback.trim() === "" ? undefined : feedback, // Passa o feedback do textarea
       });
 
       console.log("Validation completed successfully");
-
-      // --- NOVA ADIÇÃO: Enviar e-mail após a validação de Crédito ---
-      // if (customerForm) {
-      //   try {
-      //     const emailResponse = await fetch("/api/send-credit-validation-email", {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //       body: JSON.stringify({
-      //         customerId: id,
-      //         customerName: customerForm.customer_name,
-      //         customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
-      //         validationStatus: approved,
-      //         feedback: feedback, // Passa o feedback do textarea
-      //         currentStatus: customerForm.status,
-      //       }),
-      //     });
-
-      //     if (!emailResponse.ok) {
-      //       const errorData = await emailResponse.json();
-      //       console.error("Falha ao enviar e-mail de validação de Crédito:", errorData);
-      //     } else {
-      //       console.log("E-mail de validação de Crédito enviado com sucesso.");
-      //     }
-      //   } catch (emailError) {
-      //     console.error("Erro ao enviar e-mail de validação de Crédito:", emailError);
-      //   }
-      // }
-      // --- FIM DA NOVA ADIÇÃO ---
 
 
       if (customerForm) {
@@ -491,15 +476,17 @@ export default function ValidationDetailsPage() {
         description: approved
           ? "Customer approved! Forwarded to CSC team final."
           : "The form has been sent for the client's review. They can edit it now!",
+          shouldRedirect: true
       });
       setShowModal(true);
       console.log("Success modal displayed");
     } catch (err) {
-      console.error("Erro ao validar cliente:", err);
+      console.error("Error validating client:", err);
       setModalContent({
-        title: "Erro!",
+        title: "Error!",
         description:
-          err instanceof Error ? err.message : "Erro desconhecido ao aprovar.",
+          err instanceof Error ? err.message : "Unknown error while approving.",
+          shouldRedirect: false
       });
       setShowModal(true);
     } finally {
@@ -507,10 +494,13 @@ export default function ValidationDetailsPage() {
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    router.push("/validations/credit"); // Redireciona para a página de validações de crédito
-  };
+const closeModal = () => {
+  setShowModal(false);
+  // Redireciona somente se a flag shouldRedirect for verdadeira
+  if (modalContent.shouldRedirect) {
+    router.push("/validations/credit");
+  }
+};
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
@@ -589,13 +579,7 @@ export default function ValidationDetailsPage() {
               )}
             </S.FormRow>
 
-{/* <S.FormRow>
-  <strong>Branding Mix:</strong>{" "}
-  {customerForm.branding_mix && String(customerForm.branding_mix).trim() !== '' ?
-    String(customerForm.branding_mix).split(/[,;\s]+/).filter(Boolean).join(', ') :
-    "Not provided"
-  }
-</S.FormRow> */}
+
 
             <S.FormRow>
 
@@ -771,8 +755,8 @@ export default function ValidationDetailsPage() {
                 <CreditCard size={16} /> Currency
               </label>
               <S.Select
-                value={creditTerms.currency} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("currency", e.target.value)} // Usa handleCreditTermChange
+                value={creditTerms.currency}
+                onChange={(e) => handleCreditTermChange("currency", e.target.value)}
               >
                 <option value="">Select currency</option>
                 {CURRENCIES.map((currency) => (
@@ -788,12 +772,16 @@ export default function ValidationDetailsPage() {
                 <Building2 size={16} /> Invoicing Company
               </label>
               <S.Select
-                value={creditTerms.invoicing_company} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("invoicing_company", e.target.value)} // Usa handleCreditTermChange
-                disabled={!creditTerms.currency} // Desabilita até que uma moeda seja selecionada
+                value={
+                  availableCreditInvoicingCompanies.length === 1
+                    ? availableCreditInvoicingCompanies[0]
+                    : creditTerms.invoicing_company
+                }
+                onChange={(e) => handleCreditTermChange("invoicing_company", e.target.value)}
+                disabled={!creditTerms.currency}
               >
                 <option value="">Select company</option>
-                {availableCreditInvoicingCompanies.map((company) => ( // Renderiza opções baseadas no novo estado
+                {availableCreditInvoicingCompanies.map((company) => (
                   <option key={company} value={company}>
                     {company}
                   </option>
@@ -806,9 +794,9 @@ export default function ValidationDetailsPage() {
                 <Warehouse size={16} /> Warehouse
               </label>
               <S.Select
-                value={creditTerms.warehouse} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("warehouse", e.target.value)} // Usa handleCreditTermChange
-                disabled={!creditTerms.currency} // HABILITA AQUI APÓS A SELEÇÃO DA MOEDA
+                value={creditTerms.warehouse}
+                onChange={(e) => handleCreditTermChange("warehouse", e.target.value)}
+                disabled={!creditTerms.invoicing_company} // Desabilita até que a invoicing_company seja selecionada
               >
                 <option value="">Select warehouse</option>
                 {/* Se não houver invoicing_company selecionada, creditWarehouses estará vazio */}
@@ -831,8 +819,8 @@ export default function ValidationDetailsPage() {
                 <Calendar size={16} /> Payment Terms
               </label>
               <S.Select
-                value={creditTerms.payment_terms} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("payment_terms", e.target.value)} // Usa handleCreditTermChange
+                value={creditTerms.payment_terms}
+                onChange={(e) => handleCreditTermChange("payment_terms", e.target.value)}
               >
                 <option value="">Select terms</option>
                 {PAYMENT_TERMS.map((term, index) => (
@@ -848,8 +836,8 @@ export default function ValidationDetailsPage() {
                 <DollarSign size={16} /> Estimated Amount
               </label>
               <S.NumericInput
-                value={creditTerms.credit_limit} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("credit_limit", e.target.value)} // Usa handleCreditTermChange
+                value={creditTerms.credit_limit}
+                onChange={(e) => handleCreditTermChange("credit_limit", e.target.value)}
                 min="0"
                 step="0.01"
               />
@@ -860,8 +848,8 @@ export default function ValidationDetailsPage() {
                 <Percent size={16} /> Discount
               </label>
               <S.NumericInput
-                value={creditTerms.discount} // Usa creditTerms
-                onChange={(e) => handleCreditTermChange("discount", e.target.value)} // Usa handleCreditTermChange
+                value={creditTerms.discount}
+                onChange={(e) => handleCreditTermChange("discount", e.target.value)}
                 min="0"
                 max="100"
                 step="0.1"

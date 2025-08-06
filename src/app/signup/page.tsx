@@ -53,7 +53,7 @@ export default function SignUp() {
         setApiError(error)
       } else {
         console.error("Signup error:", error)
-        setApiError("Ocorreu um erro ao criar a conta. Por favor, tente novamente.")
+        setApiError("An error occurred while creating your account. Please try again.")
       }
     }
   }

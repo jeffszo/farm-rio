@@ -69,8 +69,8 @@ interface CustomerForm {
   wholesale_warehouse: string;
   wholesale_currency: string;
   wholesale_terms: string;
-  wholesale_credit: number;
-  wholesale_discount: number;
+  wholesale_credit: string;
+  wholesale_discount: string;
   wholesale_feedback?: string; // ✅ Adicione isso
 
   terms: string;
@@ -82,8 +82,8 @@ type WholesaleTerms = {
   wholesale_warehouse: string;
   wholesale_currency: string;
   wholesale_terms: string;
-  wholesale_credit: number; // Este agora será o Credit Limit
-  wholesale_discount: number;
+  wholesale_credit: string; // Este agora será o Credit Limit
+  wholesale_discount: string;
   wholesale_feedback?: string; // Made optional
 };
 
@@ -134,10 +134,11 @@ export default function ValidationDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState({
-    title: "",
-    description: "",
-  });
+const [modalContent, setModalContent] = useState({
+  title: "",
+  description: "",
+  shouldRedirect: false // <<-- A propriedade é inicializada aqui
+});
   const router = useRouter();
   const [newDuns, setNewDuns] = useState("");
   const [editingDuns, setEditingDuns] = useState(false);
@@ -147,8 +148,8 @@ export default function ValidationDetailsPage() {
     wholesale_warehouse: "",
     wholesale_currency: "",
     wholesale_terms: "",
-    wholesale_credit: 0,
-    wholesale_discount: 0,
+    wholesale_credit: "",
+    wholesale_discount: "",
   });
 
   useEffect(() => {
@@ -162,8 +163,8 @@ export default function ValidationDetailsPage() {
     wholesale_warehouse: "",
     wholesale_currency: "",
     wholesale_terms: "",
-    wholesale_credit: 0,
-    wholesale_discount: 0,
+ wholesale_credit: "", // Mude de 0 ou null para ""
+  wholesale_discount: "",
     wholesale_feedback: "",
 
 
@@ -279,8 +280,8 @@ export default function ValidationDetailsPage() {
           wholesale_warehouse: data.wholesale_warehouse ?? "",
           wholesale_currency: data.wholesale_currency ?? "",
           wholesale_terms: data.wholesale_terms ?? "",
-          wholesale_credit: data.wholesale_credit ?? 0,
-          wholesale_discount: data.credit_discount ?? 0,
+          wholesale_credit: data.wholesale_credit ?? "",
+          wholesale_discount: data.credit_discount ?? "",
           terms: data.terms ?? "",
           currency: data.currency ?? "",
         };
@@ -294,8 +295,8 @@ export default function ValidationDetailsPage() {
           wholesale_warehouse: "",
           wholesale_currency: "",
           wholesale_terms: "",
-          wholesale_credit: 0,
-          wholesale_discount: 0,
+          wholesale_credit: "",
+          wholesale_discount: "",
           wholesale_feedback: "", // Initialize feedback for wholesale
         };
         setTerms(fetchedTerms);
@@ -314,20 +315,7 @@ export default function ValidationDetailsPage() {
     if (id) fetchCustomerDetails();
   }, [id]);
 
-//   useEffect(() => {
-//   if (customerForm) {
-//     setTerms({
-//       wholesale_invoicing_company: customerForm.wholesale_invoicing_company || "",
-//       wholesale_warehouse: customerForm.wholesale_warehouse || "",
-//       wholesale_currency: customerForm.wholesale_currency || "",
-//       wholesale_terms: customerForm.wholesale_terms || "",
-//       // Usa estimated_purchase_amount se wholesale_credit for zero ou ausente
-//       wholesale_credit: Number(customerForm.wholesale_credit ?? customerForm.estimated_purchase_amount) || 0,
-//       wholesale_discount: customerForm.wholesale_discount || 0,
-//       wholesale_feedback: customerForm.wholesale_feedback || "",
-//     });
-//   }
-// }, [customerForm]);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -346,24 +334,51 @@ export default function ValidationDetailsPage() {
 
     fetchUser();
   }, []);
+  
+  // FUNÇÃO LOCAL PARA BUSCAR EMPRESAS
+  const getCompaniesByCurrency = (currency: string): string[] => {
+    return INVOICING_COMPANIES_BY_CURRENCY[currency] || [];
+  };
 
   useEffect(() => {
     const selectedCurrency = terms.wholesale_currency;
-    if (selectedCurrency && INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]) {
-      setAvailableInvoicingCompanies(INVOICING_COMPANIES_BY_CURRENCY[selectedCurrency]);
+    if (selectedCurrency) {
+      const companies = getCompaniesByCurrency(selectedCurrency);
+      setAvailableInvoicingCompanies(companies);
+      
+      // Pré-seleciona se houver apenas uma empresa
+      if (companies.length === 1) {
+        setTerms(prev => ({ 
+            ...prev, 
+            wholesale_invoicing_company: companies[0],
+            // Limpa o warehouse ao mudar a currency
+            wholesale_warehouse: '' 
+        }));
+      } else {
+        // Limpa a empresa se houver mais de uma ou nenhuma
+        setTerms(prev => ({ 
+            ...prev, 
+            wholesale_invoicing_company: "",
+            wholesale_warehouse: ""
+        }));
+      }
     } else {
-      setAvailableInvoicingCompanies([]);
+        setAvailableInvoicingCompanies([]);
+        setTerms(prev => ({
+            ...prev,
+            wholesale_invoicing_company: "",
+            wholesale_warehouse: ""
+        }));
     }
-   
   }, [terms.wholesale_currency]);
 
+  // useEffect para buscar warehouses
   useEffect(() => {
     const fetchWarehouses = async () => {
       if (!terms.wholesale_invoicing_company) {
         setWarehouses([]);
         return;
       }
-
       try {
         const warehouses = await api.getWarehousesByCompany(
           terms.wholesale_invoicing_company
@@ -376,25 +391,25 @@ export default function ValidationDetailsPage() {
         setWarehouses([]);
       }
     };
-
     fetchWarehouses();
   }, [terms.wholesale_invoicing_company]);
 
-  const handleTermChange = (
-    field: keyof WholesaleTerms,
-    value: string | number
-  ) => {
-    if (field === "wholesale_credit" || field === "wholesale_discount") {
-      const numericValue = value === "" ? 0 : Number(value);
+const handleTermChange = (
+  field: keyof WholesaleTerms,
+  value: string | number
+) => {
+  if (field === "wholesale_credit" || field === "wholesale_discount") {
+    // CORREÇÃO: Usa uma string vazia para limpar o input.
+    const newValue = value === "" ? "" : Number(value);
 
-      if (isNaN(numericValue)) return;
+    // Se o valor não for vazio e for NaN, retorna.
+    if (value !== "" && typeof newValue === "number" && isNaN(newValue)) return;
 
-      setTerms((prev) => ({ ...prev, [field]: numericValue }));
-    } else {
-      setTerms((prev) => ({ ...prev, [field]: value }));
-    }
-  };
-
+    setTerms((prev) => ({ ...prev, [field]: newValue }));
+  } else {
+    setTerms((prev) => ({ ...prev, [field]: value }));
+  }
+};
 
 
   const handleApproval = async (approved: boolean) => {
@@ -417,15 +432,16 @@ export default function ValidationDetailsPage() {
             `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
           );
         }
-        if (terms.wholesale_credit < 0 || terms.wholesale_discount < 0) {
+        if (Number(terms.wholesale_credit) < 0 || Number(terms.wholesale_discount) < 0) {
           throw new Error("⚠️ Credit limit and discount must be non-negative!");
         }
       } else { // If rejecting, feedback is required
           if (!feedback.trim()) {
-              setModalContent({
-                  title: "Error!",
-                  description: "Feedback is required when rejecting a customer.",
-              });
+            setModalContent({
+              title: "Error!",
+              description: "Feedback is required when sending to review.",
+              shouldRedirect: false,
+            });
               setShowModal(true);
               return;
           }
@@ -436,8 +452,8 @@ export default function ValidationDetailsPage() {
         wholesale_warehouse: terms.wholesale_warehouse,
         wholesale_currency: terms.wholesale_currency,
         wholesale_terms: terms.wholesale_terms,
-        wholesale_credit: terms.wholesale_credit, // O valor de Credit Limit será salvo aqui
-        wholesale_discount: terms.wholesale_discount,
+        wholesale_credit: Number(terms.wholesale_credit), // O valor de Credit Limit será salvo aqui
+        wholesale_discount: Number(terms.wholesale_discount),
         wholesale_feedback: feedback.trim() === "" ? undefined : feedback, // Use the separate feedback state
       });
 
@@ -452,10 +468,11 @@ export default function ValidationDetailsPage() {
       }
 
       setModalContent({
-        title: "Success!",
+        title: approved ? "Approved!" : "Review!",
         description: approved
-          ? "Client approved! Forwarded to the CSC team."
-          : "Customer rejected!",
+          ? "Client approved and sent to the next validation."
+          : "The form has been sent for customer review. They can edit it now!",
+        shouldRedirect: true,
       });
       setShowModal(true);
       console.log("Success modal displayed");
@@ -464,6 +481,7 @@ export default function ValidationDetailsPage() {
       setModalContent({
         title: "Error!",
         description: err instanceof Error ? err.message : "Unknown error",
+        shouldRedirect: false,
       });
       setShowModal(true);
     } finally {
@@ -471,8 +489,6 @@ export default function ValidationDetailsPage() {
     }
   };
 
-// src/app/validations/wholesale/[id]/page.tsx
-// ...
 const handleReview = async () => {
   if (!id) {
     console.error("ID do cliente não encontrado para revisão.");
@@ -481,8 +497,9 @@ const handleReview = async () => {
 
   if (!feedback.trim()) {
     setModalContent({
-      title: "Error!",
+      title: "Warning!",
       description: "Feedback is required when sending to review.",
+      shouldRedirect: false,
     });
     setShowModal(true);
     return;
@@ -490,7 +507,7 @@ const handleReview = async () => {
 
   try {
     setLoading(true);
-    console.log("Revisando formulário para edição do cliente...", { customerId: id });
+    console.log("Reviewing form for client editing...", { customerId: id });
 
     await api.reviewCustomer(id as string, feedback);
 
@@ -504,27 +521,21 @@ const handleReview = async () => {
     setModalContent({
       title: "Success!",
       description: "The form has been sent for the client's review. They can edit it now.",
+      shouldRedirect: true,
     });
     setShowModal(true);
-
-    setTimeout(() => {
-      closeModal();
-      router.push("/validations/wholesale");
-    }, 2000);
-
   } catch (err: unknown) {
-    console.error("Erro ao enviar para revisão:", err);
+    console.error("Error submitting for review:", err);
     setModalContent({
-      title: "Erro!",
-      description: err instanceof Error ? err.message : "Ocorreu um erro ao enviar para revisão. Tente novamente.",
+      title: "Error!",
+      description: err instanceof Error ? err.message : "An error occurred while submitting for review. Please try again.",
+      shouldRedirect: false,
     });
     setShowModal(true);
   } finally {
     setLoading(false);
   }
 };
-
-
 
 
 
@@ -555,10 +566,12 @@ const handleReview = async () => {
     setEditingDuns(false);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
+const closeModal = () => {
+  setShowModal(false);
+  if (modalContent.shouldRedirect) {
     router.push("/validations/wholesale");
-  };
+  }
+};
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
@@ -840,7 +853,11 @@ const handleReview = async () => {
         <Building2 size={16} /> Invoicing Company
     </label>
     <S.Select
-        value={terms.wholesale_invoicing_company}
+        value={
+            availableInvoicingCompanies.length === 1
+                ? availableInvoicingCompanies[0]
+                : terms.wholesale_invoicing_company
+        }
         onChange={(e) => handleTermChange("wholesale_invoicing_company", e.target.value)}
         disabled={!terms.wholesale_currency} 
     >
@@ -895,34 +912,35 @@ const handleReview = async () => {
 </S.TermsSection>
 
             {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
-            <S.TermsSection>
-              <label>
-                <DollarSign size={16} /> Estimated Amount
-              </label>
-              <S.NumericInput
-                value={terms.wholesale_credit}
-                onChange={(e) =>
-                  handleTermChange("wholesale_credit", e.target.value)
-                }
-                min="0"
-                step="0.01" // Ajuste o passo conforme a precisão desejada para o valor monetário
-              />
-            </S.TermsSection>
+           <S.TermsSection>
+  <label>
+    <DollarSign size={16} /> Estimated Amount
+  </label>
+  <S.NumericInput
+    // CORREÇÃO: Garante que o valor nunca seja null, usando "" como fallback.
+    value={terms.wholesale_credit ?? ''}
+    onChange={(e) =>
+      handleTermChange("wholesale_credit", e.target.value)
+    }
+    min="0"
+    step="0.01"
+  />
+</S.TermsSection>
 
-            <S.TermsSection>
-              <label>
-                <Percent size={16} /> Discount
-              </label>
-              <S.NumericInput
-                value={terms.wholesale_discount}
-                onChange={(e) =>
-                  handleTermChange("wholesale_discount", e.target.value)
-                }
-                min="0"
-                max="100"
-                step="0.1"
-              />
-            </S.TermsSection>
+<S.TermsSection>
+  <label>
+    <Percent size={16} /> Discount
+  </label>
+  <S.NumericInput
+    // CORREÇÃO: Garante que o valor nunca seja null, usando "" como fallback.
+    value={terms.wholesale_discount ?? ''}
+    onChange={(e) =>
+      handleTermChange("wholesale_discount", e.target.value)
+    }
+    min="0"
+    step="0.01"
+  />
+</S.TermsSection>
             
           </S.TermsGrid>
         </S.TermsContainer>
@@ -939,7 +957,6 @@ const handleReview = async () => {
                     />
                   </S.FeedbackGroup>
               
-
 
 <S.ButtonContainer>
   <S.Button onClick={() => handleApproval(false)} variant="secondary">

@@ -78,7 +78,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the csc initial team", "review requested by the tax team"]) // From CSC initial or rejected by tax
+    .in("status", ["approved by the csc initial team", "review requested by the tax team - customer"]) // From CSC initial or rejected by tax
     .range(from, to)
     .order("created_at", { ascending: true })
 
@@ -306,3 +306,4 @@ export async function getFeedbackTeams(customerId: string) {
     error: response?.error ?? null,
   };
 }
+

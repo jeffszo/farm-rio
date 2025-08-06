@@ -83,6 +83,7 @@ export default function ValidationDetailsPage() {
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
+    shouldRedirect: false
   });
   const router = useRouter();
 
@@ -245,6 +246,7 @@ export default function ValidationDetailsPage() {
         title: "Erro!",
         description:
           err instanceof Error ? err.message : "Erro ao atualizar D-U-N-S.",
+        shouldRedirect: false,
       });
       setShowModal(true);
     } finally {
@@ -258,10 +260,15 @@ const handleApproval = async (approved: boolean) => {
         return;
     }
 
-    if (!approved && feedback.trim() === "") {
-        alert("Por favor, forneça um feedback para a rejeição.");
-        return;
-    }
+ if (!approved && feedback.trim() === "") {
+    setModalContent({
+      title: "Error!",
+      description: "Feedback is required when sending to review.",
+      shouldRedirect: false, // Permanece na mesma página para o usuário corrigir
+    });
+    setShowModal(true);
+    return;
+  }
 
    try {
   setLoading(true);
@@ -285,6 +292,7 @@ if (customerForm?.status === "approved by the wholesale team") {
     description: approved
       ? "Customer approved!"
       : "The form has been sent for the client's review. They can edit it now.",
+      shouldRedirect:true,
   });
 
   setShowModal(true);
@@ -292,7 +300,8 @@ if (customerForm?.status === "approved by the wholesale team") {
   console.error("Erro ao validar cliente:", error);
   setModalContent({
     title: "Erro",
-    description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`
+    description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`,
+    shouldRedirect: false,
   });
   setShowModal(true);
 } finally {
@@ -303,10 +312,12 @@ if (customerForm?.status === "approved by the wholesale team") {
 
 
 // ... O restante do seu componente
-     const closeModalAndRedirect = () => {
-        setShowModal(false);
-        router.push("/validations/csc") // Redireciona para a página 'csc'
-    };
+const closeModal = () => {
+  setShowModal(false);
+  if (modalContent.shouldRedirect) { // <<-- O if verifica o valor da propriedade
+    router.push("/validations/csc");
+  }
+};
 
   // Helper function to render an address
   const renderAddress = (address: Address) => (
@@ -394,15 +405,17 @@ if (customerForm?.status === "approved by the wholesale team") {
     try {
       await navigator.clipboard.writeText(text);
       setModalContent({
-        title: "Sucesso!",
+        title: "Success!",
         description: "Tax ID number copied to clipboard!",
+        shouldRedirect: false,
       });
       setShowModal(true);
     } catch (err) {
       console.error("Erro ao copiar: ", err);
       setModalContent({
-        title: "Erro!",
-        description: "Falha ao copiar o número de Tax ID.",
+        title: "Error!",
+        description: "Failed to copy Tax ID number..",
+        shouldRedirect: false,
       });
       setShowModal(true);
     }
@@ -754,10 +767,12 @@ if (customerForm?.status === "approved by the wholesale team") {
                       <DollarSign size={16} /> Estimated Amount
                     </label>
                     <S.InfoText>
-                      {validation.credit_credit !== undefined &&
-                      validation.credit_credit !== null
-                        ? validation.credit_credit.toFixed(2)
-                        : "N/A"}
+                     {validation.credit_credit !== undefined &&
+validation.credit_credit !== null &&
+!isNaN(Number(validation.credit_credit)) 
+  ? Number(validation.credit_credit).toFixed(2)
+  : 'N/A' 
+}
                     </S.InfoText>
                   </S.TermsSection>
 
@@ -766,10 +781,11 @@ if (customerForm?.status === "approved by the wholesale team") {
                       <Percent size={16} /> Discount
                     </label>
                     <S.InfoText>
-                      {validation.credit_discount !== undefined &&
-                      validation.credit_discount !== null
-                        ? validation.credit_discount.toFixed(1) + "%"
-                        : "N/A"}
+{validation.credit_discount !== undefined &&
+validation.credit_discount !== null &&
+!isNaN(Number(validation.credit_discount))
+  ? Number(validation.credit_discount).toFixed(1) + "%"
+  : "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
                 </S.TermsGrid>
@@ -816,7 +832,7 @@ if (customerForm?.status === "approved by the wholesale team") {
                 <CircleCheck size={48} />
               </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
-              <S.ModalButton onClick={closeModalAndRedirect}>Ok</S.ModalButton>
+              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
             </S.ModalContent>
           </S.Modal>
         )}

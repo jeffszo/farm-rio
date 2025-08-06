@@ -49,10 +49,11 @@ export default function TaxValidationDetailsPage() {
     const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState({
-    title: "",
-    description: "",
-  });
+const [modalContent, setModalContent] = useState({
+  title: "",
+  description: "",
+  shouldRedirect: false // 
+});
   const [feedback, setFeedback] = useState(""); // This will be tax_notes
   // Removed unused taxStatus state
   const router = useRouter();
@@ -118,10 +119,21 @@ export default function TaxValidationDetailsPage() {
         throw new Error("Invalid client ID.");
       }
 
+ if (!approved && feedback.trim() === "") {
+    setModalContent({
+      title: "Error!",
+      description: "Feedback is required when sending to review.",
+      shouldRedirect: false, // Não redireciona em caso de erro
+    });
+    setShowModal(true);
+    return;
+  }
+
       if (!approved && !feedback.trim()) {
         setModalContent({
           title: "Review!",
           description: "The form has been sent for the client's review. They can edit it now",
+          shouldRedirect: true 
         });
         setShowModal(true);
         return;
@@ -133,42 +145,13 @@ export default function TaxValidationDetailsPage() {
         tax_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
       });
 
-      // --- NOVA ADIÇÃO: Enviar e-mail após a validação TAX ---
-      // if (customerForm) {
-      //   try {
-      //     const emailResponse = await fetch("/api/send-tax-validation-email", {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //       body: JSON.stringify({
-      //         customerId: id,
-      //         customerName: customerForm.customer_name,
-      //         customerEmail: customerForm.buyer_email, // Assumindo que o buyer_email é o email do cliente para notificação
-      //         validationStatus: approved,
-      //         feedback: feedback,
-      //         currentStatus: customerForm.status, // Envia o status atual para a rota para diferenciar os e-mails
-      //       }),
-      //     });
-
-      //     if (!emailResponse.ok) {
-      //       const errorData = await emailResponse.json();
-      //       console.error("Falha ao enviar e-mail de validação TAX:", errorData);
-      //       // Você pode optar por mostrar um erro aqui ou apenas logar, dependendo da criticidade do e-mail
-      //     } else {
-      //       console.log("E-mail de validação TAX enviado com sucesso.");
-      //     }
-      //   } catch (emailError) {
-      //     console.error("Erro ao enviar e-mail de validação TAX:", emailError);
-      //   }
-      // }
-      // --- FIM DA NOVA ADIÇÃO ---
 
       setModalContent({
         title: "Success!",
         description: approved
           ? "Client approved! Forwarded to the credit team."
           : "The form has been sent for the client's review. They can edit it now",
+          shouldRedirect: true
       });
       setShowModal(true);
     } catch (err) {
@@ -176,6 +159,7 @@ export default function TaxValidationDetailsPage() {
       setModalContent({
         title: "Error!",
         description: err instanceof Error ? err.message : "Unknown error",
+        shouldRedirect: false 
       });
       setShowModal(true);
     } finally {
@@ -183,13 +167,12 @@ export default function TaxValidationDetailsPage() {
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    // Redirect to the next step of the flow after validation
-    if (modalContent.title === "Success!" || modalContent.title === "Error!") {
-      router.push("/validations/tax"); // Redirect to the Tax validation page
-    }
-  };
+const closeModal = () => {
+  setShowModal(false);
+  if (modalContent.shouldRedirect) {
+    router.push("/validations/tax");
+  }
+};
 
   // Helper function to render an address
   const renderAddress = (address: Address) => (
