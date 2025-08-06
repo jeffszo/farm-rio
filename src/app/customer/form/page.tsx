@@ -190,6 +190,7 @@ if (userError) {
 }
 
 
+
     // Clear any previous API errors and modal states at the start of submission attempt
     setApiError(null);
     setModalTitle("");
@@ -453,7 +454,29 @@ if (!currentUser || !currentUser.id) {
       console.log("Payload being sent to submitForm:", payload); // Traduzido
 
       await api.submitForm(payload, currentUser.id);
-      console.log("Form submitted successfully via API."); // Traduzido
+      console.log("Form submitted successfully via API."); 
+
+      try {
+      const emailConfirmationPayload = {
+        name: formData.buyerInfo?.firstName || "Cliente", // Use o nome do comprador
+      };
+      console.log("Payload de email de confirmação:", emailConfirmationPayload);
+
+      const emailResponse = await fetch("/send/send-form-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailConfirmationPayload),
+      });
+
+      if (emailResponse.ok) {
+        console.log("E-mail de confirmação enviado com sucesso!");
+      } else {
+        const errorData = await emailResponse.json();
+        console.error("Falha ao enviar e-mail de confirmação:", errorData);
+      }
+    } catch (emailError) {
+      console.error("Erro ao tentar enviar e-mail de confirmação:", emailError);
+    }
 
     
       setModalTitle("Success!");
@@ -463,7 +486,7 @@ if (!currentUser || !currentUser.id) {
       console.log("Modal set to open with success message.");
         setTimeout(() => {
         router.push('/');
-      }, 3000);
+      }, 2000);
 
     } catch (error: unknown) {
       console.error(

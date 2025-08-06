@@ -33,16 +33,19 @@ export default function SignUp() {
       console.log("Conta criada! Abrindo modal...")
       setIsModalOpen(true)
 
-      // ✉️ Envia e-mail de confirmação
-      await fetch("/api/send-welcome-email", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: data.email,
-    name: data.name,
-  }),
-});
+      const emailPayload = {
+        email: data.email,
+        name: data.name,
+      };
 
+      console.log("Payload de email a ser enviado:", emailPayload); // LOG ADICIONADO AQUI
+
+      // ✉️ Envia e-mail de confirmação
+      await fetch("/send/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPayload),
+      });
 
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -56,6 +59,11 @@ export default function SignUp() {
         setApiError("An error occurred while creating your account. Please try again.")
       }
     }
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    router.push("/")
   }
 
   return (
@@ -128,14 +136,7 @@ export default function SignUp() {
             <S.ModalMessage>
               Your account has been created successfully!
             </S.ModalMessage>
-            <S.ModalButton
-              onClick={() => {
-                setIsModalOpen(false)
-                router.push("/")
-              }}
-            >
-              OK
-            </S.ModalButton>
+            <S.ModalButton onClick={closeModal}>OK</S.ModalButton>
           </S.ModalContent>
         </S.ModalOverlay>
       )}
