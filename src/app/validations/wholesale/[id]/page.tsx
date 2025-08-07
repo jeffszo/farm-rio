@@ -72,7 +72,10 @@ interface CustomerForm {
   wholesale_credit: string;
   wholesale_discount: string;
   wholesale_feedback?: string; // ✅ Adicione isso
-
+user_id: string; 
+  users: {
+    email: string;
+  };
   terms: string;
   currency: string;
 }
@@ -212,8 +215,15 @@ const [modalContent, setModalContent] = useState({
 
         console.log(data);
 
+        // Add a type assertion to help TypeScript understand the structure of data.users
         const processedData: CustomerForm = {
+          users: {
+            email: Array.isArray(data.users)
+              ? (data.users[0] as { email?: string })?.email ?? ""
+              : (data.users as { email?: string })?.email ?? "",
+          },
           id: data.id ?? "",
+          user_id: data.user_id ?? "", // <-- Add this line to include user_id
           customer_name: data.customer_name ?? "",
           sales_tax_id: data.sales_tax_id ?? "",
           duns_number: data.duns_number ?? "",
@@ -459,6 +469,37 @@ const handleTermChange = (
 
       console.log("Validation completed successfully");
 
+      try {
+        const emailPayload = {
+          name: customerForm?.buyer_name || "Cliente",
+          email: customerForm?.users?.email || "", 
+        };
+
+        let emailResponse;
+        if (approved) {
+          console.log("Sending approved email...");
+          emailResponse = await fetch("/api/send/wholesale/send-approved-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(emailPayload),
+          });
+        } else {
+          console.log("Sending rejected email...");
+          emailResponse = await fetch("/api/send/wholesale/send-rejected-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(emailPayload),
+          });
+        }
+        if (emailResponse.ok) {
+          console.log("Email sent successfully!");
+        } else {
+          console.error("Failed to send email:", await emailResponse.text());
+        }
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+      }
+
 
       if (customerForm) {
         setCustomerForm({
@@ -468,10 +509,10 @@ const handleTermChange = (
       }
 
       setModalContent({
-        title: approved ? "Approved!" : "Review!",
+        title: approved ? "Approved!" : "Rejected!",
         description: approved
-          ? "Client approved and sent to the next validation."
-          : "The form has been sent for customer review. They can edit it now!",
+          ? "Client approved! Forwarded to the CSC team."
+          : "Client rejected!",
         shouldRedirect: true,
       });
       setShowModal(true);
@@ -510,6 +551,27 @@ const handleReview = async () => {
     console.log("Reviewing form for client editing...", { customerId: id });
 
     await api.reviewCustomer(id as string, feedback);
+
+    try {
+        const emailPayload = {
+            name: customerForm?.buyer_name || "Cliente",
+            email: customerForm?.users?.email || "", 
+        };
+        console.log("Sending review email...");
+        const emailResponse = await fetch("/api/send/wholesale/send-review-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(emailPayload),
+        });
+
+        if (emailResponse.ok) {
+            console.log("Review email sent successfully!");
+        } else {
+            console.error("Failed to send review email:", await emailResponse.text());
+        }
+    } catch (emailError) {
+        console.error("Error sending review email:", emailError);
+    }
 
     if (customerForm) {
       setCustomerForm({

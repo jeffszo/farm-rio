@@ -161,6 +161,7 @@ export async function getCustomerValidationDetails(id: string) {
     .from("customer_forms")
     .select(`
       id,
+      user_id,
       created_at,
       status,
       customer_name,
@@ -200,7 +201,8 @@ export async function getCustomerValidationDetails(id: string) {
       financial_statements,
       estimated_purchase_amount,
       currency,
-      terms
+      terms,
+      users(email)
     `)
     .eq("id", id)
     .single();

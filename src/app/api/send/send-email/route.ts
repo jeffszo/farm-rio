@@ -1,7 +1,7 @@
 // app/api/send-email/route.ts
 
 import { NextResponse } from 'next/server';
-import WelcomeEmail from '../../emails/WelcomeEmail'; // Ajuste o caminho conforme necessário
+import WelcomeEmail from '../../../emails/WelcomeEmail'; // Ajuste o caminho conforme necessário
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);

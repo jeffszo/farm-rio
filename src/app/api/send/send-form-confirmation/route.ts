@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import FormSubmissionConfirmationEmail from '../../emails/FormSubmissionConfirmationEmail';
+import FormSubmissionConfirmationEmail from '../../../emails/FormSubmissionConfirmationEmail';
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
