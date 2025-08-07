@@ -41,7 +41,7 @@ export default function SignUp() {
       console.log("Payload de email a ser enviado:", emailPayload); // LOG ADICIONADO AQUI
 
       // ✉️ Envia e-mail de confirmação
-      await fetch("/send/send-email", {
+      await fetch("/api/send/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailPayload),

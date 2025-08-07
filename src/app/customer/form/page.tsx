@@ -462,7 +462,7 @@ if (!currentUser || !currentUser.id) {
       };
       console.log("Payload de email de confirmação:", emailConfirmationPayload);
 
-      const emailResponse = await fetch("/send/send-form-confirmation", {
+      const emailResponse = await fetch("/api/send/send-form-confirmation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailConfirmationPayload),
