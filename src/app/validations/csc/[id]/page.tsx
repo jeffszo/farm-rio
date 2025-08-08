@@ -317,7 +317,8 @@ export default function ValidationDetailsPage() {
       }
   } else if (
       customerForm?.status === "approved by the credit team" ||
-      customerForm?.status === "review requested by the csc final team - customer"
+      customerForm?.status === "review requested by the csc final team - customer" ||
+      customerForm?.status === "review requested by the csc initial team - customer"
   ) {
       await api.validateCSCFinalCustomer(id, approved, feedback);
       // ✅ Lógica de envio de e-mail para CSC final
