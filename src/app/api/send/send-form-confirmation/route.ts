@@ -10,7 +10,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { name } = await req.json(); // Apenas o nome é necessário no body
+    const { } = await req.json(); // Apenas o nome é necessário no body
     
     // 1. 🔐 Obtém o usuário autenticado do Supabase no lado do servidor
     // Utilize createServerActionClient para rotas de API
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       from: 'FARM RIO <contact@customer.farmrio.com>',
       to: recipientEmail, 
       subject: `Contact Confirmation - FARM RIO`, 
-      react: FormSubmissionConfirmationEmail({ name }),
+      react: FormSubmissionConfirmationEmail(),
     });
 
     if (error) {

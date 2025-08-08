@@ -74,6 +74,10 @@ interface CustomerForm {
   credit_credit?: string;
   credit_discount?: string;
   credit_feedback?: string; // Added new field for credit feedback
+  user_id: string; 
+  users: {
+    email: string;
+  };
 }
 
 
@@ -261,6 +265,11 @@ export default function ValidationDetailsPage() {
             }
             return [];
           })(),
+          users: {
+            email: Array.isArray(data.users)
+              ? (data.users[0] as { email?: string })?.email ?? ""
+              : (data.users as { email?: string })?.email ?? "",
+          },
           instagram: "instagram" in data ? (typeof data.instagram === "string" ? data.instagram : "") : "",
           website: "website" in data ? String(data.website) : "",
           branding_mix: "branding_mix" in data
@@ -465,36 +474,62 @@ export default function ValidationDetailsPage() {
 
       console.log("Validation completed successfully");
 
-
-      if (customerForm) {
-        setCustomerForm({
-          ...customerForm,
-          status: approved ? "approved" : "rejected",
-        });
-      }
-
-      setModalContent({
-        title: "Ok!",
-        description: approved
-          ? "Customer approved! Forwarded to CSC team final."
-          : "The form has been sent for the client's review. They can edit it now!",
-          shouldRedirect: true
-      });
-      setShowModal(true);
-      console.log("Success modal displayed");
-    } catch (err) {
-      console.error("Error validating client:", err);
-      setModalContent({
-        title: "Alerta!",
-        description:
-          err instanceof Error ? err.message : "Unknown error while approving.",
-          shouldRedirect: false
-      });
-      setShowModal(true);
-    } finally {
-      setLoading(false);
-    }
+      try {
+  const payload = {
+       name: customerForm?.buyer_name || "Cliente",
+        email: customerForm?.users?.email || "", 
   };
+
+  if (approved) {
+    await fetch("/api/send/credit/send-approved-email", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } else {
+    await fetch("/api/send/credit/send-review-email", {
+      method: "POST",
+      body: JSON.stringify({ ...payload, feedback }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+} catch (emailError) {
+  console.error("Erro ao enviar e-mail:", emailError);
+}
+
+    if (customerForm) {
+      setCustomerForm({
+        ...customerForm,
+        status: approved ? "approved" : "rejected",
+      });
+    }
+
+    setModalContent({
+      title: "Ok!",
+      description: approved
+        ? "Customer approved! Forwarded to CSC team final."
+        : "The form has been sent for the client's review. They can edit it now!",
+        shouldRedirect: true
+    });
+    setShowModal(true);
+    console.log("Success modal displayed");
+  } catch (err) {
+    console.error("Error validating client:", err);
+    setModalContent({
+      title: "Alerta!",
+      description:
+        err instanceof Error ? err.message : "Unknown error while approving.",
+        shouldRedirect: false
+    });
+    setShowModal(true);
+  } finally {
+    setLoading(false);
+  }
+};
 
 const closeModal = () => {
   setShowModal(false);

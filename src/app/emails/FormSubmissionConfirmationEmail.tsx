@@ -6,9 +6,9 @@ import {
   Text,
 } from "@react-email/components";
 
-interface FormSubmissionConfirmationEmailProps {
-  name: string;
-}
+// interface FormSubmissionConfirmationEmailProps {
+//   name?: string;
+// }
 
 const main = {
   // ✅ Adicione a URL da imagem de fundo aqui
@@ -49,18 +49,16 @@ const text = {
 
 
 export const FormSubmissionConfirmationEmail = (
-  { name }: FormSubmissionConfirmationEmailProps
 ) => (
   <Html>
       <Body style={main}>
         <Container style={container}>
           <Text style={h1}>Form submitted successfully!</Text>
           <Text style={text}>
-            Thank you! {name} Your onboarding form has been submitted for internal review. Please note that further updates may be requested during this process.
+            Your onboarding form has been submitted for internal review. Please note that further updates may be requested during this process.
           </Text>
-          <Text style={text}>If you have any questions, please contact us.</Text>
           <Text style={text}>
-            Sincerely,
+           Best regards,
             <br />
             FARM RIO Team
           </Text>

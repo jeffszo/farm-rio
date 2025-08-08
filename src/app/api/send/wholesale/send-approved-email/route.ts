@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import ApprovedEmail from '../../../../emails/ApprovedEmail'; // Import the ApprovedEmail component
+import ApprovedEmail from '../../../../emails/ApprovedEmailWholesale'; // Import the ApprovedEmail component
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -15,10 +15,10 @@ export async function POST(req: Request) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'FARM RIO Wholesale <wholesale@customer.farmrio.com>',
+      from: 'FARM RIO <wholesale@customer.farmrio.com>',
       to: email, 
       subject: `Your account has been approved by the wholesale team!!`, 
-      react: ApprovedEmail({ name }),
+      react: ApprovedEmail(),
     });
 
     if (error) {

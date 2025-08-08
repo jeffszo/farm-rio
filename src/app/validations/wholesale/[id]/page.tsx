@@ -448,7 +448,7 @@ const handleTermChange = (
         const missingFields = requiredFields.filter((field) => !terms[field]);
         if (missingFields.length > 0) {
           throw new Error(
-            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
+            `Please fill in all required fields: ${missingFields.join(", ")}`
           );
         }
         if (Number(terms.wholesale_credit) < 0 || Number(terms.wholesale_discount) < 0) {
@@ -482,6 +482,7 @@ const handleTermChange = (
         const emailPayload = {
           name: customerForm?.buyer_name || "Cliente",
           email: customerForm?.users?.email || "", 
+          feedback: feedback.trim(),
         };
 
         let emailResponse;
@@ -565,6 +566,7 @@ const handleReview = async () => {
         const emailPayload = {
             name: customerForm?.buyer_name || "Cliente",
             email: customerForm?.users?.email || "", 
+            feedback: feedback.trim(),
         };
         console.log("Sending review email...");
         const emailResponse = await fetch("/api/send/wholesale/send-review-email", {
@@ -788,7 +790,7 @@ const closeModal = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Access JOOR profile
+                  Access Profile
                 </a>
               ) : (
                 "N/A"

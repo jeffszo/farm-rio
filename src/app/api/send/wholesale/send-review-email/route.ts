@@ -2,23 +2,23 @@
 
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import ReviewEmail from '../../../../emails/ReviewEmail'; // Adjust the import path as necessary
+import ReviewEmail from '../../../../emails/ReviewEmailWholesale'; // Adjust the import path as necessary
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { name, email } = await req.json(); 
+    const { name, email, feedback } = await req.json();
 
     if (!name || !email) {
       return NextResponse.json({ error: "Nome e email são obrigatórios." }, { status: 400 });
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'FARM RIO Wholesale <@customer.farmrio.com>',
+      from: 'FARM RIO <wholesale@customer.farmrio.com>',
       to: email, 
-      subject: `Your FARM RIO wholesale account is under review`, 
-      react: ReviewEmail({ name }),
+      subject: `Your FARM RIO account is under review`, 
+      react: ReviewEmail({feedback}),
     });
 
     if (error) {

@@ -154,6 +154,30 @@ const [modalContent, setModalContent] = useState({
       });
 
 
+      // ✅ Lógica de envio de e-mail para o time de Tax
+      try {
+          const emailPayload = {
+              name: customerForm?.buyer_name || "Cliente",
+              email: customerForm?.buyer_email || "",
+              feedback: feedback || "", // ✅ Adiciona o feedback do estado
+          };
+          const endpoint = approved
+              ? "/api/send/tax/send-approved-email" // Endpoint para aprovação (assumindo que existe)
+              : "/api/send/tax/send-review-email"; // Endpoint fornecido no route.ts
+          const emailResponse = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(emailPayload),
+          });
+          if (emailResponse.ok) {
+              console.log("Email sent successfully!");
+          } else {
+              console.error("Failed to send email:", await emailResponse.text());
+          }
+      } catch (emailError) {
+          console.error("Error sending email:", emailError);
+      }
+
       setModalContent({
         title: "Success!",
         description: approved

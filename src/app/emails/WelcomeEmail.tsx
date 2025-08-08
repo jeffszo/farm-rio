@@ -66,9 +66,9 @@ export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
         <Text style={text}>
           {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.
         </Text>
-        <Text style={text}>If you have any questions, please contact us.</Text>
+        {/* <Text style={text}>If you have any questions, please contact us.</Text> */}
         <Text style={text}>
-          Sincerely,
+          Best regards,
           <br />
           FARM RIO Team
         </Text>

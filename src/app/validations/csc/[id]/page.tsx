@@ -58,6 +58,10 @@ interface CustomerForm {
   credit_feedback: string;
   csc_initial_feedback: string;
   csc_final_feedback: string;
+  user_id: string;
+  users: {
+    email: string;
+  };
 }
 
 interface ValidationDetails {
@@ -217,6 +221,14 @@ export default function ValidationDetailsPage() {
                 ? JSON.stringify(data.csc_final_feedback)
                 : ""
               : "",
+            user_id: data.user_id ?? "",
+            users: Array.isArray(data.users)
+              ? (data.users[0] && typeof data.users[0].email === "string"
+                  ? { email: data.users[0].email }
+                  : { email: "" })
+              : (data.users && typeof (data.users as { email?: unknown }).email === "string"
+                  ? { email: (data.users as { email: string }).email }
+                  : { email: "" }),
           };
           setCustomerForm(customerFormData);
           // Initialize editable DUNS state with fetched data
@@ -258,7 +270,7 @@ export default function ValidationDetailsPage() {
     }
   };
 
-const handleApproval = async (approved: boolean) => {
+  const handleApproval = async (approved: boolean) => {
     if (!id || typeof id !== "string") {
         console.error("ID do cliente não encontrado.");
         return;
@@ -278,13 +290,59 @@ const handleApproval = async (approved: boolean) => {
   setLoading(true);
 
   // Chamar a função adequada com base no status, passando o feedback
-if (customerForm?.status === "approved by the wholesale team") {
-    await api.validateCSCInitialCustomer(id, approved, feedback);
+  if (customerForm?.status === "approved by the wholesale team") {
+      await api.validateCSCInitialCustomer(id, approved, feedback);
+      // ✅ Lógica de envio de e-mail para CSC inicial
+      try {
+          const emailPayload = {
+              name: customerForm?.buyer_name || "Cliente",
+              email: customerForm?.users?.email || "",
+              feedback: feedback || "", // ✅ MUDANÇA AQUI: Usa o feedback do estado
+          };
+          const endpoint = approved
+              ? "/api/send/csc_initial/send-approved-email"
+              : "/api/send/csc_initial/send-review-email";
+          const emailResponse = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(emailPayload),
+          });
+          if (emailResponse.ok) {
+              console.log("Email sent successfully!");
+          } else {
+              console.error("Failed to send email:", await emailResponse.text());
+          }
+      } catch (emailError) {
+          console.error("Error sending email:", emailError);
+      }
   } else if (
-    customerForm?.status === "approved by the credit team" ||
-    customerForm?.status === "review requested by the csc final team - customer"
+      customerForm?.status === "approved by the credit team" ||
+      customerForm?.status === "review requested by the csc final team - customer"
   ) {
-    await api.validateCSCFinalCustomer(id, approved, feedback);
+      await api.validateCSCFinalCustomer(id, approved, feedback);
+      // ✅ Lógica de envio de e-mail para CSC final
+      try {
+          const emailPayload = {
+              name: customerForm?.buyer_name || "Cliente",
+              email: customerForm?.users?.email || "",
+              feedback: feedback || "", // ✅ MUDANÇA AQUI: Usa o feedback do estado
+          };
+          const endpoint = approved
+              ? "/api/send/csc_final/send-approved-email"
+              : "/api/send/csc_final/send-review-email";
+          const emailResponse = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(emailPayload),
+          });
+          if (emailResponse.ok) {
+              console.log("Email sent successfully!");
+          } else {
+              console.error("Failed to send email:", await emailResponse.text());
+          }
+      } catch (emailError) {
+          console.error("Error sending email:", emailError);
+      }
   } else {
     throw new Error("Customer status is not valid for CSC validation");
   }
@@ -312,7 +370,9 @@ if (customerForm?.status === "approved by the wholesale team") {
   setLoading(false);
 }
 
-};
+
+      
+  };
 
 
 // ... O restante do seu componente
@@ -547,7 +607,7 @@ const closeModal = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Access Website
+                  Access Profile
                 </a>
               ) : (
                 "N/A"
@@ -788,9 +848,9 @@ const closeModal = () => {
                     <S.InfoText>
                      {validation.estimated_purchase_amount !== undefined &&
 validation.estimated_purchase_amount !== null &&
-!isNaN(Number(validation.estimated_purchase_amount)) 
+!isNaN(Number(validation.estimated_purchase_amount))
   ? Number(validation.estimated_purchase_amount).toFixed(2)
-  : 'N/A' 
+  : 'N/A'
 }
                     </S.InfoText>
                   </S.TermsSection>

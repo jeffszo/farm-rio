@@ -202,6 +202,7 @@ export async function getCustomerValidationDetails(id: string) {
       financial_statements,
       estimated_purchase_amount,
       currency,
+      joor,
       terms,
       users(email)
     `)
