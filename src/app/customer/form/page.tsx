@@ -1592,11 +1592,12 @@ export default function OnboardingForm() {
   <S.ModalOverlay>
     <S.ModalContent>
       <S.ModalTitle>
-        {modalTitle.toLowerCase().includes("error") ? (
-          <CircleAlert size={48} />
-        ) : (
-          <CircleCheck size={48}/>
-        )}
+        {modalTitle === "Success!" ? (
+  <CircleCheck size={48} />
+) : (
+  <CircleAlert size={48} />
+)}
+
       </S.ModalTitle>
       <S.ModalMessage>{modalMessage}</S.ModalMessage>
       <S.ModalButton
