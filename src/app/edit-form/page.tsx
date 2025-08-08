@@ -1,12 +1,14 @@
 // src/app/customer/form/page.tsx
 "use client";
 import React from "react";
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import * as S from "./styles";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { IFormInputs, AddressInput } from "@/types/form";
+
 import { api } from "@/lib/supabase/index";
 import {
   ChevronRight,
@@ -52,10 +54,11 @@ export default function OnboardingForm() {
   const [, setPreviousFormStatus] = useState<string | null>(null);
   const [resaleCertificateError, setResaleCertificateError] = useState<string | null>(null);
   const [posPhotosError, setPosPhotosError] = useState<string | null>(null);
+  // ajuste o caminho conforme necessário
+
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-
+  
   const [stepFourAttemptedValidation, setStepFourAttemptedValidation] = useState(false);
 
   const {
@@ -168,11 +171,14 @@ useEffect(() => {
 
 // Efeito para sincronizar o passo atual da URL com o estado do componente
 useEffect(() => {
-  const stepInUrl = searchParams.get("step");
+  const search = window.location.search;
+  const params = new URLSearchParams(search);
+  const stepInUrl = params.get("step");
+
   if (stepInUrl && !isNaN(parseInt(stepInUrl, 10))) {
     setCurrentStep(parseInt(stepInUrl, 10));
   }
-}, [searchParams]);
+}, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
