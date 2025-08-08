@@ -46,4 +46,5 @@ export interface IFormInputs {
     brandingMix?: string;
     instagram?: string;
     website?: string;
+    joor?: string;
 }

@@ -2,8 +2,6 @@ import * as React from "react";
 import {
   Html,
   Body,
-  Head,
-  Heading,
   Container,
   Text,
   Link,
@@ -13,64 +11,61 @@ interface WelcomeEmailProps {
   name: string;
 }
 
+
+
 const main = {
-  backgroundColor: '#2e2e2e', // Cor de fundo do corpo (a cor preta)
+  // ✅ Adicione a URL da imagem de fundo aqui
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/farm.jpg')",
+  height: '98vh',
+  width: '100%',
+  backgroundSize: 'cover', 
   fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+    'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {
-  backgroundColor: '#2e2e2e', // A cor do container também deve ser a preta
+  // backgroundColor: 'rgba(46, 46, 46, 0.7)', // Fundo semitransparente para o texto
   margin: '0 auto',
-  padding: '20px 0 48px',
-  marginBottom: '64px',
+  padding: '20px',
+  borderRadius: '8px',
+  textAlign: 'center' as const, // Centraliza o conteúdo
+  maxWidth: '600px', // Limita a largura para melhor visualização
 };
 
-const h1 = {
+
+const text = {
   color: '#fff', // Texto branco
+  fontSize: '14px',
+  margin: '24px 0',
+  textAlign: 'center' as const,
+};
+
+const linkStyle = {
+  color: '#84C9FF', // Exemplo de cor azul claro
+  textDecoration: 'underline', // Sublinhado para indicar que é um link
+  fontSize: '14px',
+};
+
+
+
+const h1 = {
+  color: '#fff',
   fontSize: '24px',
   fontWeight: '600',
   textAlign: 'center' as const,
   margin: '30px 0',
 };
 
-const text = {
-  color: '#fff', // Texto branco
-  fontSize: '14px',
-  margin: '24px 0',
-};
-
-const button = {
-  backgroundColor: '#2e78c8',
-  borderRadius: '5px',
-  color: '#fff',
-  fontSize: '14px',
-  fontWeight: '500',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'block',
-  width: '100%',
-  padding: '12px',
-};
 
 export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
   <Html>
-    <Head />
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Welcome to FARM RIO!</Heading>
-        <Text style={text}>Hello, {name}!</Text>
+                  <Text style={h1}>Welcome to FARM RIO </Text>
+        
         <Text style={text}>
-          Your account has been successfully created. We&#39;re thrilled to have
-          you!
+          {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.
         </Text>
-        <Text style={text}>
-          You can now access the portal and start exploring our exclusive
-          products.
-        </Text>
-        <Link href="https://customer.farmrio.com" style={button}>
-          Access the portal
-        </Link>
         <Text style={text}>If you have any questions, please contact us.</Text>
         <Text style={text}>
           Sincerely,

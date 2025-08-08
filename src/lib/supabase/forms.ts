@@ -10,6 +10,7 @@ export async function submitForm(formData: unknown, userId: string) {
   interface FormData {
     customer_name: string;
     sales_tax_id: string;
+    joor: string;
     resale_certificate?: string | null;
     billing_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
     shipping_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
@@ -38,6 +39,7 @@ export async function submitForm(formData: unknown, userId: string) {
     const {
       customer_name,
       sales_tax_id,
+      joor,
       resale_certificate,
       billing_address,
       shipping_address,
@@ -77,6 +79,7 @@ export async function submitForm(formData: unknown, userId: string) {
     const payload = {
       user_id: userId,
       customer_name,
+      joor,
       sales_tax_id,
       resale_certificate: resale_certificate ?? null,
       billing_address: JSON.stringify(billing_address),
@@ -129,7 +132,6 @@ export async function submitForm(formData: unknown, userId: string) {
 
 interface FormStatusData {
   status: string
-  csc_feedback?: string
 }
 
 export async function getFormStatus(userId: string): Promise<FormStatusData | null> {

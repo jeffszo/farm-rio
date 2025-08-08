@@ -2,12 +2,8 @@ import * as React from "react";
 import {
   Html,
   Body,
-  Head,
-  Heading,
   Container,
   Text,
-  Section,
-  Hr,
 } from "@react-email/components";
 
 interface FormSubmissionConfirmationEmailProps {
@@ -15,63 +11,62 @@ interface FormSubmissionConfirmationEmailProps {
 }
 
 const main = {
-  backgroundColor: '#2e2e2e', // Cor de fundo do corpo (a cor preta)
+  // ✅ Adicione a URL da imagem de fundo aqui
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/farm.jpg')",
+  height: '98vh',
+  width: '100%',
+  backgroundSize: 'cover', 
   fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+    'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
-
 const container = {
-  backgroundColor: '#2e2e2e', // A cor do container também deve ser a preta
+  // backgroundColor: 'rgba(46, 46, 46, 0.7)', // Fundo semitransparente para o texto
   margin: '0 auto',
-  padding: '20px 0 48px',
-  marginBottom: '64px',
+  padding: '0 20px ',
+  borderRadius: '8px',
+  textAlign: 'center' as const, // Centraliza o conteúdo
+  maxWidth: '600px', // Limita a largura para melhor visualização
 };
 
 const h1 = {
-  color: "#333",
-  fontSize: "24px",
-  fontWeight: "600",
-  textAlign: "center" as const,
-  margin: "30px 0",
+  color: '#fff',
+  fontSize: '24px',
+  fontWeight: '600',
+  textAlign: 'center' as const,
+  margin: '30px 0',
 };
 
-const section = {
-  margin: "0 auto",
-  padding: "20px",
-  border: "1px solid #eaeaea",
-  borderRadius: "5px",
-};
+
 
 const text = {
-  color: "#333",
-  fontSize: "14px",
-  margin: "24px 0",
+  color: '#fff', // Texto branco
+  fontSize: '14px',
+  margin: '24px 0',
+  textAlign: 'center' as const,
 };
 
-export const FormSubmissionConfirmationEmail = ({
-  name,
-}: FormSubmissionConfirmationEmailProps) => (
+
+
+export const FormSubmissionConfirmationEmail = (
+  { name }: FormSubmissionConfirmationEmailProps
+) => (
   <Html>
-    <Head />
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Form submitted successfully!</Heading>
-        <Section style={section}>
-          <Text style={text}>Hello, {name}!</Text>
+      <Body style={main}>
+        <Container style={container}>
+          <Text style={h1}>Form submitted successfully!</Text>
           <Text style={text}>
-            Your data was submitted correctly! It will now proceed to validation by the respective teams.
+            Thank you! {name} Your onboarding form has been submitted for internal review. Please note that further updates may be requested during this process.
           </Text>
-          <Hr />
+          <Text style={text}>If you have any questions, please contact us.</Text>
           <Text style={text}>
-            Best regards,
+            Sincerely,
             <br />
             FARM RIO Team
           </Text>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
+        </Container>
+      </Body>
+    </Html>
 );
 
 export default FormSubmissionConfirmationEmail;

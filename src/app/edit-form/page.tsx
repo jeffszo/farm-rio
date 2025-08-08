@@ -3,11 +3,21 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as S from "./styles";
-import type { IFormInputs } from "@/types/form";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { IFormInputs, AddressInput } from "@/types/form";
 import { api } from "@/lib/supabase/index";
-import { ChevronRight, ChevronLeft, Upload, CircleCheck, Plus, Trash2, Info } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Upload,
+  CircleCheck,
+  Plus,
+  Trash2,
+  Info,
+  CircleAlert,
+} from "lucide-react";
 
 
 const termsOptions = [
@@ -40,11 +50,11 @@ export default function OnboardingForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [, setPreviousFormStatus] = useState<string | null>(null);
-  const router = useRouter();
+  const [resaleCertificateError, setResaleCertificateError] = useState<string | null>(null);
+  const [posPhotosError, setPosPhotosError] = useState<string | null>(null);
 
-  // Removendo 'useParams' e 'customerId' para que o ID não seja mais extraído da URL
-  // const params = useParams();
-  // const customerId = typeof params?.id === "string" ? params.id : "";
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [stepFourAttemptedValidation, setStepFourAttemptedValidation] = useState(false);
 
@@ -90,118 +100,104 @@ export default function OnboardingForm() {
   };
 
 
-
-  // Unindo as lógicas de buscar o usuário e os dados do formulário
-  useEffect(() => {
-    const fetchUserAndData = async () => {
-      setIsLoading(true);
+// Lógica de carregamento de dados centralizada
+useEffect(() => {
+  const fetchUserAndData = async () => {
+    setIsLoading(true);
+    try {
       const currentUser = await api.getCurrentUserServer();
       setUser(currentUser);
 
-      // --- LOG ADICIONADO AQUI ---
-      console.log('Usuário da sessão:', currentUser);
-      console.log('ID do usuário da sessão:', currentUser?.id);
-      // --- FIM DO LOG ---
-
       if (currentUser?.id) {
-        try {
-          const { data, error } = await api.getCustomerFormById(currentUser.id);
+        const { data, error } = await api.getCustomerFormById(currentUser.id);
 
-          if (error || !data) {
-            console.warn("Nenhum dado de cliente encontrado para o usuário logado, assumindo novo formulário.");
-            // Se não houver dados, o formulário permanece vazio para um novo preenchimento
-          } else {
-            // Popula os campos do formulário com os dados existentes
-            setValue("customerInfo.legalName", data.customer_name || "");
-            setValue("customerInfo.taxId", data.sales_tax_id || "");
-            setValue("customerInfo.dunNumber", data.duns_number || "");
-            setValue("customerInfo.dba", data.dba_number || "");
-            setValue("instagram", data.instagram || "");
-            setValue("website", data.website || "");
-            setValue("brandingMix", (data.branding_mix || []).join(", "));
-            setValue("apContact.firstName", data.ap_contact_name?.split(" ")[0] || "");
-            setValue("apContact.lastName", data.ap_contact_name?.split(" ")[1] || "");
-            setValue("apContact.email", data.ap_contact_email || "");
-            setValue("apContact.countryCode", data.ap_contact_country_code || "");
-            setValue("apContact.contactNumber", data.ap_contact_number || "");
-            setValue("buyerInfo.firstName", data.buyer_name?.split(" ")[0] || "");
-            setValue("buyerInfo.lastName", data.buyer_name?.split(" ")[1] || "");
-            setValue("buyerInfo.email", data.buyer_email || "");
-            setValue("buyerInfo.countryCode", data.buyer_country_code || "");
-            setValue("buyerInfo.buyerNumber", data.buyer_number || "");
-            setValue("buyerInfo.terms", data.terms || "");
-            setValue("buyerInfo.currency", data.currency || "");
-            setValue("buyerInfo.estimatedPurchaseAmount", data.estimated_purchase_amount || "");
+        if (error || !data) {
+          console.warn("Nenhum dado de cliente encontrado para o usuário logado, assumindo novo formulário.");
+        } else {
+          // Prepara os dados para o reset do formulário
+          const formDataToReset = {
+            customerInfo: {
+              legalName: data.customer_name || "",
+              taxId: data.sales_tax_id || "",
+              dunNumber: data.duns_number || "",
+              dba: data.dba_number || "",
+            },
+            instagram: data.instagram || "",
+            website: data.website || "",
+            brandingMix: (data.branding_mix || []).join(", "),
+            apContact: {
+              firstName: data.ap_contact_name?.split(" ")[0] || "",
+              lastName: data.ap_contact_name?.split(" ")[1] || "",
+              email: data.ap_contact_email || "",
+              countryCode: data.ap_contact_country_code || "",
+              contactNumber: data.ap_contact_number || "",
+            },
+            buyerInfo: {
+              firstName: data.buyer_name?.split(" ")[0] || "",
+              lastName: data.buyer_name?.split(" ")[1] || "",
+              email: data.buyer_email || "",
+              countryCode: data.buyer_country_code || "",
+              buyerNumber: data.buyer_number || "",
+              terms: data.terms || "",
+              currency: data.currency || "",
+              estimatedPurchaseAmount: data.estimated_purchase_amount || "",
+            },
+            joor: data.joor || "",
+            billingAddress: typeof data.billing_address === "string" ? JSON.parse(data.billing_address) : data.billing_address || [],
+            shippingAddress: typeof data.shipping_address === "string" ? JSON.parse(data.shipping_address) : data.shipping_address || [],
+          };
 
-            const parsedBilling = typeof data.billing_address === "string" ? JSON.parse(data.billing_address) : data.billing_address || [];
-            const parsedShipping = typeof data.shipping_address === "string" ? JSON.parse(data.shipping_address) : data.shipping_address || [];
+          reset(formDataToReset);
 
-            setValue("billingAddress", parsedBilling);
-            setbillingAddress(parsedBilling.map((_: unknown, i: number) => i));
-            setValue("shippingAddress", parsedShipping);
-            setshippingAddress(parsedShipping.map((_: unknown, i: number) => i));
-          }
-        } catch (err) {
-          console.error("Erro ao buscar e popular dados do cliente:", err);
-          setError("root.api", { type: "manual", message: "Erro ao carregar dados do formulário." });
+          // Atualiza os estados locais para os campos de endereço dinâmicos
+          setbillingAddress(formDataToReset.billingAddress.map((_: unknown, i: number) => i));
+          setshippingAddress(formDataToReset.shippingAddress.map((_: unknown, i: number) => i));
+
+          setPreviousFormStatus(data.status || null);
         }
       }
+    } catch (err) {
+      console.error("Erro ao buscar e popular dados do cliente:", err);
+      setError("root.api", { type: "manual", message: "Erro ao carregar dados do formulário." });
+    } finally {
       setIsLoading(false);
-    };
-    fetchUserAndData();
-  }, [setError, setValue]);
+    }
+  };
+  fetchUserAndData();
+}, [reset, setError]);
+
+// Efeito para sincronizar o passo atual da URL com o estado do componente
+useEffect(() => {
+  const stepInUrl = searchParams.get("step");
+  if (stepInUrl && !isNaN(parseInt(stepInUrl, 10))) {
+    setCurrentStep(parseInt(stepInUrl, 10));
+  }
+}, [searchParams]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        alert("Please upload a PDF file.");
+        setResaleCertificateError("Please upload a PDF file.");
         setFile(null);
         return;
       }
       setFile(selectedFile);
+      setResaleCertificateError(null);
     } else {
       setFile(null);
+      setResaleCertificateError("Resale Certificate is required.");
     }
   };
-
-useEffect(() => {
-  async function fetchCustomerData() {
-    // Certifique-se de que o objeto 'user' está disponível no escopo do seu componente
-    const userId = user?.id;
-
-    if (userId) {
-      try {
-        // CORREÇÃO: Usar a função que busca o formulário pelo ID do usuário
-        const { data, error } = await api.getCustomerFormById(userId);
-
-        if (error) {
-          throw new Error(error.message);
-        }
-
-        if (data) {
-          // Salva o status do formulário antes de qualquer edição
-          setPreviousFormStatus(data.status || null);
-          // O restante da lógica para preencher o formulário (ex: reset com os dados do data)
-          reset(data);
-        }
-      } catch (error: unknown) {
-        console.error("Erro ao buscar dados do cliente:", error);
-        if (error instanceof Error) {
-          setApiError(error.message || "Erro ao carregar dados do formulário.");
-        } else {
-          setApiError("Erro ao carregar dados do formulário.");
-        }
-      }
-    }
-  }
-  fetchCustomerData();
-}, [user?.id, reset]); // CORREÇÃO: A dependência agora é o user.id
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       setImageFiles((prev) => [...prev, ...files]);
+      setPosPhotosError(null);
+    } else {
+      setImageFiles([]);
+      setPosPhotosError("POS photos are required.");
     }
   };
 
@@ -219,33 +215,44 @@ const onSubmit = async (formData: IFormInputs) => {
       return;
     }
 
-        const termsSelected = formData.buyerInfo?.terms?.trim().toLowerCase();
-        if (termsSelected && termsSelected !== "100% Prior to Ship" && !financialStatementsFile) {
-            // Lógica para exibir o modal de erro
-            setModalContent({
-                title: "Error uploading Financial Statements:",
-                description: "Financial Statements are mandatory if terms are not 100% Prior to Ship.",
-            });
-            setIsModalOpen(true); 
-            setIsUploading(false);
-            return;
-        } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
-            // Lógica para exibir o modal de erro
-            setModalContent({
-                title: "Error uploading Financial Statements:",
-                description: "Financial Statements must be a PDF file.",
-            });
-            setIsModalOpen(true);
-            setIsUploading(false);
-            return;
-        }
+    // Validação de campos de arquivo antes de prosseguir
+    if (!file) {
+      setResaleCertificateError("Resale Certificate is required.");
+      setIsUploading(false);
+      return;
+    }
+    if (imageFiles.length === 0) {
+      setPosPhotosError("POS photos are required.");
+      setIsUploading(false);
+      return;
+    }
+
+    const termsSelected = formData.buyerInfo?.terms?.trim().toLowerCase();
+    // AQUI: A condição já está correta, verificando se o termo é diferente de "100% prior to ship"
+    if (termsSelected && termsSelected !== "100% prior to ship" && !financialStatementsFile) {
+      setModalContent({
+        title: "Error uploading Financial Statements:",
+        description: "Financial Statements are mandatory if terms are not 100% Prior to Ship.",
+      });
+      setIsModalOpen(true);
+      setIsUploading(false);
+      return;
+    } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
+      setModalContent({
+        title: "Error uploading Financial Statements:",
+        description: "Financial Statements must be a PDF file.",
+      });
+      setIsModalOpen(true);
+      setIsUploading(false);
+      return;
+    }
 
 
     const { data: customerData, error: fetchError } = await api.getCustomerFormById(userIdToUse);
     if (fetchError || !customerData) {
-        setApiError("We couldn't find an existing form for this user.");
-        setIsUploading(false);
-        return;
+      setApiError("We couldn't find an existing form for this user.");
+      setIsUploading(false);
+      return;
     }
 
     const previousFormStatus = customerData.status;
@@ -272,20 +279,18 @@ const onSubmit = async (formData: IFormInputs) => {
     const termsValue = formData.buyerInfo?.terms === "" ? null : formData.buyerInfo?.terms;
     const currencyValue = formData.buyerInfo?.currency === "" ? null : formData.buyerInfo?.currency;
 
-    // Lógica para determinar o novo status com a extração corrigida do nome do time
-     let newStatus = "pending";
-        // Lógica para diferenciar o status quando o cliente reenvia o formulário
-        if (previousFormStatus === "review requested by the wholesale team") {
-            newStatus = "review requested by the wholesale team - customer";
-        } else if (previousFormStatus === "review requested by the tax team") {
-            newStatus = "review requested by the tax team - customer";
-        } else if (previousFormStatus === "review requested by the credit team") {
-            newStatus = "review requested by the credit team - customer";
-        } else if (previousFormStatus === "review requested by the csc initial team") {
-            newStatus = "review requested by the csc initial team - customer";
-        } else if (previousFormStatus === "review requested by the CSC final team") {
-          newStatus = "review requested by the csc final team - customer";
-        }
+    let newStatus = "pending";
+    if (previousFormStatus === "review requested by the wholesale team") {
+      newStatus = "review requested by the wholesale team - customer";
+    } else if (previousFormStatus === "review requested by the tax team") {
+      newStatus = "review requested by the tax team - customer";
+    } else if (previousFormStatus === "review requested by the credit team") {
+      newStatus = "review requested by the credit team - customer";
+    } else if (previousFormStatus === "review requested by the csc initial team") {
+      newStatus = "review requested by the csc initial team - customer";
+    } else if (previousFormStatus === "review requested by the CSC final team") {
+      newStatus = "review requested by the csc final team - customer";
+    }
 
 
     const payload = {
@@ -305,7 +310,7 @@ const onSubmit = async (formData: IFormInputs) => {
       buyer_email: formData.buyerInfo?.email || null,
       buyer_country_code: formData.buyerInfo?.countryCode || null,
       buyer_number: formData.buyerInfo?.buyerNumber || null,
-      status: newStatus, // O status é agora dinâmico
+      status: newStatus,
       photo_urls: photoUrls,
       branding_mix: formData.brandingMix ? formData.brandingMix.split(",").map((s) => s.trim()) : null,
       instagram: formData.instagram || null,
@@ -318,15 +323,15 @@ const onSubmit = async (formData: IFormInputs) => {
 
     await api.submitForm(payload, userIdToUse);
 
-  setModalContent({
-  title: "Success!",
-  description: "Your form has been submitted successfully!",
-});
-setIsModalOpen(true);
+    setModalContent({
+      title: "Success!",
+      description: "Your form has been submitted successfully!",
+    });
+    setIsModalOpen(true);
 
-setTimeout(() => {
-  router.push("/");
-}, 3000); 
+    setTimeout(() => {
+      router.push("/");
+    }, 3000);
 
   } catch (error: unknown) {
     console.error("Erro ao enviar formulário:", error);
@@ -339,7 +344,29 @@ setTimeout(() => {
   const nextStep = async () => {
     let fieldsToValidate: (keyof IFormInputs | string)[] = [];
     if (currentStep === 1) {
+      // Validação de campos de arquivo na navegação
+      let isValidStep = true;
+      if (!file) {
+        setResaleCertificateError("Resale Certificate is required.");
+        isValidStep = false;
+      } else {
+        setResaleCertificateError(null);
+      }
+      if (imageFiles.length === 0) {
+        setPosPhotosError("POS photos are required.");
+        isValidStep = false;
+      } else {
+        setPosPhotosError(null);
+      }
+
       fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber", "brandingMix", "instagram", "website"];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      const isValidForm = await trigger(fieldsToValidate);
+
+      if (!isValidForm || !isValidStep) {
+        return;
+      }
     } else if (currentStep === 2) {
       billingAddress.forEach((index) => {
         fieldsToValidate.push(`billingAddress.${index}.street`, `billingAddress.${index}.zipCode`, `billingAddress.${index}.city`, `billingAddress.${index}.state`, `billingAddress.${index}.county`, `billingAddress.${index}.country`);
@@ -353,10 +380,12 @@ setTimeout(() => {
       fieldsToValidate = ["buyerInfo.firstName", "buyerInfo.lastName", "buyerInfo.email", "buyerInfo.countryCode", "buyerInfo.buyerNumber", "buyerInfo.terms", "buyerInfo.currency", "buyerInfo.estimatedPurchaseAmount"];
       setStepFourAttemptedValidation(true);
       const termsSelected = getValues("buyerInfo.terms");
-      if (termsSelected && termsSelected !== "" && !financialStatementsFile) {
+
+      // CORREÇÃO AQUI: Verificamos se um termo foi selecionado e se ele NÃO é "100% Prior to Ship"
+      if (termsSelected && termsSelected.toLowerCase() !== "100% prior to ship" && !financialStatementsFile) {
         setError("buyerInfo.financialStatements", {
           type: "required",
-          message: "Declarações Financeiras são obrigatórias se os Termos forem selecionados.",
+          message: "Declarações Financeiras são obrigatórias se os Termos forem selecionados e não forem '100% Prior to Ship'.",
         });
       } else if (financialStatementsFile && financialStatementsFile.type !== "application/pdf") {
         setError("buyerInfo.financialStatements", {
@@ -376,11 +405,15 @@ setTimeout(() => {
     if (!isValid) {
       return;
     }
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    const newStep = Math.min(currentStep + 1, totalSteps);
+    setCurrentStep(newStep);
+    router.push(`?step=${newStep}`);
   };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    const newStep = Math.max(currentStep - 1, 1);
+    setCurrentStep(newStep);
+    router.push(`?step=${newStep}`);
   };
 
   const addShippingAddress = () => {
@@ -424,7 +457,7 @@ setTimeout(() => {
 
   return (
     <S.ContainerMain>
-      <S.FormContainer>
+      <S.FormContainer stepOne={currentStep === 1}>
         <S.FormHeader>
           <S.FormTitle>Edit Customer Onboarding</S.FormTitle>
           <S.FormSubtitle>
@@ -478,7 +511,8 @@ setTimeout(() => {
                   <S.Input
                     id="dunNumber"
                     type="number"
-                    {...register("customerInfo.dunNumber", { required: "DUNS is required", valueAsNumber: true })}
+                    {...register("customerInfo.dunNumber",
+                      { valueAsNumber: true })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
                   {errors.customerInfo?.dunNumber && <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>}
@@ -515,44 +549,102 @@ setTimeout(() => {
                   />
                   {errors.website && <S.ErrorMessage>{errors.website.message}</S.ErrorMessage>}
                 </S.InputGroup>
+                 <S.InputGroup>
+  <S.Label htmlFor="joor">JOOR profile - (if applicable)</S.Label>
+  <S.Input
+    id="joor"
+    type="url"
+    placeholder="https://jooraccess.com/yourprofile"
+    {...register("joor", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*$/,
+        message: "Please enter a valid URL.",
+      },
+    })}
+    error={!!errors.joor}
+  />
+  {errors.joor && (
+    <S.ErrorMessage>{errors.joor.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+               <S.FileInputContainer>
+  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+  <S.HiddenInput
+    id="file-upload"
+    type="file"
+    accept="application/pdf"
+    onChange={handleFileChange}
+  />
+  <S.UploadButton htmlFor="file-upload">
+    <Upload size={16} />
+    {file ? "1 file selected" : "Attach file (PDF)"}
+  </S.UploadButton>
+  {resaleCertificateError && (
+    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
                 <S.FileInputContainer>
-                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-                  <S.HiddenInput id="file-upload" type="file" accept="application/pdf" onChange={handleFileChange} />
-                  <S.UploadButton htmlFor="file-upload">
-                    <Upload size={16} />
-                    {file ? file.name : "Attach file (PDF)"}
-                  </S.UploadButton>
-                  {/* No resaleCertificate error in customerInfo, so nothing to render here */}
-                </S.FileInputContainer>
-                <S.FileInputContainer>
-                  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
-                  <S.HiddenInput id="image-upload" type="file" accept="image/*" multiple onChange={handleImageChange} />
-                  <S.UploadButton htmlFor="image-upload">
-                    <Upload size={16} />
-                    {imageFiles.length > 0 ? `${imageFiles.length} file(s) selected` : "Attach image files"}
-                  </S.UploadButton>
-                  {imageFiles.length > 0 && (
-                    <S.FilePreviewContainer>
-                      {imageFiles.map((img, idx) => (<S.FilePreview key={idx}>{img.name}</S.FilePreview>))}
-                    </S.FilePreviewContainer>
-                  )}
-                </S.FileInputContainer>
-                <S.InputGroup>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <S.Label style={{ marginBottom: 0 }} htmlFor="brandingMix">Branding Mix</S.Label>
-                    <S.InfoButton type="button" title="list all the brands you work with (separate the brands by comma">
-                      <Info size={16} />
-                    </S.InfoButton>
-                  </div>
-                  <S.Input
-                    style={{ width: "562px", height: "200px", paddingBottom: "170px" }}
-                    id="brandingMix"
-                    {...register("brandingMix", { required: "Brand/Branding Mix is required" })}
-                    error={!!errors.brandingMix}
-                  />
-                  {errors.brandingMix && <S.ErrorMessage>{errors.brandingMix.message}</S.ErrorMessage>}
-                </S.InputGroup>
-              </S.Grid>
+  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+  <S.HiddenInput
+    id="image-upload"
+    type="file"
+    accept="image/*"
+    multiple
+    onChange={handleImageChange}
+  />
+  <S.UploadButton htmlFor="image-upload">
+    <Upload size={16} />
+    {imageFiles.length > 0
+      ? `${imageFiles.length} file(s) selected`
+      : "Attach image files"}
+  </S.UploadButton>
+  {posPhotosError && (
+    <S.ErrorMessage>{posPhotosError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
+
+                  </S.Grid>
+              {/* O campo Branding Mix foi movido para fora do S.Grid */}
+              <S.InputGroup>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <S.Label style={{ marginBottom: 0 }} htmlFor="brandingMix">
+                    Branding Mix
+                  </S.Label>
+                  <S.InfoButton
+                    type="button"
+                    title="list all the brands you work with (separate the brands by comma"
+                    style={{
+                      display: "flex",
+                    }}
+                  >
+                    <Info size={16} />
+                  </S.InfoButton>
+                </div>
+                <S.Input
+                  style={{
+                    width: "522px", // Ocupa a largura total abaixo do grid
+                    height: "200px",
+                  }}
+                  as="textarea" // Usar textarea para multi-linhas
+                  id="brandingMix"
+                  {...register("brandingMix", {
+                    required: "Brand/Branding Mix is required",
+                  })}
+                  error={!!errors.brandingMix}
+                />
+                {errors.brandingMix && (
+                  <S.ErrorMessage>
+                    {errors.brandingMix.message}
+                  </S.ErrorMessage>
+                )}
+              </S.InputGroup>
             </S.Section>
           )}
 
@@ -745,7 +837,7 @@ setTimeout(() => {
                   {errors.buyerInfo?.currency && <S.ErrorMessage>{errors.buyerInfo.currency.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="estimatedPurchaseAmount">Estimated Purchase Amount</S.Label>
+                  <S.Label htmlFor="estimatedPurchaseAmount">Estimated Puchase Amount Per Season</S.Label>
                   <S.Input type="number" id="estimatedPurchaseAmount" min={0} step="0.01" {...register("buyerInfo.estimatedPurchaseAmount", { required: "Estimated purchase amount is required", valueAsNumber: true, min: { value: 0, message: "Amount must be positive" } })} error={!!errors.buyerInfo?.estimatedPurchaseAmount} />
                   {errors.buyerInfo?.estimatedPurchaseAmount && <S.ErrorMessage>{errors.buyerInfo.estimatedPurchaseAmount.message}</S.ErrorMessage>}
                 </S.InputGroup>
@@ -792,28 +884,23 @@ setTimeout(() => {
           </S.ButtonGroup>
         </form>
       </S.FormContainer>
-      {isModalOpen && (
+     {isModalOpen && (
   <S.ModalOverlay>
     <S.ModalContent>
-      <S.ModalTitle style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px'
-}}>
-  {modalContent?.title === "Error uploading Financial Statements:" ? <Info size={28} /> : <CircleCheck size={28} />}
-  <span style={{ fontSize: "1rem", fontWeight: "bold" }}>{modalContent.title}</span>
-</S.ModalTitle>
-<S.ModalMessage>{modalContent.description}</S.ModalMessage>
+      <S.ModalTitle>
+        {modalContent?.title.toLowerCase().includes("error") ? <CircleAlert size={48}  /> : <CircleCheck size={48}  />}
+      </S.ModalTitle>
+      <S.ModalMessage>{modalContent.description}</S.ModalMessage>
 
       <S.ModalButton
-onClick={() => {
-    setIsModalOpen(false);
-    if (modalContent?.title !== "Error uploading Financial Statements:") {
-        setTimeout(() => {
-            router.push("/");
-        }, 2000); 
-    }
-}}
+        onClick={() => {
+          setIsModalOpen(false);
+          if (!modalContent?.title.toLowerCase().includes("error")) {
+            setTimeout(() => {
+              router.push("/");
+            }, 2000);
+          }
+        }}
       >
         OK
       </S.ModalButton>

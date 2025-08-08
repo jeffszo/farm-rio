@@ -67,42 +67,112 @@ export default function PendingCustomersTable({
   }
 
   const exportToExcel = async () => {
-    const result = await api.getApprovedCustomers()
-    console.log('Dados da API:', result);
-    // Check if result is an array and has expected properties
-    const customers: Customer[] = Array.isArray(result)
-      ? result.filter(
-          (item) =>
-            typeof item === "object" &&
-            item !== null &&
-            "id" in item &&
-            "customer_name" in item &&
-            "status" in item &&
-            "created_at" in item
-        ) as Customer[]
-      : []
+  const result = await api.getApprovedCustomers();
+  console.log('Dados da API:', result);
 
-     
-  console.log('Clientes após o primeiro filtro:', customers);
-  customers.forEach(c => {
-    console.log(`Status: '${c.status}', Tipo: ${typeof c.status}`);
-  });
+  // Filtra clientes válidos
+  const customers = Array.isArray(result)
+    ? result.filter(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          "id" in item &&
+          "customer_name" in item &&
+          "status" in item &&
+          "created_at" in item
+      )
+    : [];
 
+  const approvedCustomers = customers.filter(
+    (customer) => customer.status.trim().toLowerCase() === "finished"
+  );
 
-const approvedCustomers = customers.filter((customer) => customer.status.trim().toLowerCase() === "finished")
-    if (approvedCustomers.length === 0) {
-      alert("No customers approved for export!")
-      return
+  if (approvedCustomers.length === 0) {
+    // Substitui alert() por uma mensagem na console, já que alert() não funciona no ambiente
+    console.warn("No customers approved for export!");
+    return;
+  }
+
+  // Novo array para armazenar os clientes com os endereços "achatados"
+  const processedCustomers = approvedCustomers.map(customer => {
+    // Cria um novo objeto para evitar modificar o original
+    const newCustomer: Record<string, unknown> = { ...customer };
+
+    // --- Processamento da shipping_address ---
+    try {
+      // Tenta analisar a string JSON da shipping_address
+      const shippingAddresses = JSON.parse(newCustomer.shipping_address as string);
+      
+      // Remove a propriedade original para evitar que ela apareça como uma única coluna
+      delete newCustomer.shipping_address;
+
+      // Itera sobre os endereços e cria uma única coluna para cada endereço
+      if (Array.isArray(shippingAddresses)) {
+        shippingAddresses.forEach((address, index) => {
+          if (address && Object.keys(address).length > 0) {
+            // Concatena todos os campos do endereço em uma única string
+            const fullAddress = [
+              address.street,
+              address.city,
+              address.state,
+              address.zipCode,
+              address.country
+            ].filter(Boolean).join(', '); // Filtra campos vazios e junta com vírgula e espaço
+            
+            newCustomer[`shipping_address_${index + 1}`] = fullAddress;
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Failed to parse shipping_address JSON:", e);
+      // Se houver erro, apenas mantém a string original para não perder o dado
+      newCustomer.shipping_address = newCustomer.shipping_address;
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(approvedCustomers)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers")
+    // --- Processamento da billing_address ---
+    try {
+      // Tenta analisar a string JSON da billing_address
+      const billingAddresses = JSON.parse(newCustomer.billing_address as string);
+      
+      // Remove a propriedade original para evitar que ela apareça como uma única coluna
+      delete newCustomer.billing_address;
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
-    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    saveAs(data, "approved_customers.xlsx")
-  }
+      // Itera sobre os endereços de cobrança e cria uma única coluna para cada um
+      if (Array.isArray(billingAddresses)) {
+        billingAddresses.forEach((address, index) => {
+          if (address && Object.keys(address).length > 0) {
+            // Concatena todos os campos do endereço em uma única string
+            const fullAddress = [
+              address.street,
+              address.city,
+              address.state,
+              address.zipCode,
+              address.country
+            ].filter(Boolean).join(', ');
+            
+            newCustomer[`billing_address_${index + 1}`] = fullAddress;
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Failed to parse billing_address JSON:", e);
+      // Se houver erro, mantém a string original
+      newCustomer.billing_address = newCustomer.billing_address;
+    }
+    
+    return newCustomer;
+  });
+
+  // O worksheet agora é criado com o array processado
+  const worksheet = XLSX.utils.json_to_sheet(processedCustomers);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers");
+
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(data, "approved_customers.xlsx");
+};
+
 
   return (
     <S.Container>

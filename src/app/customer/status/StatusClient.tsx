@@ -78,10 +78,10 @@ export default function StatusClient({
       <S.ReviewTitle>Request Status</S.ReviewTitle>
       <S.ReviewSubtitle>
         {/* ... (Todo o seu JSX para exibir os status e feedbacks) ... */}
-        {formStatus === 'pending' && <div>Your form is currently <strong>pending review</strong>.</div>}
+        {formStatus === 'pending' && <div>Your form is currently pending review.</div>}
         {formStatus === 'approved by the csc initial team' && (
           <div>
-            Your form has been <strong>approved by the CSC Initial team</strong> and is now under review by the Tax team.
+            Your form has been approved by the CSC Initial team and is now under review by the Tax team.
             {cscInitialFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
@@ -93,7 +93,7 @@ export default function StatusClient({
         {/* ... (Todos os outros blocos de status e feedback) ... */}
         {formStatus === 'review requested by the initial CSC team' && (
           <div>
-            Your form has been <strong>review requested by the CSC team</strong>. Please check the feedback.
+            Your form has been reviewed by the CSC initial Team. Please check their feedback below
             {cscInitialFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
@@ -104,7 +104,7 @@ export default function StatusClient({
         )}
         {formStatus === 'review requested by the CSC final team' && (
           <div>
-            Your corrected form has been <strong>requested by the CSC team</strong>. Please review carefully.
+            Your form has been reviewed by the CSC final Team. Please check their feedback below
             {cscFinalFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
@@ -115,7 +115,7 @@ export default function StatusClient({
         )}
         {formStatus === 'review requested by the tax team' && (
           <div>
-            Your form has been <strong>review requested by the Tax team</strong>. Please check the feedback.
+            Your form has been reviewed by the Tax Team. Please check their feedback below
             {taxFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Tax Team:</S.FeedbackTitle>
@@ -126,7 +126,7 @@ export default function StatusClient({
         )}
         {formStatus === 'review requested by the wholesale team' && (
           <div>
-            Your form has been <strong>review requested by the Wholesale team</strong>. Please check the feedback.
+            Your form has been reviewed by the Wholesale Team. Please check their feedback below
             {wholesaleFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
@@ -137,7 +137,7 @@ export default function StatusClient({
         )}
         {formStatus === 'review requested by the credit team' && (
           <div>
-            Your form has been <strong>review requested by the Credit team</strong>. Please check the feedback.
+            Your form has been reviewed by the Credit Team. Please check their feedback below
             {creditFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Credit Team:</S.FeedbackTitle>
@@ -149,7 +149,7 @@ export default function StatusClient({
         {formStatus === 'rejected by the wholesale team' && (
           <div>
            Unfortunately, your submission for new customer registration was not approved by our team at this time.
-For more information, please contact our wholesale team at wholesale@farmrio.com
+        For more information, please contact our wholesale team at wholesale@farmrio.com
             {wholesaleFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
@@ -158,10 +158,10 @@ For more information, please contact our wholesale team at wholesale@farmrio.com
             )}
           </div>
         )}
-        {formStatus === 'finished' && <div>Your form has been <strong>successfully finalized!</strong></div>}
+        {formStatus === 'finished' && <div>Your form has been successfully finalized!</div>}
         {formStatus === 'approved by the tax team' && (
           <div>
-            Your form has been <strong>approved by the Tax team</strong> and is now under review by the Wholesale team.
+            Your form has been approved by the Tax team and is now under review by the Wholesale team.
             {taxFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Tax Team:</S.FeedbackTitle>
@@ -172,7 +172,7 @@ For more information, please contact our wholesale team at wholesale@farmrio.com
         )}
         {formStatus === 'approved by the wholesale team' && (
           <div>
-            Your form has been <strong>approved by the Wholesale team</strong> and is now under review by the CSC team.
+            Your form has been approved by the Wholesale team and is now under review by the CSC team.
             {wholesaleFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
@@ -183,7 +183,7 @@ For more information, please contact our wholesale team at wholesale@farmrio.com
         )}
         {formStatus === 'approved by the credit team' && (
           <div>
-            Your form has been <strong>approved by all teams!</strong> You&apos;re good to go!
+            Your form has been approved by all teams! You&apos;re good to go!
             {creditFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackTitle>Feedback from the Credit Team:</S.FeedbackTitle>

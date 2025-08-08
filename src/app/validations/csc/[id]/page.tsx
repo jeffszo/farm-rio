@@ -20,7 +20,8 @@ import {
   Calendar,
   DollarSign,
   Percent,
-  MessageSquare 
+  MessageSquare,
+  CircleAlert // Corrigido o typo CicleAlert para CircleAlert
 } from "lucide-react";
 
 interface Address {
@@ -35,6 +36,7 @@ interface Address {
 interface CustomerForm {
   id: string;
   customer_name: string;
+  joor: string;
   sales_tax_id: string;
   duns_number: string;
   dba_number: string;
@@ -70,6 +72,7 @@ interface ValidationDetails {
   credit_currency: string;
   credit_terms: string;
   credit_credit: number;
+  estimated_purchase_amount: number;
   credit_discount: number;
 }
 
@@ -166,6 +169,7 @@ export default function ValidationDetailsPage() {
                 ? JSON.stringify(data.branding_mix)
                 : ""
               : "",
+            joor: "joor" in data && typeof data.joor === "string" ? data.joor : "",
             financial_statements: "financial_statements" in data
               ? typeof data.financial_statements === "string"
                 ? data.financial_statements
@@ -535,6 +539,21 @@ const closeModal = () => {
               )}
             </S.FormRow>
 
+                         <S.FormRow>
+              <strong>JOOR:</strong>{" "}
+              {customerForm.joor ? (
+                <a
+                  href={customerForm.joor}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access Website
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </S.FormRow>
+
             <S.FormRow>
               <strong>Resale Certificate:</strong>{" "}
               {customerForm.resale_certificate ? (
@@ -702,12 +721,12 @@ const closeModal = () => {
 
                   <S.TermsSection>
                     <label>
-                      <DollarSign size={16} /> Credit Limit
+                      <DollarSign size={16} />  Estimated Puchase Amount Per Season
                     </label>
                     <S.InfoText>
-                      {validation.wholesale_credit !== undefined &&
-                      validation.wholesale_credit !== null
-                        ? validation.wholesale_credit.toFixed(2)
+                      {validation.estimated_purchase_amount !== undefined &&
+                      validation.estimated_purchase_amount !== null
+                        ? validation.estimated_purchase_amount.toFixed(2)
                         : "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
@@ -764,13 +783,13 @@ const closeModal = () => {
 
                   <S.TermsSection>
                     <label>
-                      <DollarSign size={16} /> Estimated Amount
+                      <DollarSign size={16} /> Estimated Puchase Amount Per Season
                     </label>
                     <S.InfoText>
-                     {validation.credit_credit !== undefined &&
-validation.credit_credit !== null &&
-!isNaN(Number(validation.credit_credit)) 
-  ? Number(validation.credit_credit).toFixed(2)
+                     {validation.estimated_purchase_amount !== undefined &&
+validation.estimated_purchase_amount !== null &&
+!isNaN(Number(validation.estimated_purchase_amount)) 
+  ? Number(validation.estimated_purchase_amount).toFixed(2)
   : 'N/A' 
 }
                     </S.InfoText>
@@ -829,7 +848,10 @@ validation.credit_discount !== null &&
           <S.Modal>
             <S.ModalContent>
               <S.ModalTitle>
-                <CircleCheck size={48} />
+                {/* Lógica do ícone alterada para refletir o status de aprovação/erro */}
+                {modalContent.title.toLowerCase().includes("alerta") || modalContent.title.toLowerCase().includes("erro")
+                  ? <CircleAlert size={48} />
+                  : <CircleCheck size={48} />}
               </S.ModalTitle>
               <S.ModalDescription>{modalContent.description}</S.ModalDescription>
               <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>

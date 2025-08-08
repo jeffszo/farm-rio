@@ -2,19 +2,22 @@ import styled from "styled-components"
 
 export const ContainerMain = styled.div`
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 85vh;
+  justify-content: center;
+  min-height: 85vh; /* Altera de 'height' para 'min-height' */
+  margin: 3rem 0; /* Adiciona margem para evitar que o conteúdo toque nas bordas da tela */
+  
+  @media (max-width: 768px) {
+    /* No mobile, já está 100%, mas adicionamos um flex-direction para organização */
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+  }
+`;
 
-    @media (max-width: 768px) {
-    margin: 3rem 0;
-    height: 100%;
-}
-`
-
-export const FormContainer = styled.div`
-  width: 95%; /* Ou um valor fixo como 800px */
-  max-width: 1200px;
+export const FormContainer = styled.div<{ stepOne?: boolean }>`
+ width: ${({ stepOne }) => (stepOne ? "95%" : "100%")};
+  max-width: ${({ stepOne }) => (stepOne ? "1395px" : "1200px")};
   padding: 1.5rem;
   background: #ffffff;
   border-radius: 0.5rem;

@@ -16,7 +16,8 @@ import {
   Plus,
   Trash2,
   Info,
-  CircleX // Import CircleX for error icon
+  CircleAlert,
+  CircleX
 } from "lucide-react";
 import { api } from "../../../lib/supabase/index";
 
@@ -38,14 +39,14 @@ const currencyOptions = [
 ];
 
 export default function OnboardingForm() {
-  const [file, setFile] = useState<File | null>(null); // Para Resale Certificate
-  const [imageFiles, setImageFiles] = useState<File[]>([]); // Para Multiple Images
+  const [file, setFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [financialStatementsFile, setFinancialStatementsFile] =
-    useState<File | null>(null); // ESTADO PARA O ARQUIVO FINANCIAL STATEMENTS
+    useState<File | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [shippingAddress, setshippingAddress] = useState<number[]>([0]);
-  const [, setIsSameAsBilling] = useState(false); // Novo estado para "Same as Billing"
+  const [, setIsSameAsBilling] = useState(false);
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -54,16 +55,21 @@ export default function OnboardingForm() {
     null
   );
   const [isLoading, setIsLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Novos estados para erros específicos de campos de arquivo
+  const [resaleCertificateError, setResaleCertificateError] = useState<string | null>(null);
+  const [posPhotosError, setPosPhotosError] = useState<string | null>(null);
 
   // New states for dynamic modal content
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
-  const [modalIcon, setModalIcon] = useState<React.ElementType | null>(null); // To store the icon component
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [modalIcon, setModalIcon] = useState<React.ElementType | null>(null);
 
   const router = useRouter();
 
-  // Adicione esta linha para declarar e gerenciar o estado de validação do passo 4
   const [stepFourAttemptedValidation, setStepFourAttemptedValidation] =
     useState(false);
 
@@ -74,14 +80,13 @@ export default function OnboardingForm() {
     trigger,
     getValues,
     setValue,
-    clearErrors, // Importe clearErrors
-    setError, // Importe setError
+    clearErrors,
+    setError,
   } = useForm<IFormInputs>({
     mode: "onChange",
     defaultValues: {
       billingAddress: [{} as AddressInput],
       shippingAddress: [{} as AddressInput],
-      // Definir valor padrão para os selects para evitar erro de componente não controlado
       buyerInfo: {
         firstName: "",
         lastName: "",
@@ -104,25 +109,24 @@ export default function OnboardingForm() {
       if (selectedFile.type !== "application/pdf") {
         setError("buyerInfo.financialStatements", {
           type: "manual",
-          message: "Financial Statements must be a PDF file.", // Traduzido
+          message: "Financial Statements must be a PDF file.",
         });
-        setFinancialStatementsFile(null); // Limpa o arquivo inválido
-        console.log("Invalid Financial Statements file: not a PDF."); // Traduzido
+        setFinancialStatementsFile(null);
+        console.log("Invalid Financial Statements file: not a PDF.");
         return;
       }
       setFinancialStatementsFile(selectedFile);
-      // Limpa o erro se um arquivo for selecionado e for PDF válido
       clearErrors("buyerInfo.financialStatements");
-      setApiError(null); // Limpa o erro da API se o arquivo se tornar válido
+      setApiError(null);
       console.log(
         "Financial Statements file selected:",
         selectedFile.name
-      ); // Traduzido
+      );
     } else {
       setFinancialStatementsFile(null);
-      clearErrors("buyerInfo.financialStatements"); // Limpa o erro se nenhum arquivo for selecionado
-      setApiError(null); // Limpa o erro da API se nenhum arquivo for selecionado (e não for mais obrigatório)
-      console.log("No Financial Statements file selected."); // Traduzido
+      clearErrors("buyerInfo.financialStatements");
+      setApiError(null);
+      console.log("No Financial Statements file selected.");
     }
   };
 
@@ -139,78 +143,96 @@ export default function OnboardingForm() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
-        alert("Please upload a PDF file."); // Traduzido
-        setFile(null); // Limpa o arquivo inválido
-        console.log("Invalid Resale Certificate file: not a PDF."); // Traduzido
+        alert("Please upload a PDF file.");
+        setFile(null);
+        console.log("Invalid Resale Certificate file: not a PDF.");
         return;
       }
       setFile(selectedFile);
+      setResaleCertificateError(null); // Limpa o erro quando um arquivo válido é selecionado
       console.log(
         "Resale Certificate file selected:",
         selectedFile.name
-      ); // Traduzido
+      );
     } else {
       setFile(null);
-      console.log("No Resale Certificate file selected."); // Traduzido
+      console.log("No Resale Certificate file selected.");
     }
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // É importante usar event.target.files aqui, pois event.files não existe.
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
       setImageFiles((prev) => [...prev, ...files]);
+      setPosPhotosError(null); // Limpa o erro quando um arquivo é selecionado
       console.log(
         "Images selected:",
         files.map((f) => f.name)
-      ); // Traduzido
+      );
     } else {
-      console.log("No images selected."); // Traduzido
+      console.log("No images selected.");
     }
   };
 
   const onSubmit = async (formData: IFormInputs) => {
     console.log("Submit button clicked. Starting onSubmit function.");
 
+    // Validação manual para o Resale Certificate e POS Photos
+    if (!file) {
+        setModalTitle("Validation Error");
+        setModalMessage("Resale Certificate is required.");
+        setModalIcon(() => CircleX);
+        setIsModalOpen(true);
+        setIsUploading(false);
+        setResaleCertificateError("Resale Certificate is required.");
+        return;
+    } else {
+        setResaleCertificateError(null);
+    }
+    if (imageFiles.length === 0) {
+        setModalTitle("Validation Error");
+        setModalMessage("At least one POS photo is required.");
+        setModalIcon(() => CircleX);
+        setIsModalOpen(true);
+        setIsUploading(false);
+        setPosPhotosError("At least one POS photo is required.");
+        return;
+    } else {
+        setPosPhotosError(null);
+    }
+
     console.log("📥 Form submission started.");
 
-// Verifica sessão e token
-const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-console.log("🔐 Supabase session data:", sessionData);
-console.log("🧾 Access Token:", sessionData?.session?.access_token);
-if (sessionError) {
-  console.error("⚠️ Error getting session:", sessionError.message);
-}
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log("🔐 Supabase session data:", sessionData);
+    console.log("🧾 Access Token:", sessionData?.session?.access_token);
+    if (sessionError) {
+      console.error("⚠️ Error getting session:", sessionError.message);
+    }
 
-// Verifica o usuário
-const { data: userData, error: userError } = await supabase.auth.getUser();
-console.log("👤 Supabase user data:", userData?.user);
-if (userError) {
-  console.error("⚠️ Error getting user:", userError.message);
-}
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    console.log("👤 Supabase user data:", userData?.user);
+    if (userError) {
+      console.error("⚠️ Error getting user:", userError.message);
+    }
 
-
-
-    // Clear any previous API errors and modal states at the start of submission attempt
     setApiError(null);
     setModalTitle("");
     setModalMessage("");
     setModalIcon(null);
-    setIsModalOpen(false); // Ensure modal is closed before new attempt
+    setIsModalOpen(false);
 
-    // Manually trigger validation for financial statements before submission
     const termsSelected = getValues("buyerInfo.terms");
     let financialStatementsError = false;
-    let specificErrorMessage = ""; // To hold the specific error message for API error
+    let specificErrorMessage = "";
 
-    // Re-evaluate the conditional validation
     if (
       termsSelected &&
       termsSelected !== "100% Prior to Ship" &&
       !financialStatementsFile
     ) {
       specificErrorMessage =
-        "Financial Statements are required if terms are not 100% Prior to Ship."; // Traduzido
+        "Financial Statements are required if terms are not 100% Prior to Ship.";
       setError("buyerInfo.financialStatements", {
         type: "required",
         message: specificErrorMessage,
@@ -220,7 +242,7 @@ if (userError) {
       financialStatementsFile &&
       financialStatementsFile.type !== "application/pdf"
     ) {
-      specificErrorMessage = "Financial Statements must be a PDF file."; // Traduzido
+      specificErrorMessage = "Financial Statements must be a PDF file.";
       setError("buyerInfo.financialStatements", {
         type: "manual",
         message: specificErrorMessage,
@@ -230,8 +252,6 @@ if (userError) {
       clearErrors("buyerInfo.financialStatements");
     }
 
-    // Trigger validation for all fields that are part of the final step,
-    // including the financial statements field which might have been manually set.
     const allFieldsValid = await trigger([
       "buyerInfo.firstName",
       "buyerInfo.lastName",
@@ -241,112 +261,105 @@ if (userError) {
       "buyerInfo.terms",
       "buyerInfo.currency",
       "buyerInfo.estimatedPurchaseAmount",
-      "buyerInfo.financialStatements", // Inclua este campo para que trigger o avalie
+      "buyerInfo.financialStatements",
     ]);
 
-    // Check if there are any errors after triggering all validations
     if (!allFieldsValid || financialStatementsError || Object.keys(errors).length > 0) {
-      console.log("Final form submission validation failed. Errors:", errors); // Traduzido
+      console.log("Final form submission validation failed. Errors:", errors);
       let displayMessage = "";
-      // If there's a specific financial statements error, use it.
-      // Otherwise, find the first error message from react-hook-form's errors.
       if (financialStatementsError && specificErrorMessage) {
         displayMessage = specificErrorMessage;
       } else {
-        // Find the first error message from the 'errors' object if any
         const firstErrorMessage = Object.values(errors)
           .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
 
         if (firstErrorMessage) {
           displayMessage = firstErrorMessage;
         } else {
-          // Fallback message if no specific error found
-          displayMessage = "Please fill in all required fields correctly."; // Traduzido
+          displayMessage = "Please fill in all required fields correctly.";
         }
       }
 
       setModalTitle("Submission failed!");
       setModalMessage(displayMessage);
-      setModalIcon(() => CircleX); // Set the error icon component
-      setIsModalOpen(true); // Open the modal with error content
+      setModalIcon(() => CircleX);
+      setIsModalOpen(true);
 
-      setIsUploading(false); // Make sure to reset loading state if submission is aborted
-      return; // Stop the submission process
+      setIsUploading(false);
+      return;
     }
 
-    // Proceed with API call only if all validations pass
     try {
-      setApiError(null); // Clear API error before attempting API call
+      setApiError(null);
       setIsUploading(true);
       console.log("isUploading set to true.");
 
-let { data: { user: currentUser } } = await supabase.auth.getUser();
+      let { data: { user: currentUser } } = await supabase.auth.getUser();
 
 
-if (!currentUser) {
-  console.log("🔁 Buscando currentUser dentro do onSubmit...");
-  const apiUser = await api.getCurrentUserServer();
-  if (apiUser && apiUser.id) {
-    // Only assign the properties that exist in Supabase's User type
-    currentUser = {
-      id: apiUser.id,
-      app_metadata: {},
-      user_metadata: {},
-      aud: "",
-      created_at: "",
-      email: "",
-      phone: "",
-      confirmation_sent_at: "",
-      recovery_sent_at: "",
-      email_change_sent_at: "",
-      last_sign_in_at: "",
-      role: "",
-      updated_at: "",
-      identities: [],
-      factors: [],
-      invited_at: "",
-      action_link: "",
-      email_confirmed_at: "",
-      phone_confirmed_at: "",
-      is_anonymous: false
-    };
-  }
-}
+      if (!currentUser) {
+        console.log("🔁 Buscando currentUser dentro do onSubmit...");
+        const apiUser = await api.getCurrentUserServer();
+        if (apiUser && apiUser.id) {
+          currentUser = {
+            id: apiUser.id,
+            app_metadata: {},
+            user_metadata: {},
+            aud: "",
+            created_at: "",
+            email: "",
+            phone: "",
+            confirmation_sent_at: "",
+            recovery_sent_at: "",
+            email_change_sent_at: "",
+            last_sign_in_at: "",
+            role: "",
+            updated_at: "",
+            identities: [],
+            factors: [],
+            invited_at: "",
+            action_link: "",
+            email_confirmed_at: "",
+            phone_confirmed_at: "",
+            is_anonymous: false
+          };
+        }
+      }
 
-if (!currentUser || !currentUser.id) {
-  console.error("⚠️ Usuário não autenticado no momento do submit.");
-  setModalTitle("Authentication Error");
-  setModalMessage("Your session has expired or you are not logged in. Please log in again.");
-  setModalIcon(() => CircleX);
-  setIsModalOpen(true);
-  setIsUploading(false);
+      if (!currentUser || !currentUser.id) {
+        console.error("⚠️ Usuário não autenticado no momento do submit.");
+        setModalTitle("Authentication Error");
+        setModalMessage("Your session has expired or you are not logged in. Please log in again.");
+        setModalIcon(() => CircleX);
+        setIsModalOpen(true);
+        setIsUploading(false);
 
-  setTimeout(() => {
-    router.push("/");
-  }, 2); // 30 segundos de espera
+        setTimeout(() => {
+          router.push("/");
+        }, 2);
 
-  return;
-}
+        return;
+      }
 
       console.log("Current user ID:", currentUser.id);
 
-      console.log("Data received in form (formData):", formData); // Traduzido
+      console.log("Data received in form (formData):", formData);
 
       let fileUrl: string | null = null;
       if (file) {
         try {
-          console.log("Attempting to upload resale certificate."); // Traduzido
+          console.log("Attempting to upload resale certificate.");
           fileUrl = await api.uploadResaleCertificate(file, currentUser.id);
           console.log(
             "Resale certificate file uploaded successfully:",
             fileUrl
-          ); // Traduzido
+          );
         } catch (error) {
           console.error(
             "Error uploading resale certificate file:",
             error
-          ); // Traduzido
-          
+          );
+
           setModalTitle("Upload Error");
           setModalMessage(error instanceof Error ? error.message : "Error uploading file. Please try again.");
           setModalIcon(() => CircleX);
@@ -356,20 +369,20 @@ if (!currentUser || !currentUser.id) {
           return;
         }
       } else {
-        console.log("No resale certificate file to upload."); // Traduzido
+        console.log("No resale certificate file to upload.");
       }
 
       const photoUrls: string[] = [];
       if (imageFiles.length > 0) {
-        console.log("Attempting to upload image files."); // Traduzido
+        console.log("Attempting to upload image files.");
         for (const imageFile of imageFiles) {
           try {
             const imageUrl = await api.uploadImage(imageFile, currentUser.id);
             photoUrls.push(imageUrl);
-            console.log(`Image ${imageFile.name} uploaded successfully.`); // Traduzido
+            console.log(`Image ${imageFile.name} uploaded successfully.`);
           } catch (error) {
-            console.error(`Error uploading image ${imageFile.name}:`, error); // Traduzido
-            
+            console.error(`Error uploading image ${imageFile.name}:`, error);
+
             setModalTitle("Upload Error");
             setModalMessage(error instanceof Error ? error.message : "Error uploading images. Please try again.");
             setModalIcon(() => CircleX);
@@ -380,14 +393,13 @@ if (!currentUser || !currentUser.id) {
           }
         }
       } else {
-        console.log("No image files to upload."); // Traduzido
+        console.log("No image files to upload.");
       }
 
       let financialStatementsFileUrl: string | null = null;
-      // The check for financialStatementsError already happened above
       if (financialStatementsFile) {
         try {
-          console.log("Attempting to upload financial statements."); // Traduzido
+          console.log("Attempting to upload financial statements.");
           financialStatementsFileUrl = await api.uploadFinancialStatements(
             financialStatementsFile,
             currentUser.id
@@ -395,10 +407,10 @@ if (!currentUser || !currentUser.id) {
           console.log(
             "Financial Statements file uploaded successfully:",
             financialStatementsFileUrl
-          ); // Traduzido
+          );
         } catch (error) {
-          console.error("Error uploading Financial Statements:", error); // Traduzido
-          
+          console.error("Error uploading Financial Statements:", error);
+
           setModalTitle("Upload Error");
           setModalMessage(error instanceof Error ? error.message : "Error uploading Financial Statements. Please try again.");
           setModalIcon(() => CircleX);
@@ -408,7 +420,7 @@ if (!currentUser || !currentUser.id) {
           return;
         }
       } else {
-        console.log("No financial statements file to upload or not required."); // Traduzido
+        console.log("No financial statements file to upload or not required.");
       }
 
       const termsValue =
@@ -424,6 +436,7 @@ if (!currentUser || !currentUser.id) {
         sales_tax_id: formData.customerInfo?.taxId || null,
         duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
+        joor: formData.joor || null,
         resale_certificate: fileUrl,
         billing_address: formData.billingAddress || [],
         shipping_address: formData.shippingAddress || [],
@@ -451,14 +464,14 @@ if (!currentUser || !currentUser.id) {
         financial_statements: financialStatementsFileUrl,
       };
 
-      console.log("Payload being sent to submitForm:", payload); // Traduzido
+      console.log("Payload being sent to submitForm:", payload);
 
       await api.submitForm(payload, currentUser.id);
-      console.log("Form submitted successfully via API."); 
+      console.log("Form submitted successfully via API.");
 
       try {
       const emailConfirmationPayload = {
-        name: formData.buyerInfo?.firstName || "Cliente", // Use o nome do comprador
+        name: formData.buyerInfo?.firstName || "Cliente",
       };
       console.log("Payload de email de confirmação:", emailConfirmationPayload);
 
@@ -478,11 +491,10 @@ if (!currentUser || !currentUser.id) {
       console.error("Erro ao tentar enviar e-mail de confirmação:", emailError);
     }
 
-    
       setModalTitle("Success!");
       setModalMessage("Your form has been submitted successfully!");
-      setModalIcon(() => CircleCheck); // Set the success icon component
-      setIsModalOpen(true); // Open the modal with success content
+      setModalIcon(() => CircleCheck);
+      setIsModalOpen(true);
       console.log("Modal set to open with success message.");
         setTimeout(() => {
         router.push('/');
@@ -492,25 +504,35 @@ if (!currentUser || !currentUser.id) {
       console.error(
         "GENERAL error submitting the form:",
         error instanceof Error ? error.message : String(error)
-      ); // Traduzido
-      
-      // setModalTitle("Submission Error");
-      // setModalMessage(error instanceof Error ? error.message : "Error submitting the form. Please try again.");
-      setModalIcon(() => CircleX); // Set the error icon component
-      setIsModalOpen(true); // Open the modal with error content
+      );
+
+      setModalIcon(() => CircleX);
+      setIsModalOpen(true);
       router.push("/")
 
     } finally {
       setIsUploading(false);
-      console.log("isUploading set to false. End of onSubmit function."); // Traduzido
+      console.log("isUploading set to false. End of onSubmit function.");
     }
   };
 
   const nextStep = async () => {
-    let fieldsToValidate: (keyof IFormInputs | string)[] = [];
-    setApiError(null); // Clear API error on next step attempt
+    let fieldsToValidate: string[] = []; // Always initialized as an array
+    const errorsList: string[] = []; // Array para acumular os erros
+    setApiError(null);
+    setResaleCertificateError(null);
+    setPosPhotosError(null);
 
     if (currentStep === 1) {
+      if (!file) {
+        errorsList.push("Resale Certificate is required.");
+        setResaleCertificateError("Resale Certificate is required.");
+      }
+      if (imageFiles.length === 0) {
+        errorsList.push("At least one POS photo is required.");
+        setPosPhotosError("At least one POS photo is required.");
+      }
+
       fieldsToValidate = [
         "customerInfo.legalName",
         "customerInfo.taxId",
@@ -559,95 +581,65 @@ if (!currentUser || !currentUser.id) {
         "buyerInfo.terms",
         "buyerInfo.currency",
         "buyerInfo.estimatedPurchaseAmount",
-        // DO NOT add 'buyerInfo.financialStatements' here for direct 'required' validation,
-        // as its requirement is conditional and handled manually.
       ];
       setStepFourAttemptedValidation(true);
 
       const termsSelected = getValues("buyerInfo.terms");
-      let financialStatementsError = false; // Flag to track specific financial statements error
-      let specificErrorMessage = ""; // To hold the specific error message for API error
 
-      // Conditional validation for Financial Statements
       if (
         termsSelected &&
         termsSelected !== "100% Prior to Ship" &&
         !financialStatementsFile
       ) {
-        specificErrorMessage =
-          "Financial Statements are required if terms are not 100% Prior to Ship."; // Traduzido
+        const errorMessage = "Financial Statements are required if terms are not 100% Prior to Ship.";
+        errorsList.push(errorMessage);
         setError("buyerInfo.financialStatements", {
           type: "required",
-          message: specificErrorMessage,
+          message: errorMessage,
         });
-        financialStatementsError = true;
-        console.log(
-          "Validation Error (nextStep): Financial Statements required for terms other than 100%."
-        ); // Traduzido
       } else if (
         financialStatementsFile &&
         financialStatementsFile.type !== "application/pdf"
       ) {
-        specificErrorMessage = "Financial Statements must be a PDF file."; // Traduzido
+        const errorMessage = "Financial Statements must be a PDF file.";
+        errorsList.push(errorMessage);
         setError("buyerInfo.financialStatements", {
           type: "manual",
-          message: specificErrorMessage,
+          message: errorMessage,
         });
-        financialStatementsError = true;
-        console.log(
-          "Validation Error (nextStep): Financial Statements must be PDF."
-        ); // Traduzido
       } else {
-        // Clear the error if conditions are met (e.g., file is present and PDF, or terms are '100% Prior to Ship')
         clearErrors("buyerInfo.financialStatements");
       }
-
-      // Trigger validation for other fields in step 4
-      // @ts-expect-error (may need a more robust typing solution if it persists)
-      const otherFieldsValid = await trigger(fieldsToValidate);
-
-      // Check if there are any errors after all validations (including manual ones)
-      // This is crucial to capture manually defined errors like financialStatementsError
-      if (!otherFieldsValid || financialStatementsError || Object.keys(errors).length > 0) {
-        console.log("Step 4 validation failed. Errors:", errors); // Traduzido
-        // If there's a specific financial statements error, use it.
-        // Otherwise, find the first error message from react-hook-form's errors.
-        if (financialStatementsError && specificErrorMessage) {
-            setApiError(specificErrorMessage);
-        } else {
-            const firstErrorMessage = Object.values(errors)
-              .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
-            if (firstErrorMessage) {
-                setApiError(firstErrorMessage);
-            }
-        }
-        return; // Prevents advancing to the next step
-      }
     }
 
-    // General step validation
-    // @ts-expect-error (if fieldsToValidate can have types that don't directly match trigger, consider refactoring)
-    const isValid = await trigger(fieldsToValidate);
+    const isValid = await trigger(fieldsToValidate as Parameters<typeof trigger>[0]);
 
     if (!isValid) {
-      console.log("Form validation failed for the current step:", errors); // Traduzido
-      // If isValid is false, it means react-hook-form has errors.
-      // Display the first one in apiError.
-      const firstErrorMessage = Object.values(errors)
-        .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
-      if (firstErrorMessage) {
-        setApiError(firstErrorMessage);
-      }
+      // Coleta erros do react-hook-form
+      Object.values(errors).forEach((error) => {
+        if (typeof error === "object" && error !== null && "message" in error) {
+          errorsList.push(error.message as string);
+        }
+      });
+    }
+
+    if (errorsList.length > 0) {
+      // Join all collected errors into a single string to display as `apiError`
+      setApiError(errorsList.join(" | "));
+      console.log("Form validation failed for the current step:", errors);
       return;
     }
-    console.log("Form validation successful for the current step."); // Traduzido
-    setApiError(null); // Clear API error if validation passes for the step
+
+    console.log("Form validation successful for the current step.");
+    setApiError(null);
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    setApiError(null); // Clear API error on previous step
+    setApiError(null);
+    setResaleCertificateError(null);
+    setPosPhotosError(null);
   };
 
   const addShippingAddress = () => {
@@ -693,16 +685,14 @@ if (!currentUser || !currentUser.id) {
       clearErrors("shippingAddress.0.country");
       console.log(
         "Shipping address populated based on billing address."
-      ); // Traduzido
+      );
     } else {
-      console.warn("Billing address not found to copy."); // Traduzido
+      console.warn("Billing address not found to copy.");
     }
     setIsSameAsBilling(true);
   };
 
   useEffect(() => {
-    // Este useEffect estava vazio, pode ser usado para algo como carregar dados iniciais do usuário
-    // ou resetar estados. Mantido aqui se houver um propósito futuro.
   }, []);
 
   if (isLoading) {
@@ -711,7 +701,7 @@ if (!currentUser || !currentUser.id) {
 
   return (
     <S.ContainerMain>
-      <S.FormContainer>
+      <S.FormContainer stepOne={currentStep === 1}>
         <S.FormHeader>
           <S.FormTitle>Customer Onboarding</S.FormTitle>
           <S.FormSubtitle>
@@ -719,7 +709,7 @@ if (!currentUser || !currentUser.id) {
           </S.FormSubtitle>
         </S.FormHeader>
 
-        {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
+        {/* {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>} */}
 
         <S.ProgressBar>
           <S.ProgressFill progress={(currentStep / totalSteps) * 100} />
@@ -735,7 +725,7 @@ if (!currentUser || !currentUser.id) {
                   <S.Input
                     id="legalName"
                     {...register("customerInfo.legalName", {
-                      required: "Legal name is required",
+                      required: "Name is required",
                     })}
                     error={!!errors.customerInfo?.legalName}
                   />
@@ -778,8 +768,7 @@ if (!currentUser || !currentUser.id) {
                     id="dunNumber"
                     type="number"
                     {...register("customerInfo.dunNumber", {
-                      required: "DUNS is required",
-                      valueAsNumber: true, // Garante que seja um número
+                      valueAsNumber: true,
                     })}
                     error={!!errors.customerInfo?.dunNumber}
                   />
@@ -834,87 +823,107 @@ if (!currentUser || !currentUser.id) {
                   )}
                 </S.InputGroup>
 
-                <S.FileInputContainer>
-                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-                  <S.HiddenInput
-                    id="file-upload"
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                  />
-                  <S.UploadButton htmlFor="file-upload">
-                    <Upload size={16} />
-                    {file ? file.name : "Attach file (PDF)"}
-                  </S.UploadButton>
-                  {/* No error message for resaleCertificate since it's not a form field */}
-                </S.FileInputContainer>
-                <S.FileInputContainer>
-                        <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
-                        <S.HiddenInput
-                          id="image-upload"
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageChange}
-                        />
-                  <S.UploadButton htmlFor="image-upload">
-                    <Upload size={16} />
-                    {imageFiles.length > 0
-                      ? `${imageFiles.length} file(s) selected`
-                      : "Attach image files"}
-                  </S.UploadButton>
-                  {imageFiles.length > 0 && (
-                    <S.FilePreviewContainer>
-                      {imageFiles.map((img, idx) => (
-                        <S.FilePreview key={idx}>{img.name}</S.FilePreview>
-                      ))}
-                    </S.FilePreviewContainer>
-                  )}
-                </S.FileInputContainer>
+                <S.InputGroup>
+  <S.Label htmlFor="joor">JOOR profile - if applicable</S.Label>
+  <S.Input
+    id="joor"
+    type="url"
+    placeholder="https://jooraccess.com/yourprofile"
+    {...register("joor", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*$/,
+        message: "Please enter a valid URL.",
+      },
+    })}
+    error={!!errors.joor}
+  />
+  {errors.joor && (
+    <S.ErrorMessage>{errors.joor.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
 
-                <S.InputGroup >
-                  <div style={{
-                      display: "flex",
-                      alignItems:"center",
-                      
-                    }}>
-                  <S.Label style={{marginBottom: 0}} htmlFor="brandingMix">Branding Mix</S.Label>
+
+                <S.FileInputContainer>
+  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+  <S.HiddenInput
+    id="file-upload"
+    type="file"
+    accept="application/pdf"
+    onChange={handleFileChange}
+  />
+  <S.UploadButton htmlFor="file-upload">
+    <Upload size={16} />
+    {file ? "1 file selected" : "Attach file (PDF)"}
+  </S.UploadButton>
+  {resaleCertificateError && (
+    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
+                <S.FileInputContainer>
+  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+  <S.HiddenInput
+    id="image-upload"
+    type="file"
+    accept="image/*"
+    multiple
+    onChange={handleImageChange}
+  />
+  <S.UploadButton htmlFor="image-upload">
+    <Upload size={16} />
+    {imageFiles.length > 0
+      ? `${imageFiles.length} file(s) selected`
+      : "Attach image files"}
+  </S.UploadButton>
+  {posPhotosError && (
+    <S.ErrorMessage>{posPhotosError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
+
+              </S.Grid>
+              {/* O campo Branding Mix foi movido para fora do S.Grid */}
+              <S.InputGroup>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <S.Label style={{ marginBottom: 0 }} htmlFor="brandingMix">
+                    Branding Mix
+                  </S.Label>
                   <S.InfoButton
-                   type="button"
+                    type="button"
                     title="list all the brands you work with (separate the brands by comma"
                     style={{
                       display: "flex",
-                      // alignItems:"center",
-                      // justifyContent: "center",
-
                     }}
-
                   >
                     <Info size={16} />
                   </S.InfoButton>
-                  </div>
-                  <S.Input
-                    style={{
-                      width:"562px",
-                      height: "200px",
-                      paddingBottom:"170px",
-
-                    }}
-                    id="brandingMix"
-                    {...register("brandingMix", {
-                      required: "Brand/Branding Mix is required",
-                    })}
-                    error={!!errors.brandingMix}
-                  />
-                  {errors.brandingMix && (
-                    <S.ErrorMessage>
-                      {errors.brandingMix.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.InputGroup>
-              </S.Grid>
+                </div>
+                <S.Input
+                  style={{
+                    width: "522px", // Ocupa a largura total abaixo do grid
+                    height: "200px",
+                  }}
+                  as="textarea" // Usar textarea para multi-linhas
+                  id="brandingMix"
+                  {...register("brandingMix", {
+                    required: "Brand/Branding Mix is required",
+                  })}
+                  error={!!errors.brandingMix}
+                />
+                {errors.brandingMix && (
+                  <S.ErrorMessage>
+                    {errors.brandingMix.message}
+                  </S.ErrorMessage>
+                )}
+              </S.InputGroup>
             </S.Section>
           )}
+
 
           {currentStep === 2 && (
             <S.CompactSection>
@@ -1361,7 +1370,7 @@ if (!currentUser || !currentUser.id) {
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerLastName">Last name:</S.Label>
+                  <S.Label htmlFor="buyerLastName">Last name</S.Label>
                   <S.Input
                     id="buyerLastName"
                     {...register("buyerInfo.lastName", {
@@ -1376,7 +1385,7 @@ if (!currentUser || !currentUser.id) {
                   )}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerEmail">E-mail:</S.Label>
+                  <S.Label htmlFor="buyerEmail">E-mail</S.Label>
                   <S.Input
                     id="buyerEmail"
                     type="email"
@@ -1400,7 +1409,7 @@ if (!currentUser || !currentUser.id) {
 
                 <S.PhoneInputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="buyerCountryCode">Country Code:</S.Label>
+                    <S.Label htmlFor="buyerCountryCode">Country Code</S.Label>
                     <S.Input
                       id="buyerCountryCode"
                       type="number"
@@ -1535,7 +1544,6 @@ if (!currentUser || !currentUser.id) {
                     id="financialStatements-upload"
                     type="file"
                     accept="application/pdf"
-                    // REGISTER THE FIELD SO RHF CAN MONITOR IT
                     {...register("buyerInfo.financialStatements")}
                     onChange={handleFinancialStatementsFileChange}
                   />
@@ -1545,7 +1553,6 @@ if (!currentUser || !currentUser.id) {
                       ? financialStatementsFile.name
                       : "Attach file (PDF)"}
                   </S.UploadButton>
-                  {/* Error message only appears if step 4 validation has been attempted AND there is an error */}
                   {errors.buyerInfo?.financialStatements &&
                     stepFourAttemptedValidation && (
                       <S.ErrorMessage>
@@ -1581,29 +1588,32 @@ if (!currentUser || !currentUser.id) {
         </form>
       </S.FormContainer>
 
-      {isModalOpen && (
-        <S.ModalOverlay>
-          <S.ModalContent>
-            <S.ModalTitle>
-              {modalIcon && React.createElement(modalIcon, { size: 48 })}
-            </S.ModalTitle>
-            <S.ModalMessage>{modalTitle}</S.ModalMessage> {/* e.g., "Success!" or "Submission Error" */}
-            <S.ModalMessage>{modalMessage}</S.ModalMessage> {/* Detailed message */}
-            <S.ModalButton
-onClick={() => {
-    setIsModalOpen(false);
-    if (modalTitle === "Success!") {
-        setTimeout(() => {
-            router.push("/");
-        }); 
-    }
-}}
-            >
-              OK
-            </S.ModalButton>
-          </S.ModalContent>
-        </S.ModalOverlay>
-      )}
+{isModalOpen && (
+  <S.ModalOverlay>
+    <S.ModalContent>
+      <S.ModalTitle>
+        {modalTitle.toLowerCase().includes("error") ? (
+          <CircleAlert size={48} />
+        ) : (
+          <CircleCheck size={48}/>
+        )}
+      </S.ModalTitle>
+      <S.ModalMessage>{modalMessage}</S.ModalMessage>
+      <S.ModalButton
+        onClick={() => {
+          setIsModalOpen(false);
+          if (modalTitle === "Success!") {
+            setTimeout(() => {
+              router.push("/");
+            });
+          }
+        }}
+      >
+        OK
+      </S.ModalButton>
+    </S.ModalContent>
+  </S.ModalOverlay>
+)}
     </S.ContainerMain>
   );
 }

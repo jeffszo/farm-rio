@@ -14,12 +14,13 @@ import {
   Warehouse,
   CreditCard,
   Calendar,
-  DollarSign,
+  // DollarSign,
   Percent,
   Pencil,
   Check,
   X,
   Truck,
+  CircleAlert,
   MessageSquare
 } from "lucide-react";
 
@@ -100,6 +101,7 @@ interface ValidationDetails { // Interface para dados de validação existentes 
   credit_terms: string;
   credit_credit: string;
   credit_discount: string;
+  estimated_purchase_amount: number;
 }
 
 
@@ -430,7 +432,7 @@ export default function ValidationDetailsPage() {
         const missingFields = requiredFields.filter((field) => !creditTerms[field]); // Usa creditTerms
         if (missingFields.length > 0) {
           throw new Error(
-            `⚠️ Please fill in all required fields: ${missingFields.join(", ")}`
+            `Please fill in all required fields: ${missingFields.join(", ")}`
           );
         }
         const creditLimitNum = Number(creditTerms.credit_limit);
@@ -441,7 +443,7 @@ export default function ValidationDetailsPage() {
       } else { // If rejecting, feedback is required
           if (!approved && feedback.trim() === "") {
     setModalContent({
-      title: "Error!",
+      title: "Alerta!",
       description: "Feedback is required when sending to review.",
       shouldRedirect: false, // Não redireciona em caso de erro
     });
@@ -483,7 +485,7 @@ export default function ValidationDetailsPage() {
     } catch (err) {
       console.error("Error validating client:", err);
       setModalContent({
-        title: "Error!",
+        title: "Alerta!",
         description:
           err instanceof Error ? err.message : "Unknown error while approving.",
           shouldRedirect: false
@@ -718,7 +720,7 @@ const closeModal = () => {
                   <strong>Terms:</strong> {validation.wholesale_terms}
                 </S.FormRow>
                 <S.FormRow>
-                  <strong>Credit Limit:</strong> {validation.wholesale_credit}
+                  <strong>Estimated Puchase Amount Per Season:</strong> {validation.estimated_purchase_amount}
                 </S.FormRow>
                 <S.FormRow>
                   <strong>Discount:</strong> {validation.wholesale_discount}%
@@ -733,7 +735,7 @@ const closeModal = () => {
                         <S.SectionTitle>
               <MessageSquare  size={16} /> Team Feedback
             </S.SectionTitle>
-                                   <S.FormRow>
+            <S.FormRow>
   <strong>Tax Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
 </S.FormRow>
 
@@ -831,7 +833,7 @@ const closeModal = () => {
               </S.Select>
             </S.TermsSection>
 
-            <S.TermsSection>
+            {/* <S.TermsSection>
               <label>
                 <DollarSign size={16} /> Estimated Amount
               </label>
@@ -841,7 +843,7 @@ const closeModal = () => {
                 min="0"
                 step="0.01"
               />
-            </S.TermsSection>
+            </S.TermsSection> */}
 
             <S.TermsSection>
               <label>
@@ -896,7 +898,8 @@ const closeModal = () => {
           <S.Modal>
             <S.ModalContent>
               <S.ModalTitle>
-                <CircleCheck size={48} />
+                {/* Lógica do ícone alterada para refletir o status de aprovação/erro */}
+                {modalContent.title.toLowerCase().includes("alerta") ? <CircleAlert size={48} /> : <CircleCheck size={48} />}
               </S.ModalTitle>
               <S.ModalDescription>
                 {modalContent.description}

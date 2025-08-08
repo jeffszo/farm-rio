@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index"; // Ensure `api` imports your validation functions
 import * as S from "./styles"; // Assuming you have specific or global styles for this page
-import { User, MapPin, Mail, CircleCheck, Copy, Check, MessageSquare} from "lucide-react"; // Import only necessary icons
+import { User, MapPin, Mail, CircleCheck, Copy, Check, MessageSquare, CircleAlert } from "lucide-react"; // Importamos o CircleAlert aqui
 
 interface Address {
   street: string;
@@ -20,6 +20,7 @@ interface CustomerForm {
   id: string;
   customer_name: string;
   sales_tax_id: string;
+  joor: string;
   duns_number: string;
   dba_number: string;
   resale_certificate: string;
@@ -89,6 +90,13 @@ const [modalContent, setModalContent] = useState({
                   ? JSON.stringify(data.website)
                   : ""
               : "",
+                joor: "joor" in data
+            ? typeof data.joor === "string"
+              ? data.joor
+              : data.joor
+                ? JSON.stringify(data.joor)
+                : ""
+            : "", 
             branding_mix: "branding_mix" in data
               ? typeof data.branding_mix === "string"
                 ? data.branding_mix
@@ -472,7 +480,9 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
           <S.Modal>
             <S.ModalContent>
               <S.ModalTitle>
-                <CircleCheck size={48} />
+                 {modalContent.title.toLowerCase().includes("error") || modalContent.title.toLowerCase().includes("review")
+                  ? <CircleAlert size={48} />
+                  : <CircleCheck size={48} />}
               </S.ModalTitle>
               <S.ModalDescription>
                 {modalContent.description}
@@ -485,4 +495,3 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
     </S.ContainerMain>
   );
 }
-

@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
-import { CircleCheck } from "lucide-react";
 import * as S from "./styles";
 import {
   User,
@@ -20,6 +19,8 @@ import {
   Pencil,
   Check,
   X,
+  CircleAlert,
+  CircleCheck
   // MessageSquare,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ interface CustomerForm {
   sales_tax_id: string;
   duns_number: string;
   dba_number: string;
+  joor: string;
   financial_statements: string;
   resale_certificate: string;
   billing_address: AddressDetail[]; // Updated to AddressDetail[]
@@ -216,7 +218,7 @@ const [modalContent, setModalContent] = useState({
         console.log(data);
 
         // Add a type assertion to help TypeScript understand the structure of data.users
-        const processedData: CustomerForm = {
+   const processedData: CustomerForm = {
           users: {
             email: Array.isArray(data.users)
               ? (data.users[0] as { email?: string })?.email ?? ""
@@ -275,6 +277,13 @@ const [modalContent, setModalContent] = useState({
                 ? JSON.stringify(data.website)
                 : ""
             : "",
+          joor: "joor" in data
+            ? typeof data.joor === "string"
+              ? data.joor
+              : data.joor
+                ? JSON.stringify(data.joor)
+                : ""
+            : "", // Adicionado o campo joor com verificação de existência
           branding_mix: "branding_mix" in data
             ? typeof data.branding_mix === "string"
               ? data.branding_mix
@@ -449,7 +458,7 @@ const handleTermChange = (
           if (!feedback.trim()) {
             setModalContent({
               title: "Error!",
-              description: "Feedback is required when sending to review.",
+              description: "Feedback is required when submitting for rejection",
               shouldRedirect: false,
             });
               setShowModal(true);
@@ -538,7 +547,7 @@ const handleReview = async () => {
 
   if (!feedback.trim()) {
     setModalContent({
-      title: "Warning!",
+      title: "Error!",
       description: "Feedback is required when sending to review.",
       shouldRedirect: false,
     });
@@ -770,6 +779,22 @@ const closeModal = () => {
                 "N/A"
               )}
             </S.FormRow>
+
+              <S.FormRow>
+              <strong>JOOR:</strong>{" "}
+              {customerForm.joor ? (
+                <a
+                  href={customerForm.joor}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Access JOOR profile
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </S.FormRow>
+
             <S.FormRow>
                <strong>Photos:</strong>{" "}
               {parsedPhotoUrls.length > 0 ? (
@@ -878,7 +903,7 @@ const closeModal = () => {
                     <S.Value>{customerForm.currency || 'N/A'}</S.Value>
                 </S.FieldGroup>
                 <S.FieldGroup>
-                    <S.Label> <DollarSign size={16} /> Estimated Amount</S.Label>
+                    <S.Label> <DollarSign size={16} /> Estimated Puchase Amount Per Season</S.Label>
                     <S.Value>{customerForm.estimated_purchase_amount || 'N/A'}</S.Value>
                 </S.FieldGroup>
             </S.TermsCardContent>
@@ -974,7 +999,7 @@ const closeModal = () => {
 </S.TermsSection>
 
             {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
-           <S.TermsSection>
+           {/* <S.TermsSection>
   <label>
     <DollarSign size={16} /> Estimated Amount
   </label>
@@ -987,7 +1012,7 @@ const closeModal = () => {
     min="0"
     step="0.01"
   />
-</S.TermsSection>
+</S.TermsSection> */}
 
 <S.TermsSection>
   <label>
@@ -1035,19 +1060,24 @@ const closeModal = () => {
 </S.ButtonContainer>
 
 
-        {showModal && (
-          <S.Modal>
-            <S.ModalContent>
-              <S.ModalTitle>
-                <CircleCheck size={48} />
-              </S.ModalTitle>
-              <S.ModalDescription>
-                {modalContent.description}
-              </S.ModalDescription>
-              <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
-            </S.ModalContent>
-          </S.Modal>
+ {showModal && (
+  <S.Modal>
+    <S.ModalContent>
+      <S.ModalTitle>
+        {modalContent.title.toLowerCase().includes("error") || modalContent.title.toLowerCase().includes("review") ? (
+          <CircleAlert size={48}/>
+        ) : (
+          <CircleCheck size={48} />
         )}
+      </S.ModalTitle>
+      <S.ModalDescription>
+        {modalContent.description}
+      </S.ModalDescription>
+      <S.ModalButton onClick={closeModal}>Ok</S.ModalButton>
+    </S.ModalContent>
+  </S.Modal>
+)}
+
       </S.Container>
     </S.ContainerMain>
   );

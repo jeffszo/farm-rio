@@ -24,7 +24,8 @@ export async function getApprovedCustomers() {
       credit_invoicing_company,
       credit_warehouse,
       credit_currency,
-      credit_credit,
+      estimated_purchase_amount,
+      terms,
       credit_discount
     `)
     .eq("status", "finished"); // Alterado para "finished" como status final do fluxo
