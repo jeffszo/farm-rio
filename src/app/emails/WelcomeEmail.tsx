@@ -14,14 +14,13 @@ interface WelcomeEmailProps {
 
 
 const main = {
-  // ✅ Adicione a URL da imagem de fundo aqui
-  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/farm.jpg')",
-  height: '98vh',
-  width: '100%',
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
+  height: '95vh',
   backgroundSize: 'cover', 
   fontFamily:
     'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
+
 
 const container = {
   // backgroundColor: 'rgba(46, 46, 46, 0.7)', // Fundo semitransparente para o texto
@@ -67,11 +66,11 @@ export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
           {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.
         </Text>
         {/* <Text style={text}>If you have any questions, please contact us.</Text> */}
-        <Text style={text}>
+        {/* <Text style={text}>
           Best regards,
           <br />
           FARM RIO Team
-        </Text>
+        </Text> */}
       </Container>
     </Body>
   </Html>

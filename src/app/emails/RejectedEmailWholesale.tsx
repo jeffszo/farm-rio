@@ -15,13 +15,13 @@ import {
  }
 
 const main = {
-  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/farm.jpg')",
-  height: '98vh',
-  width: '100%',
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
+  height: '95vh',
   backgroundSize: 'cover', 
   fontFamily:
     'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
+
 
 const container = {
   margin: '0 auto',
@@ -74,11 +74,11 @@ export const RejectedEmailWholesale = ({feedback}: ReviewEmailProps) => (
                             </Link>{" "}
                             to review and make the necessary adjustments.
                           </Text>
-                          <Text style={text}>
+                          {/* <Text style={text}>
                             Best regards,
                             <br />
                             FARM RIO Team
-                          </Text>
+                          </Text> */}
       </Container>
     </Body>
   </Html>
