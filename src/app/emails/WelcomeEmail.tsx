@@ -62,7 +62,7 @@ export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Text style={h1}>Welcome to FARM RIO </Text>
+              <Text style={h1}>FARM RIO Onboarding - Your account has been successfully created. </Text>
               
               <Text style={text}>
                 {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.

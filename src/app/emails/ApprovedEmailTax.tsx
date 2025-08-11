@@ -57,7 +57,7 @@ export const ApprovedEmailTax = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>TAX - Account approved</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Internal Review Update (3/5)</Heading>
               <Text style={text}>
                 Your account has been approved by our Tax Team and will now move forward to Credit analysis.
               </Text>

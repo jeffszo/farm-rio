@@ -66,7 +66,7 @@ export const ReviewEmailCSCInitial = ({ feedback }: ReviewEmailProps) => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>Account to be reviewed</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Review Requested</Heading>
               <Text style={text}>
                 Our Governance Team has requested updates to your onboarding form.
                 <br />

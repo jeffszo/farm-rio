@@ -536,7 +536,7 @@ export default function OnboardingForm() {
       fieldsToValidate = [
         "customerInfo.legalName",
         "customerInfo.taxId",
-        "customerInfo.dunNumber",
+        "customerInfo.dba",
         "brandingMix",
         "instagram",
         "website",
@@ -721,7 +721,7 @@ export default function OnboardingForm() {
               <S.SectionTitle>Customer Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="legalName">Name</S.Label>
+                  <S.Label htmlFor="legalName">Company Legal Name</S.Label>
                   <S.Input
                     id="legalName"
                     {...register("customerInfo.legalName", {
@@ -742,8 +742,16 @@ export default function OnboardingForm() {
                     placeholder="Trade name"
                     type="string"
                     id="dba"
-                    {...register("customerInfo.dba")}
+                    {...register("customerInfo.dba", {
+                      required: "DBA is required",
+                    })}
+                    error={!!errors.customerInfo?.dba}
                   />
+                  {errors.customerInfo?.dba && (
+                    <S.ErrorMessage>
+                      {errors.customerInfo.dba.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
@@ -809,9 +817,8 @@ export default function OnboardingForm() {
                     placeholder="https://yourwebsite.com"
                     {...register("website", {
                       pattern: {
-                        value:
-                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-                        message: "Please enter a valid Website URL.",
+  value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+  message: "Please enter a valid Website URL with http:// or https://",
                       },
                     })}
                     error={!!errors.website}

@@ -57,9 +57,9 @@ export const ApprovedEmailWholesale = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>Wholesale - Account approved</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Internal Review Update (1/5)</Heading>
               <Text style={text}>
-                Your account has been approved and is now under internal review to ensure all information is correct. Soon, you’ll be able to explore our catalog and begin your vibrant journey with FARM RIO.
+Welcome! Your account has been approved and is now under internal review to ensure all information is correct. Soon, you’ll be able to explore our catalog and begin your vibrant journey with FARM RIO.
               </Text>
             </Container>
           </td>

@@ -66,7 +66,7 @@ export const RejectedEmailWholesale = ({feedback}: ReviewEmailProps) => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>Wholesale - Account update</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Review Requested</Heading>
               <Text style={text}>
                 We’re sorry to inform you that your account was not approved by our Sales Team                 <br />
 

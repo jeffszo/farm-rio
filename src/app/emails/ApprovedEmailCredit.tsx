@@ -55,7 +55,7 @@ export const ApprovedEmailCredit = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>Credit - Account approved</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Internal Review Update (4/5)</Heading>
               <Text style={text}>
                 Your account has been approved by our Credit Team. You’ll soon be connected to FARM RIO on JOOR.
               </Text>

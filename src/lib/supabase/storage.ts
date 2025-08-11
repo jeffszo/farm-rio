@@ -123,7 +123,10 @@ export async function uploadImage(file: File, customerId: string): Promise<strin
   return signedUrlData.signedUrl;
 }
 
-export async function uploadFinancialStatements(file: File, customerId: string): Promise<string> {
+export async function uploadFinancialStatements(
+  file: File,
+  customerId: string
+): Promise<string> {
   const supabase = createClient();
 
   console.log("📦 Iniciando upload do demonstrativo financeiro...");
@@ -136,9 +139,8 @@ export async function uploadFinancialStatements(file: File, customerId: string):
 
   console.log("👤 Usuário autenticado:", user?.id);
   console.log("👤 Customer ID:", customerId);
-  
+
   if (userError) {
-    console.error("❌ Erro ao obter usuário:", userError.message);
     throw new Error(`Erro ao obter usuário: ${userError.message}`);
   }
 
@@ -148,83 +150,65 @@ export async function uploadFinancialStatements(file: File, customerId: string):
 
   // Verificar permissão para o customerId
   if (customerId !== user.id) {
-    console.log("🔒 Verificando permissão para o customerId:", customerId);
-
-    // Vamos verificar se o cliente existe e se o usuário é o gerente
-    const {
-      data: customer,
-      error: customerError,
-    } = await supabase
+    const { data: customer, error: customerError } = await supabase
       .from("customer_forms")
       .select("id, user_id")
       .eq("id", customerId)
       .eq("user_id", user.id)
       .single();
 
-    console.log("📊 Dados do cliente:", customer);
-    
     if (customerError) {
-      console.error("❌ Erro ao verificar cliente:", customerError.message);
       throw new Error(`Erro ao verificar cliente: ${customerError.message}`);
     }
 
     if (!customer) {
       throw new Error("Sem permissão para fazer upload para este cliente");
     }
-
-    console.log("✅ Permissão confirmada para upload do cliente:", customerId);
   }
 
-  // Mantém o nome original do arquivo
-  const originalFileName = file.name;
-  // Cria o caminho no formato: [ID_DO_USUÁRIO]/[NOME_DO_ARQUIVO]
-  const filePath = `${customerId}/${originalFileName}`;
+  // Pega a extensão do arquivo (ex.: .pdf, .png, .docx)
+  const extension = file.name.includes(".")
+    ? file.name.substring(file.name.lastIndexOf("."))
+    : "";
+
+  // Nome final: customerId.extensão
+  const filePath = `${customerId}${extension}`;
 
   console.log("📁 Caminho do arquivo a ser enviado:", filePath);
-  console.log("🗂️ Nome original do arquivo:", originalFileName);
 
-  // Upload para o bucket
+  // Upload direto no bucket (sem pasta), sobrescrevendo se existir
   const { error: uploadError } = await supabase.storage
     .from("financialstatements")
     .upload(filePath, file, { upsert: true });
 
   if (uploadError) {
-    console.error("❌ Erro ao fazer upload do arquivo:", uploadError.message);
     throw new Error(`Erro ao fazer upload do arquivo: ${uploadError.message}`);
   }
 
   console.log("✅ Upload realizado com sucesso!");
 
-  // Cria URL assinada válida por 10 anos
+  // Gera link assinado válido por 10 anos
   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from("financialstatements")
     .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10);
 
-  if (signedUrlError) {
-    console.error("❌ Erro ao gerar link assinado:", signedUrlError.message);
-    throw new Error(`Erro ao gerar link assinado: ${signedUrlError.message}`);
-  }
-
-  if (!signedUrlData?.signedUrl) {
-    throw new Error("Erro desconhecido ao gerar link assinado.");
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    throw new Error("Erro ao gerar link assinado.");
   }
 
   const signedUrl = signedUrlData.signedUrl;
-  console.log("🔗 Link assinado gerado com sucesso");
 
-  // Salva o link na tabela customer_forms
+  // Salva o link no banco
   const { error: dbError } = await supabase
     .from("customer_forms")
     .update({ financial_statements: signedUrl })
     .eq("id", customerId);
 
   if (dbError) {
-    console.error("❌ Erro ao salvar URL no banco de dados:", dbError.message);
-    throw new Error(`Erro ao salvar URL no banco de dados: ${dbError.message}`);
+    throw new Error(`Erro ao salvar URL no banco: ${dbError.message}`);
   }
 
   console.log("💾 URL salva no banco de dados com sucesso");
 
   return signedUrl;
 }
-

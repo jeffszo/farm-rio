@@ -41,6 +41,9 @@ interface CustomerForm {
   // Add Tax-specific fields here if any, e.g., tax_status, tax_notes
   tax_status?: string;
   csc_initial_feedback?: string;
+    users: {
+    email: string;
+  };
 }
 
 export default function TaxValidationDetailsPage() {
@@ -68,6 +71,11 @@ const [modalContent, setModalContent] = useState({
           if (!data) throw new Error("Form not found.");
           setCustomerForm({
             ...data,
+                   users: {
+            email: Array.isArray(data.users)
+              ? ((data.users[0] as { email?: string })?.email ?? "")
+              : ((data.users as { email?: string })?.email ?? ""),
+          },
             financial_statements: "financial_statements" in data ? (typeof data.financial_statements === "string" ? data.financial_statements : JSON.stringify(data.financial_statements)) : "",
             photo_urls: "photo_urls" in data
               ? Array.isArray(data.photo_urls)
@@ -158,7 +166,7 @@ const [modalContent, setModalContent] = useState({
       try {
           const emailPayload = {
               name: customerForm?.buyer_name || "Cliente",
-              email: customerForm?.buyer_email || "",
+              email: customerForm?.users?.email || "",
               feedback: feedback || "", // ✅ Adiciona o feedback do estado
           };
           const endpoint = approved

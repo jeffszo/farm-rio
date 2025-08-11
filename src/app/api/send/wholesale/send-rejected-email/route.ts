@@ -14,9 +14,9 @@ export async function POST(req: Request) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'FARM RIO Wholesale <wholesale@customer.farmrio.com>',
+      from: 'FARM RIO Onboarding <wholesale@customer.farmrio.com>',
       to: email, 
-      subject: `Update on your FARM RIO account`, 
+      subject: `FARM RIO Onboarding - Review Requested`, 
       react: RejectedEmail({ feedback }),
     });
 

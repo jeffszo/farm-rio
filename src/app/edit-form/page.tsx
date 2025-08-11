@@ -365,7 +365,7 @@ const onSubmit = async (formData: IFormInputs) => {
         setPosPhotosError(null);
       }
 
-      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dunNumber", "brandingMix", "instagram", "website"];
+      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dba", "brandingMix", "instagram", "website"];
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       const isValidForm = await trigger(fieldsToValidate);
@@ -490,7 +490,7 @@ const onSubmit = async (formData: IFormInputs) => {
               <S.SectionTitle>Customer Information</S.SectionTitle>
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="legalName">Name</S.Label>
+                  <S.Label htmlFor="legalName">Company Legal Name</S.Label>
                   <S.Input
                     id="legalName"
                     {...register("customerInfo.legalName", { required: "Legal name is required" })}
@@ -500,7 +500,10 @@ const onSubmit = async (formData: IFormInputs) => {
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
-                  <S.Input placeholder="Trade name" type="string" id="dba" {...register("customerInfo.dba")} />
+                  <S.Input placeholder="Trade name" type="string" id="dba"  {...register("customerInfo.dba", { required: "DBA is required" })}
+                    error={!!errors.customerInfo?.dba}
+                  />
+                  {errors.customerInfo?.dba && <S.ErrorMessage>{errors.customerInfo.dba.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="taxId">Tax ID / VAT #</S.Label>
@@ -547,8 +550,8 @@ const onSubmit = async (formData: IFormInputs) => {
                     placeholder="https://yourwebsite.com"
                     {...register("website", {
                       pattern: {
-                        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-                        message: "Please enter a valid Website URL.",
+  value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+  message: "Please enter a valid Website URL with http:// or https://",
                       },
                     })}
                     error={!!errors.website}

@@ -893,9 +893,9 @@ validation.credit_discount !== null &&
       </S.Button>
     ) : (
       <>
-        <S.Button onClick={() => handleApproval(false)} variant="secondary">
+        {/* <S.Button onClick={() => handleApproval(false)} variant="secondary">
           Review
-        </S.Button>
+        </S.Button> */}
         <S.Button onClick={() => handleApproval(true)} variant="primary">
           Approve
         </S.Button>

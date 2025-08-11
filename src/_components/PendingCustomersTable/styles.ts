@@ -138,7 +138,6 @@ export const TableFilterSelect = styled.select`
   outline: none;
   transition: all 0.2s ease;
   cursor: pointer;
-  margin-left: 0.5rem;
   
   &:hover {
     border-color: #cbd5e0;
@@ -336,14 +335,14 @@ export const MobileFilterContainer = styled.div`
   }
 `
 
-export const FilterLabel = styled.label`
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #4a5568;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`
+// export const FilterLabel = styled.label`
+//   font-size: 0.95rem;
+//   font-weight: 600;
+//   color: #4a5568;
+//   display: flex;
+//   align-items: center;
+//   gap: 0.5rem;
+// `
 
 export const MobileListItem = styled.li`
   background-color: #ffffff;
@@ -379,4 +378,20 @@ export const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+`
+
+export const FiltersContainer = styled.div`
+  display: flex;
+  gap: 24px;       /* Espaço entre os filtros */
+  margin-bottom: 16px;
+  margin-top: 16px;
+  align-items: center;
+  justify-content: flex-start;  /* Alinha os filtros à esquerda */
+  width: 100%;       
+`
+
+export const FilterLabel = styled.label`
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
 `

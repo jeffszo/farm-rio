@@ -2,7 +2,7 @@
 // src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef} from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index";
 import * as S from "./styles";
@@ -133,6 +133,14 @@ export default function ValidationDetailsPage() {
   const [feedback, setFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
+
+   const cancelRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (showConfirmReject && cancelRef.current) {
+      cancelRef.current.focus();
+    }
+  }, [showConfirmReject]);
 
   const [modalContent, setModalContent] = useState({
     title: "",
@@ -1199,32 +1207,35 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
         )}
 
         {showConfirmReject && (
-  <S.Modal>
-    <S.ModalContent>
-      <S.ModalTitle>
-        <CircleAlert size={48} />
-      </S.ModalTitle>
-      <S.ModalDescription>
-        Are you sure you want to <strong>reject</strong> this customer?
-        <br />
-        This will also <strong>delete the user account</strong> from the system.
-      </S.ModalDescription>
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-        <S.ModalButton
-          type="button"
-          style={{ backgroundColor: "#dc2626" }}
-          onClick={executeReject}
-          disabled={pendingReject}
-        >
-          {pendingReject ? "Deleting..." : "Yes, confirm"}
-        </S.ModalButton>
-        <S.ModalButton type="button" onClick={() => setShowConfirmReject(false)}>
-          Cancel
-        </S.ModalButton>
-      </div>
-    </S.ModalContent>
-  </S.Modal>
-)}
+        <S.Modal>
+          <S.ModalContent>
+            <S.ModalTitle>
+              <CircleAlert size={48} />
+            </S.ModalTitle>
+            <S.ModalDescription>
+              Are you sure you want to <strong>reject</strong> this customer?
+              <br />
+              This will also <strong>delete the user account</strong> from the system.
+            </S.ModalDescription>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              <S.ModalButton
+                type="button"
+                onClick={executeReject}
+                disabled={pendingReject}
+              >
+                {pendingReject ? "Deleting..." : "Yes, confirm"}
+              </S.ModalButton>
+              <S.ModalButton
+                ref={cancelRef}
+                type="button"
+                onClick={() => setShowConfirmReject(false)}
+              >
+                Cancel
+              </S.ModalButton>
+            </div>
+          </S.ModalContent>
+        </S.Modal>
+      )}
 
        {showDeleteSuccessModal && (
   <S.Modal>

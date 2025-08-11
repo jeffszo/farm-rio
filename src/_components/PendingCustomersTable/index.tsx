@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useState, useMemo } from "react"
 import { Users, ChevronLeft, ChevronRight, Download, Filter } from "lucide-react"
@@ -11,7 +11,9 @@ import { api } from "../../lib/supabase/index"
 
 interface Customer {
   id: string
+  dba_number: string
   customer_name: string
+  currency: string
   status: string
   created_at: string
 }
@@ -41,34 +43,43 @@ export default function PendingCustomersTable({
   const isWholesaleRoute = pathname?.includes("/validations/wholesale")
   const isTaxRoute = pathname?.includes("/validations/tax")
   const isCreditRoute = pathname?.includes("/validations/credit")
-
+  const [filterCurrency, setFilterCurrency] = useState<string>("all")
 
   const filteredCustomers = useMemo(() => {
-    if (filterStatus === "all") return customers
+    let filtered = customers
 
-    const statusMap = {
-      pending: "pending",
-      reviewRequestedByWholesale: "review requested by the wholesale team",
-      reviewRequestedByTax: "review requested by the tax team",
-      reviewRequestedByCredit: "review requested by the credit team",
-      reviewRequestedByCSC: "review requested by the csc initial team",
-      approvedByWholesale: "approved by the wholesale team",
-      // rejectedByWholesale: "rejected by the wholesale team",
-      approvedByCredit: "approved by the credit team",
-      // Opção de rejectedByCredit removida
-      approvedByTax: "approved by the tax team",
-      approvedByCSCInitial:"approved by the csc initial team",
-      approvedByCSCFinal: "approved by the csc final team",
-      finished: "finished",
-      eviewRequestedByTaxCustomer: "review requested by the tax team - customer",
-      reviewRequestedByWholesaleCustomer: "review requested by the wholesale team - customer",
-      reviewRequestedByCreditCustomer: "review requested by the credit team - customer",
-      reviewRequestedByCSCInitialCustomer: "review requested by the csc initial team - customer",
-      reviewRequestedByCSCFinalCustomer: "review requested by the csc final team - customer",// dataByClient: "data corrected by client",
+    if (filterStatus !== "all") {
+      const statusMap = {
+        pending: "pending",
+        reviewRequestedByWholesale: "review requested by the wholesale team",
+        reviewRequestedByTax: "review requested by the tax team",
+        reviewRequestedByCredit: "review requested by the credit team",
+        reviewRequestedByCSC: "review requested by the csc initial team",
+        approvedByWholesale: "approved by the wholesale team",
+        approvedByCredit: "approved by the credit team",
+        approvedByTax: "approved by the tax team",
+        approvedByCSCInitial: "approved by the csc initial team",
+        approvedByCSCFinal: "approved by the csc final team",
+        finished: "finished",
+        eviewRequestedByTaxCustomer: "review requested by the tax team - customer",
+        reviewRequestedByWholesaleCustomer: "review requested by the wholesale team - customer",
+        reviewRequestedByCreditCustomer: "review requested by the credit team - customer",
+        reviewRequestedByCSCInitialCustomer: "review requested by the csc initial team - customer",
+        reviewRequestedByCSCFinalCustomer: "review requested by the csc final team - customer",
+      }
+      filtered = filtered.filter(
+        (customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap]
+      )
     }
 
-    return customers.filter((customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap])
-  }, [customers, filterStatus])
+    if (filterCurrency !== "all") {
+      filtered = filtered.filter(
+        (customer) => customer.currency === filterCurrency
+      )
+    }
+
+    return filtered
+  }, [customers, filterStatus, filterCurrency])
 
   const handleViewDetails = (id: string) => {
     setLoadingCustomerId(id)
@@ -76,112 +87,88 @@ export default function PendingCustomersTable({
   }
 
   const exportToExcel = async () => {
-  const result = await api.getApprovedCustomers();
-  console.log('Dados da API:', result);
+    const result = await api.getApprovedCustomers();
+    console.log('Dados da API:', result);
 
-  // Filtra clientes válidos
-  const customers = Array.isArray(result)
-    ? result.filter(
-        (item) =>
-          typeof item === "object" &&
-          item !== null &&
-          "id" in item &&
-          "customer_name" in item &&
-          "status" in item &&
-          "created_at" in item
-      )
-    : [];
+    const customers = Array.isArray(result)
+      ? result.filter(
+          (item) =>
+            typeof item === "object" &&
+            item !== null &&
+            "id" in item &&
+            "customer_name" in item &&
+            "status" in item &&
+            "created_at" in item
+        )
+      : [];
 
-  const approvedCustomers = customers.filter(
-    (customer) => customer.status.trim().toLowerCase() === "finished"
-  );
+    const approvedCustomers = customers.filter(
+      (customer) => customer.status.trim().toLowerCase() === "finished"
+    );
 
-  if (approvedCustomers.length === 0) {
-    // Substitui alert() por uma mensagem na console, já que alert() não funciona no ambiente
-    console.warn("No customers approved for export!");
-    return;
-  }
-
-  // Novo array para armazenar os clientes com os endereços "achatados"
-  const processedCustomers = approvedCustomers.map(customer => {
-    // Cria um novo objeto para evitar modificar o original
-    const newCustomer: Record<string, unknown> = { ...customer };
-
-    // --- Processamento da shipping_address ---
-    try {
-      // Tenta analisar a string JSON da shipping_address
-      const shippingAddresses = JSON.parse(newCustomer.shipping_address as string);
-      
-      // Remove a propriedade original para evitar que ela apareça como uma única coluna
-      delete newCustomer.shipping_address;
-
-      // Itera sobre os endereços e cria uma única coluna para cada endereço
-      if (Array.isArray(shippingAddresses)) {
-        shippingAddresses.forEach((address, index) => {
-          if (address && Object.keys(address).length > 0) {
-            // Concatena todos os campos do endereço em uma única string
-            const fullAddress = [
-              address.street,
-              address.city,
-              address.state,
-              address.zipCode,
-              address.country
-            ].filter(Boolean).join(', '); // Filtra campos vazios e junta com vírgula e espaço
-            
-            newCustomer[`shipping_address_${index + 1}`] = fullAddress;
-          }
-        });
-      }
-    } catch (e) {
-      console.error("Failed to parse shipping_address JSON:", e);
-      // Se houver erro, apenas mantém a string original para não perder o dado
-      newCustomer.shipping_address = newCustomer.shipping_address;
+    if (approvedCustomers.length === 0) {
+      console.warn("No customers approved for export!");
+      return;
     }
 
-    // --- Processamento da billing_address ---
-    try {
-      // Tenta analisar a string JSON da billing_address
-      const billingAddresses = JSON.parse(newCustomer.billing_address as string);
-      
-      // Remove a propriedade original para evitar que ela apareça como uma única coluna
-      delete newCustomer.billing_address;
+    const processedCustomers = approvedCustomers.map(customer => {
+      const newCustomer: Record<string, unknown> = { ...customer };
 
-      // Itera sobre os endereços de cobrança e cria uma única coluna para cada um
-      if (Array.isArray(billingAddresses)) {
-        billingAddresses.forEach((address, index) => {
-          if (address && Object.keys(address).length > 0) {
-            // Concatena todos os campos do endereço em uma única string
-            const fullAddress = [
-              address.street,
-              address.city,
-              address.state,
-              address.zipCode,
-              address.country
-            ].filter(Boolean).join(', ');
-            
-            newCustomer[`billing_address_${index + 1}`] = fullAddress;
-          }
-        });
+      try {
+        const shippingAddresses = JSON.parse(newCustomer.shipping_address as string);
+        delete newCustomer.shipping_address;
+        if (Array.isArray(shippingAddresses)) {
+          shippingAddresses.forEach((address, index) => {
+            if (address && Object.keys(address).length > 0) {
+              const fullAddress = [
+                address.street,
+                address.city,
+                address.state,
+                address.zipCode,
+                address.country
+              ].filter(Boolean).join(', ');
+              newCustomer[`shipping_address_${index + 1}`] = fullAddress;
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse shipping_address JSON:", e);
+        newCustomer.shipping_address = newCustomer.shipping_address;
       }
-    } catch (e) {
-      console.error("Failed to parse billing_address JSON:", e);
-      // Se houver erro, mantém a string original
-      newCustomer.billing_address = newCustomer.billing_address;
-    }
-    
-    return newCustomer;
-  });
 
-  // O worksheet agora é criado com o array processado
-  const worksheet = XLSX.utils.json_to_sheet(processedCustomers);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers");
+      try {
+        const billingAddresses = JSON.parse(newCustomer.billing_address as string);
+        delete newCustomer.billing_address;
+        if (Array.isArray(billingAddresses)) {
+          billingAddresses.forEach((address, index) => {
+            if (address && Object.keys(address).length > 0) {
+              const fullAddress = [
+                address.street,
+                address.city,
+                address.state,
+                address.zipCode,
+                address.country
+              ].filter(Boolean).join(', ');
+              newCustomer[`billing_address_${index + 1}`] = fullAddress;
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse billing_address JSON:", e);
+        newCustomer.billing_address = newCustomer.billing_address;
+      }
+      
+      return newCustomer;
+    });
 
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  saveAs(data, "approved_customers.xlsx");
-};
+    const worksheet = XLSX.utils.json_to_sheet(processedCustomers);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Customers");
 
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(data, "approved_customers.xlsx");
+  };
 
   return (
     <S.Container>
@@ -200,69 +187,117 @@ export default function PendingCustomersTable({
       </S.TitleWrapper>
 
       <S.TotalCount>
-        Total pending customers: {filterStatus === "all" ? totalCount : filteredCustomers.length}
+        Total pending customers: {filterStatus === "all" && filterCurrency === "all"
+          ? totalCount
+          : filteredCustomers.length}
       </S.TotalCount>
+
+      {/* FILTROS ACIMA DA TABELA - desktop */}
+      {!isMobile && (
+        <S.FiltersContainer>
+          <S.FilterLabel>
+            Currency:
+            <S.TableFilterSelect
+              value={filterCurrency}
+              onChange={(e) => setFilterCurrency(e.target.value)}
+            >
+              <option value="all">All currencies</option>
+              {[...new Set(customers.map((c) => c.currency))].map((currency) => (
+                <option key={currency} value={currency}>
+                  {currency}
+                </option>
+              ))}
+            </S.TableFilterSelect>
+          </S.FilterLabel>
+
+          <S.FilterLabel>
+            Status:
+            <S.TableFilterSelect
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">all status</option>
+              {isWholesaleRoute ? (
+                <>
+                  <option value="pending">pending</option>
+                  <option value="reviewRequestedByWholesaleCustomer">
+                    review requested by the wholesale team - customer
+                  </option>
+                  <option value="reviewRequestedByTaxCustomer">
+                    review requested by the tax team - customer
+                  </option>
+                  <option value="approvedByTax">approved by the tax team</option>
+                  <option value="reviewRequestedByCreditCustomer">
+                    review requested by the credit team - customer
+                  </option>
+                  <option value="finished">finished</option>
+                  <option value="approvedByCredit">approved by the credit team</option>
+                </>
+              ) : isTaxRoute ? (
+                <>
+                  <option value="reviewRequestedByTaxCustomer">
+                    review requested by the tax team - customer
+                  </option>
+                  <option value="approvedByTax">approved by the tax team</option>
+                </>
+              ) : isCreditRoute ? (
+                <>
+                  <option value="approvedByTax">approved by the tax team</option>
+                  <option value="reviewRequestedByCreditCustomer">
+                    review requested by the credit team - customer
+                  </option>
+                </>
+              ) : (
+                <>
+                  <option value="approvedByWholesale">
+                    approved by the wholesale team
+                  </option>
+                  <option value="approvedByCredit">approved by the credit team</option>
+                  <option value="reviewRequestedByCSCInitialCustomer">
+                    review requested by the csc initial team - customer
+                  </option>
+                  <option value="reviewRequestedByCSCFinalCustomer">
+                    review requested by the csc final team - customer
+                  </option>
+                  <option value="finished">finished</option>
+                </>
+              )}
+            </S.TableFilterSelect>
+          </S.FilterLabel>
+        </S.FiltersContainer>
+      )}
 
       {!isMobile ? (
         <S.Table>
           <thead>
             <tr>
-              <S.TableHeader>Client Name</S.TableHeader>
-              <S.TableHeader>
-                <S.TableHeaderFilter>
-                  Status
-                  <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                   <option value="all">all status</option>
-  {isWholesaleRoute ? (
-    <>
-      <option value="pending">pending</option>
-      <option value="reviewRequestedByWholesaleCustomer">review requested by the wholesale team - customer</option>
-    </>
-  ) : isTaxRoute ? (
-    <>
-      {/* Opções específicas para a rota de Tax */}
-      <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-      <option value="approvedByTax">approved by the tax team</option>
-    </>
-  ) : isCreditRoute ? (
-    <>
-       <option value="approvedByTax">approved by the tax team</option>
-      <option value="reviewRequestedByCreditCustomer">review requested by the credit team - customer</option>
-    </>
-  ) : (
-    <>
-      <option value="approvedByWholesale">approved by the wholesale team</option>
-      <option value="approvedByCredit">approved by the credit team</option>
-      <option value="reviewRequestedByCSCInitialCustomer">review requested by the csc initial team - customer</option>
-      <option value="reviewRequestedByCSCFinalCustomer">review requested by the csc final team - customer</option>
-            <option value="finished">finished</option>
-
-    </>
-  )}
-                  </S.TableFilterSelect>
-                </S.TableHeaderFilter>
-              </S.TableHeader>
+              <S.TableHeader>DBA</S.TableHeader>
+              <S.TableHeader>Legal Name</S.TableHeader>
+              <S.TableHeader>Currency</S.TableHeader>
+              <S.TableHeader>Status</S.TableHeader>
               <S.TableHeader>Date Created</S.TableHeader>
               <S.TableHeader>Action</S.TableHeader>
             </tr>
           </thead>
+
           <tbody>
             {filteredCustomers.length > 0 ? (
               filteredCustomers.map((customer) => (
                 <S.TableRow key={customer.id}>
+                  <S.TableData>{customer.dba_number}</S.TableData>
                   <S.TableData>{customer.customer_name}</S.TableData>
+                  <S.TableData>{customer.currency}</S.TableData>
                   <S.TableData>
-                    <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
+                    <S.StatusBadge status={customer.status}>
+                      {customer.status}
+                    </S.StatusBadge>
                   </S.TableData>
                   <S.TableData>
-                    {new Date(customer.created_at).toLocaleString(
-                      navigator.language,
-                      {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                      }
-                    )}
+                    {new Date(customer.created_at).toLocaleString(navigator.language, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
                   </S.TableData>
                   <S.TableData>
                     <S.Button
@@ -270,15 +305,17 @@ export default function PendingCustomersTable({
                       disabled={loadingCustomerId === customer.id}
                       aria-label={`See details of ${customer.customer_name}`}
                     >
-                      {loadingCustomerId === customer.id ? 'Loading...' : 'See details'}
+                      {loadingCustomerId === customer.id ? "Loading..." : "See details"}
                     </S.Button>
                   </S.TableData>
                 </S.TableRow>
               ))
             ) : (
               <S.EmptyTableRow>
-                <S.EmptyTableData colSpan={4}>
-                  <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
+                <S.EmptyTableData colSpan={6}>
+                  <S.EmptyStateMessage>
+                    No customers found with the selected filter.
+                  </S.EmptyStateMessage>
                 </S.EmptyTableData>
               </S.EmptyTableRow>
             )}
@@ -286,40 +323,72 @@ export default function PendingCustomersTable({
         </S.Table>
       ) : (
         <>
+          {/* mobile filters e lista continuam iguais */}
+          <S.MobileFilterContainer>
+            <S.FilterLabel>
+              <Filter size={16} />
+              Filter by currency:
+            </S.FilterLabel>
+            <S.TableFilterSelect
+              value={filterCurrency}
+              onChange={(e) => setFilterCurrency(e.target.value)}
+            >
+              <option value="all">All currencies</option>
+              {[...new Set(customers.map((c) => c.currency))].map((currency) => (
+                <option key={currency} value={currency}>
+                  {currency}
+                </option>
+              ))}
+            </S.TableFilterSelect>
+          </S.MobileFilterContainer>
+
           <S.MobileFilterContainer>
             <S.FilterLabel>
               <Filter size={16} />
               Filter by status:
             </S.FilterLabel>
-           <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                   <option value="all">all status</option>
-  {isWholesaleRoute ? (
-    <>
-      <option value="pending">pending</option>
-      <option value="reviewRequestedByWholesaleCustomer">review requested by the wholesale team - customer</option>
-    </>
-  ) : isTaxRoute ? (
-    <>
-      {/* Opções específicas para a rota de Tax */}
-      <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-      <option value="approvedByTax">approved by the tax team</option>
-    </>
-  ) : isCreditRoute ? (
-    <>
-       <option value="approvedByTax">approved by the tax team</option>
-      <option value="reviewRequestedByCreditCustomer">review requested by the credit team - customer</option>
-    </>
-  ) : (
-    <>
-      <option value="approvedByWholesale">approved by the wholesale team</option>
-      <option value="approvedByCredit">approved by the credit team</option>
-      <option value="reviewRequestedByCSCInitialCustomer">review requested by the csc initial team - customer</option>
-      <option value="reviewRequestedByCSCFinalCustomer">review requested by the csc final team - customer</option>
-            <option value="finished">finished</option>
-
-    </>
-  )}
-                  </S.TableFilterSelect>
+            <S.TableFilterSelect
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">all status</option>
+              {isWholesaleRoute ? (
+                <>
+                  <option value="pending">pending</option>
+                  <option value="reviewRequestedByWholesaleCustomer">
+                    review requested by the wholesale team - customer
+                  </option>
+                </>
+              ) : isTaxRoute ? (
+                <>
+                  <option value="reviewRequestedByTaxCustomer">
+                    review requested by the tax team - customer
+                  </option>
+                  <option value="approvedByTax">approved by the tax team</option>
+                </>
+              ) : isCreditRoute ? (
+                <>
+                  <option value="approvedByTax">approved by the tax team</option>
+                  <option value="reviewRequestedByCreditCustomer">
+                    review requested by the credit team - customer
+                  </option>
+                </>
+              ) : (
+                <>
+                  <option value="approvedByWholesale">
+                    approved by the wholesale team
+                  </option>
+                  <option value="approvedByCredit">approved by the credit team</option>
+                  <option value="reviewRequestedByCSCInitialCustomer">
+                    review requested by the csc initial team - customer
+                  </option>
+                  <option value="reviewRequestedByCSCFinalCustomer">
+                    review requested by the csc final team - customer
+                  </option>
+                  <option value="finished">finished</option>
+                </>
+              )}
+            </S.TableFilterSelect>
           </S.MobileFilterContainer>
 
           <S.MobileList>
@@ -328,30 +397,39 @@ export default function PendingCustomersTable({
                 <S.MobileListItem key={customer.id}>
                   <S.MobileListItemTitle>{customer.customer_name}</S.MobileListItemTitle>
                   <S.MobileListItemContent>
-                    Status: <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
+                    DBA: {customer.dba_number}
                   </S.MobileListItemContent>
                   <S.MobileListItemContent>
-                    Date: {new Date(customer.created_at).toLocaleString(
-                      navigator.language,
-                      {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                      }
-                    )}
+                    Currency: {customer.currency}
+                  </S.MobileListItemContent>
+                  <S.MobileListItemContent>
+                    Status:{" "}
+                    <S.StatusBadge status={customer.status}>
+                      {customer.status}
+                    </S.StatusBadge>
+                  </S.MobileListItemContent>
+                  <S.MobileListItemContent>
+                    Date:{" "}
+                    {new Date(customer.created_at).toLocaleString(navigator.language, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
                   </S.MobileListItemContent>
                   <S.Button
                     onClick={() => handleViewDetails(customer.id)}
                     disabled={loadingCustomerId === customer.id}
                     aria-label={`See details of ${customer.customer_name}`}
                   >
-                    {loadingCustomerId === customer.id ? 'Loading...' : 'See details'}
+                    {loadingCustomerId === customer.id ? "Loading..." : "See details"}
                   </S.Button>
                 </S.MobileListItem>
               ))
             ) : (
               <S.EmptyMobileState>
-                <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
+                <S.EmptyStateMessage>
+                  No customers found with the selected filter.
+                </S.EmptyStateMessage>
               </S.EmptyMobileState>
             )}
           </S.MobileList>
