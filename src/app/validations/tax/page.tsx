@@ -6,14 +6,16 @@ import { api } from "../../../lib/supabase/index";
 import PendingCustomersTable from "../../../_components/PendingCustomersTable";
 import TableSkeleton from "../../../_components/TableSkeleton";
 
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  customer_name: string;
-  status: string;
-  created_at: string;
-}
+  interface Customer {
+    id: string;
+    name: string;
+    email: string;
+    customer_name: string;
+    status: string;
+    currency: string;
+    dba_number: string;
+    created_at: string;
+  }
 
 export default function Page() {
   const [customers, setCustomers] = useState<Customer[]>([]);

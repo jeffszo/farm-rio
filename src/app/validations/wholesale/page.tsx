@@ -12,10 +12,13 @@ export default function WholesaleValidationsPage() {
     id: string;
     name: string;
     email: string;
-    customer_name: string; 
+    customer_name: string;
     status: string;
+    currency: string;
+    dba_number: string;
     created_at: string;
   }
+
 
   // Usando o tipo Customer no estado
   const [customers, setCustomers] = useState<Customer[]>([]);

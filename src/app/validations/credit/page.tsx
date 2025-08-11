@@ -11,8 +11,10 @@ export default function CreditValidationsPage() {
     id: string;
     name: string;
     email: string;
-    customer_name: string;  
+    customer_name: string;
     status: string;
+    currency: string;
+    dba_number: string;
     created_at: string;
   }
 
@@ -32,7 +34,7 @@ export default function CreditValidationsPage() {
           currentPage,
           itemsPerPage
         );
-        
+
         if (error) throw new Error(error.message);
 
         // Agora setamos o estado com os dados retornados da API
