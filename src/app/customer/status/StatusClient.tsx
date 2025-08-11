@@ -84,7 +84,6 @@ export default function StatusClient({
             Your form has been approved by the CSC Initial team and is now under review by the Tax team.
             {cscInitialFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -96,7 +95,6 @@ export default function StatusClient({
             Your form has been reviewed by the CSC initial Team. Please check their feedback below
             {cscInitialFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -107,7 +105,6 @@ export default function StatusClient({
             Your form has been reviewed by the CSC final Team. Please check their feedback below
             {cscFinalFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the CSC Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{cscFinalFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -118,7 +115,6 @@ export default function StatusClient({
             Your form has been reviewed by the Tax Team. Please check their feedback below
             {taxFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Tax Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{taxFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -129,7 +125,6 @@ export default function StatusClient({
             Your form has been reviewed by the Wholesale Team. Please check their feedback below
             {wholesaleFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -140,7 +135,6 @@ export default function StatusClient({
             Your form has been reviewed by the Credit Team. Please check their feedback below
             {creditFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Credit Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{creditFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -152,7 +146,6 @@ export default function StatusClient({
         For more information, please contact our wholesale team at wholesale@farmrio.com
             {wholesaleFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -164,7 +157,6 @@ export default function StatusClient({
             Your form has been approved by the Tax team and is now under review by the Wholesale team.
             {taxFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Tax Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{taxFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -175,7 +167,6 @@ export default function StatusClient({
             Your form has been approved by the Wholesale team and is now under review by the CSC team.
             {wholesaleFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Wholesale Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
@@ -186,7 +177,6 @@ export default function StatusClient({
             Your form has been approved by all teams! You&apos;re good to go!
             {creditFeedback && (
               <S.FeedbackCard>
-                <S.FeedbackTitle>Feedback from the Credit Team:</S.FeedbackTitle>
                 <S.FeedbackContent>{creditFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
             )}
