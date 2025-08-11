@@ -1327,7 +1327,7 @@ export default function OnboardingForm() {
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="apContactNumber">Phone:</S.Label>
+                    <S.Label htmlFor="apContactNumber">Phone</S.Label>
                     <S.Input
                       id="apContactNumber"
                       type="number"
@@ -1355,7 +1355,7 @@ export default function OnboardingForm() {
 
               <S.Grid>
                 <S.InputGroup>
-                  <S.Label htmlFor="buyerFirstName">First name:</S.Label>
+                  <S.Label htmlFor="buyerFirstName">First name</S.Label>
                   <S.Input
                     id="buyerFirstName"
                     {...register("buyerInfo.firstName", {
@@ -1427,7 +1427,7 @@ export default function OnboardingForm() {
                     )}
                   </S.InputGroup>
                   <S.InputGroup>
-                    <S.Label htmlFor="buyerNumber">Phone:</S.Label>
+                    <S.Label htmlFor="buyerNumber">Phone</S.Label>
                     <S.Input
                       type="number"
                       id="buyerNumber"

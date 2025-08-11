@@ -312,7 +312,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   }
 
   // Define o novo status com base na aprovação
-  const newStatus = approved ? getNextStatus("csc_final") : "review requested by the CSC final team";
+  const newStatus = approved ? getNextStatus("csc_final") : "review requested by the csc final team";
   
   const updateData: { status: string; updated_at: string; csc_final_status?: string; csc_final_feedback?: string | null; } = {
     status: newStatus,

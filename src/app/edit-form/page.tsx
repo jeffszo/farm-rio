@@ -294,7 +294,7 @@ const onSubmit = async (formData: IFormInputs) => {
       newStatus = "review requested by the credit team - customer";
     } else if (previousFormStatus === "review requested by the initial CSC team") {
       newStatus = "review requested by the csc initial team - customer";
-    } else if (previousFormStatus === "review requested by the CSC final team") {
+    } else if (previousFormStatus === "review requested by the csc final team") {
       newStatus = "review requested by the csc final team - customer";
     }
 

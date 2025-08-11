@@ -150,3 +150,4 @@ export async function getCurrentUserServer(): Promise<User | null> {
     userType: userData?.role || "cliente",
   }
 }
+

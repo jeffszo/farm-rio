@@ -9,31 +9,32 @@ import {
   Link,
 } from '@react-email/components';
 
-// interface ApprovedEmailProps {
-//   name?: string;
-      
-// }
-
 const main = {
-  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
-  height: '95vh',
-  backgroundSize: 'cover', 
+  backgroundColor: '#ffffff', // Fundo padrão para o Body
   fontFamily:
     'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
+const table = {
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
+  backgroundSize: 'cover',
+  backgroundColor: '#2e2e2e', // Fundo de fallback
+  height: '448px',
+  width: '990px',
+  margin: '0 auto'
+};
 
 const container = {
   margin: '0 auto',
   padding: '20px',
   borderRadius: '8px',
-  textAlign: 'center' as const, // Centraliza o conteúdo
-  maxWidth: '600px', // Limita a largura para melhor visualização
+  textAlign: 'center' as const,
+  maxWidth: '600px',
 };
 
 
 const text = {
-  color: '#fff', // Texto branco
+  color: '#fff',
   fontSize: '14px',
   margin: '24px 0',
   textAlign: 'center' as const,
@@ -48,34 +49,28 @@ const h1 = {
 };
 
 const linkStyle = {
-  color: '#84C9FF', // Exemplo de cor azul claro
-  textDecoration: 'underline', // Sublinhado para indicar que é um link
+  color: '#84C9FF',
+  textDecoration: 'underline',
   fontSize: '14px',
 };
-
 
 
 export const ApprovedEmailCSCFinal = () => (
   <Html>
     <Head />
     <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>CSC - Account approved</Heading>
-          <Text style={text}>
-            Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <Link style={linkStyle}>farmriowholesale.com. </Link>
-          </Text>
-          {/* <Link
-            href="https://customer.farmrio.com"
-            style={button}
-          >
-            Acessar o portal de atacado
-          </Link> */}
-          {/* <Text style={text}>
-            Best regards, 
-            <br />
-            FARM RIO Team
-          </Text> */}
-      </Container>
+      <table style={table} border={0} cellPadding={0} cellSpacing={0}>
+        <tr>
+          <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
+            <Container style={container}>
+              <Heading style={h1}>CSC - Account approved</Heading>
+              <Text style={text}>
+                Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <Link style={linkStyle}>farmriowholesale.com. </Link>
+              </Text>
+            </Container>
+          </td>
+        </tr>
+      </table>
     </Body>
   </Html>
 );

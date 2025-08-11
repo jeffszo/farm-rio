@@ -11,41 +11,40 @@ interface WelcomeEmailProps {
   name: string;
 }
 
-
-
 const main = {
-  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
-  height: '95vh',
-  backgroundSize: 'cover', 
-  fontFamily:
-    'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  backgroundColor: '#ffffff', // Cor de fundo padrão
+  fontFamily: 'Verdana, -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
+const table = {
+  backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
+  backgroundSize: 'cover',
+  backgroundColor: '#2e2e2e',
+  height: '448px', // Define a altura mínima
+  width: '990px',
+  margin: '0 auto'
+};
 
 const container = {
-  // backgroundColor: 'rgba(46, 46, 46, 0.7)', // Fundo semitransparente para o texto
   margin: '0 auto',
   padding: '20px',
   borderRadius: '8px',
-  textAlign: 'center' as const, // Centraliza o conteúdo
-  maxWidth: '600px', // Limita a largura para melhor visualização
+  textAlign: 'center' as const,
+  maxWidth: '600px', // Limita a largura do conteúdo interno para melhor leitura
 };
 
-
 const text = {
-  color: '#fff', // Texto branco
+  color: '#fff',
   fontSize: '14px',
   margin: '24px 0',
   textAlign: 'center' as const,
 };
 
 const linkStyle = {
-  color: '#84C9FF', // Exemplo de cor azul claro
-  textDecoration: 'underline', // Sublinhado para indicar que é um link
+  color: '#84C9FF',
+  textDecoration: 'underline',
   fontSize: '14px',
 };
-
-
 
 const h1 = {
   color: '#fff',
@@ -55,23 +54,23 @@ const h1 = {
   margin: '30px 0',
 };
 
-
 export const WelcomeEmail = ({ name }: WelcomeEmailProps) => (
   <Html>
     <Body style={main}>
-      <Container style={container}>
-                  <Text style={h1}>Welcome to FARM RIO </Text>
-        
-        <Text style={text}>
-          {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.
-        </Text>
-        {/* <Text style={text}>If you have any questions, please contact us.</Text> */}
-        {/* <Text style={text}>
-          Best regards,
-          <br />
-          FARM RIO Team
-        </Text> */}
-      </Container>
+      {/* Usamos uma tabela para garantir a largura e o background */}
+      <table style={table} border={0} cellPadding={0} cellSpacing={0}>
+        <tr>
+          <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
+            <Container style={container}>
+              <Text style={h1}>Welcome to FARM RIO </Text>
+              
+              <Text style={text}>
+                {name}, your account has been successfully created. Please visit <Link href="https://customer.farmrio.com/" style={linkStyle}>https://customer.farmrio.com/</Link> to provide your company and tax information so our Sales Team can proceed with the evaluation.
+              </Text>
+            </Container>
+          </td>
+        </tr>
+      </table>
     </Body>
   </Html>
 );
