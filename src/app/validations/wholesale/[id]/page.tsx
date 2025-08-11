@@ -688,19 +688,23 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
 
 
 
-    } catch (err) {
-      setModalContent({
-        title: "Error!",
-        description:
-          err instanceof Error
-            ? err.message
-            : "An error occurred while submitting for review. Please try again.",
-        shouldRedirect: false,
-      });
-      setShowModal(true);
-    } finally {
-      setLoading(false);
-    }
+    setModalContent({
+      title: "Success!",
+      description: "The form has been sent for the client's review. They can edit it now.",
+      shouldRedirect: true,
+    });
+    setShowModal(true);
+  } catch (err: unknown) {
+    console.error("Error submitting for review:", err);
+    setModalContent({
+      title: "Error!",
+      description: err instanceof Error ? err.message : "An error occurred while submitting for review. Please try again.",
+      shouldRedirect: false,
+    });
+    setShowModal(true);
+  } finally {
+    setLoading(false);
+  }
   }
 
   const handleSaveDuns = async () => {
