@@ -305,7 +305,6 @@ export default function PendingCustomersTable({
                         day: "2-digit",
                       })}
                     </S.TableData>
-                    <S.TableData>{totalCount}</S.TableData>
                     <S.TableData>
                       <S.Button
                         onClick={() => handleViewDetails(customer.id)}
