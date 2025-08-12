@@ -259,6 +259,7 @@ export default function PendingCustomersTable({
               </S.TableFilterSelect>
             </S.FilterGroup>
 
+
             <S.FilterGroup>
               <S.FilterTitle>
                 <Filter size={16} />
@@ -272,6 +273,8 @@ export default function PendingCustomersTable({
                 ))}
               </S.TableFilterSelect>
             </S.FilterGroup>
+                        <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
+
           </S.TableFilterContainer>
 
           <S.Table>
@@ -282,7 +285,6 @@ export default function PendingCustomersTable({
                 <S.TableHeader>DBA</S.TableHeader>
                 <S.TableHeader>Status</S.TableHeader>
                 <S.TableHeader>Date Created</S.TableHeader>
-                <S.TableHeader>Total Clients ({totalCount})</S.TableHeader>
                 <S.TableHeader>Action</S.TableHeader>
               </tr>
             </thead>

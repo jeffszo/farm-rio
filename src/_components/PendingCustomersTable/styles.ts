@@ -401,3 +401,13 @@ export const TotalCount = styled.p`
   border: 1px solid #f0f0f0;
   font-weight: 600;
 `
+export const TotalClientsInfo = styled.div`
+  margin-left: auto;
+  padding: 10px 16px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+`
