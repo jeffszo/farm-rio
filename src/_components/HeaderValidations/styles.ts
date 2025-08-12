@@ -5,7 +5,7 @@ export const HeaderContainer = styled.header`
   background-color: ${theme.colors.backgroundHeader};
   padding: ${theme.spacing[4]} ${theme.spacing[2]};
   border-bottom: 1px solid ${theme.colors.border};
-
+width: 100%;
 
 `
 

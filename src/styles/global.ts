@@ -11,7 +11,6 @@ const Global = createGlobalStyle`
     font-family: 'Nunito Sans', sans-serif;
     scroll-behavior: smooth;
     text-decoration: none;
-
   }
 
 
@@ -19,6 +18,7 @@ const Global = createGlobalStyle`
     height: 100%;
     display: flex;
     flex-direction: column;
+
   }
 
   #__next {
@@ -33,6 +33,7 @@ const Global = createGlobalStyle`
     flex-direction: column;
     position: relative;
     min-height: auto;
+
   }
 `;
 
