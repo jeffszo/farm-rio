@@ -133,6 +133,8 @@ export default function ValidationDetailsPage() {
   const [feedback, setFeedback] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
+  const [loadingApprove, setLoadingApprove] = useState(false);
+  
 
    const cancelRef = useRef<HTMLButtonElement | null>(null);
 
@@ -558,7 +560,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
 
     // Fluxo de aprovação → ativa loading
-    setLoading(true);
+    setLoadingApprove(true)
 
     // Valida campos obrigatórios
     const requiredFields: (keyof WholesaleTerms)[] = [
@@ -632,7 +634,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     });
     setShowModal(true);
   } finally {
-    setLoading(false);
+    setLoadingApprove(false);
   }
 };
 
@@ -749,7 +751,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
   };
 
-  if (loading) return <S.Message>Loading...</S.Message>;
+  // if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
   if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
@@ -1182,9 +1184,13 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
             Review
           </S.Button>
 
-          <S.Button variant="primary" onClick={() => handleApproval(true)}>
-            Approve
-          </S.Button>
+<S.Button 
+  onClick={() => handleApproval(true)} 
+  variant="primary" 
+  disabled={loadingApprove}
+>
+  {loadingApprove ? "Approving..." : "Approve"}
+</S.Button>
         </S.ButtonContainer>
 
         {showModal && (

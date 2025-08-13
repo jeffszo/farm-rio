@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/validations/csc/[id]/page.tsx
 "use client";
 import React from "react";
@@ -85,6 +86,7 @@ export default function ValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingApprove, setLoadingApprove] = useState(false);
   const [feedback, setFeedback] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -287,8 +289,7 @@ export default function ValidationDetailsPage() {
   }
 
    try {
-  setLoading(true);
-
+  setLoadingApprove(true);
   // Chamar a função adequada com base no status, passando o feedback
   if (customerForm?.status === "approved by the wholesale team" || customerForm?.status === "review requested by the csc initial team - customer") {
       await api.validateCSCInitialCustomer(id, approved, feedback);
@@ -367,7 +368,7 @@ export default function ValidationDetailsPage() {
   });
   setShowModal(true);
 } finally {
-  setLoading(false);
+  setLoadingApprove(false);
 }
 
 
@@ -873,7 +874,7 @@ validation.credit_discount !== null &&
           )}
         </S.FormDetails>
 
-{customerForm.status !== "finished" && (
+{customerForm.status !== "finished" && customerForm.status !== "approved by the credit team" &&  (
   <S.FeedbackGroup>
     <S.Label htmlFor="feedback">Observation</S.Label>
     <S.Textarea
@@ -885,24 +886,27 @@ validation.credit_discount !== null &&
   </S.FeedbackGroup>
 )}
 
-{customerForm.status !== "finished" && (
+
   <S.ButtonContainer>
-    {customerForm.status === "approved by the CSC team" ? (
-      <S.Button variant="primary">
-        Finish
-      </S.Button>
-    ) : (
-      <>
-        {/* <S.Button onClick={() => handleApproval(false)} variant="secondary">
-          Review
-        </S.Button> */}
-        <S.Button onClick={() => handleApproval(true)} variant="primary">
-          Approve
-        </S.Button>
-      </>
-    )}
-  </S.ButtonContainer>
+{customerForm.status !== "review requested by the csc final team - customer" && customerForm.status !== "approved by the credit team" && customerForm.status !== "finished" && (
+  <S.Button onClick={() => handleApproval(false)} variant="secondary">
+    Review
+  </S.Button>
 )}
+
+{customerForm.status !== "finished" && (
+     <S.Button 
+  onClick={() => handleApproval(true)} 
+  variant="primary" 
+  disabled={loading}
+>
+  {loading ? "Loading..." : "Approve"}
+</S.Button>
+)}
+    
+
+  </S.ButtonContainer>
+
 
         {showModal && (
           <S.Modal>

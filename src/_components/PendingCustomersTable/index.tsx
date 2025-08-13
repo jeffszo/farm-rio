@@ -65,6 +65,7 @@ export default function PendingCustomersTable({
       approvedByCredit: "approved by the credit team",
       approvedByTax: "approved by the tax team",
       approvedByCSC: "approved by the csc final team",
+      approvedByCSCInitial: "approved by the csc initial team",
       finished: "finished",
       reviewRequestedByTaxCustomer: "review requested by the tax team - customer",
       reviewRequestedByWholesaleCustomer: "review requested by the wholesale team - customer",
@@ -219,35 +220,34 @@ export default function PendingCustomersTable({
                 ) : isTaxRoute ? (
                   <>
                     <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-                    <option value="approvedByTax">approved by the tax team</option>
+                                        <option value="approvedByCSCInitial">approved by the csc initial team</option>
                   </>
                 ) : isCreditRoute ? (
                   <>
-                    <option value="approvedByCredit">approved by the credit team</option>
                     <option value="approvedByTax">approved by the tax team</option>
+
                     <option value="reviewRequestedByCreditCustomer">
                       review requested by the credit team - customer
                     </option>
                   </>
                 ) : (
                   <>
-                    <option value="pending">pending</option>
-                    <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
+                    <option value="finished">finished</option>
+                    {/* <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
                     <option value="reviewRequestedByTax">review requested by the tax team</option>
                     <option value="reviewRequestedByCredit">review requested by the credit team</option>
-                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option>
+                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option> */}
                     <option value="approvedByWholesale">approved by the wholesale team</option>
                     <option value="approvedByCredit">approved by the credit team</option>
-                    <option value="approvedByTax">approved by the tax team</option>
-                    <option value="approvedByCSC">approved by the csc final team</option>
-                    <option value="finished">finished</option>
-                    <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-                    <option value="reviewRequestedByWholesaleCustomer">
+                    {/* <option value="approvedByTax">approved by the tax team</option> */}
+                    {/* <option value="approvedByCSC">approved by the csc final team</option> */}
+                    {/* <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option> */}
+                    {/* <option value="reviewRequestedByWholesaleCustomer">
                       review requested by the wholesale team - customer
-                    </option>
-                    <option value="reviewRequestedByCreditCustomer">
+                    </option> */}
+                    {/* <option value="reviewRequestedByCreditCustomer">
                       review requested by the credit team - customer
-                    </option>
+                    </option> */}
                     <option value="reviewRequestedByCSCInitialCustomer">
                       review requested by the csc initial team - customer
                     </option>
@@ -280,9 +280,9 @@ export default function PendingCustomersTable({
           <S.Table>
             <thead>
               <tr>
-                <S.TableHeader>Client Name</S.TableHeader>
-                <S.TableHeader>Currency</S.TableHeader>
                 <S.TableHeader>DBA</S.TableHeader>
+                <S.TableHeader>Legal Name</S.TableHeader>
+                <S.TableHeader>Currency</S.TableHeader>
                 <S.TableHeader>Status</S.TableHeader>
                 <S.TableHeader>Date Created</S.TableHeader>
                 <S.TableHeader>Action</S.TableHeader>
@@ -338,28 +338,42 @@ export default function PendingCustomersTable({
                 <option value="all">All status</option>
                 {isWholesaleRoute ? (
                   <>
-                    <option value="pending">Pending</option>
-                    <option value="reviewRequestedByWholesaleCustomer">review by wholesale</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="pending">Pending</option>
-                    <option value="reviewRequestedByWholesale">review by wholesale</option>
-                    <option value="reviewRequestedByTax">review by tax</option>
-                    <option value="reviewRequestedByCredit">review by credit</option>
-                    <option value="reviewRequestedByCSC">review by csc initial</option>
-                    <option value="approvedByWholesale">approved by wholesale</option>
-                    <option value="approvedByCredit">approved by credit</option>
-                    <option value="approvedByTax">approved by tax</option>
-                    <option value="approvedByCSC">approved by csc final</option>
-                    <option value="finished">finished</option>
-                    <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
+                    <option value="pending">pending</option>
                     <option value="reviewRequestedByWholesaleCustomer">
                       review requested by the wholesale team - customer
                     </option>
+                  </>
+                ) : isTaxRoute ? (
+                  <>
+                    <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
+                                        <option value="approvedByCSCInitial">approved by the csc initial team</option>
+                  </>
+                ) : isCreditRoute ? (
+                  <>
+                    <option value="approvedByTax">approved by the tax team</option>
+
                     <option value="reviewRequestedByCreditCustomer">
                       review requested by the credit team - customer
                     </option>
+                  </>
+                ) : (
+                  <>
+                    {/* <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
+                    <option value="reviewRequestedByTax">review requested by the tax team</option>
+                    <option value="reviewRequestedByCredit">review requested by the credit team</option>
+                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option> */}
+                    <option value="finished">finished</option>
+                    <option value="approvedByWholesale">approved by the wholesale team</option>
+                    <option value="approvedByCredit">approved by the credit team</option>
+                    {/* <option value="approvedByTax">approved by the tax team</option> */}
+                    {/* <option value="approvedByCSC">approved by the csc final team</option> */}
+                    {/* <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option> */}
+                    {/* <option value="reviewRequestedByWholesaleCustomer">
+                      review requested by the wholesale team - customer
+                    </option> */}
+                    {/* <option value="reviewRequestedByCreditCustomer">
+                      review requested by the credit team - customer
+                    </option> */}
                     <option value="reviewRequestedByCSCInitialCustomer">
                       review requested by the csc initial team - customer
                     </option>
@@ -384,7 +398,6 @@ export default function PendingCustomersTable({
               </S.TableFilterSelect>
             </S.FilterGroup>
           </S.MobileFilterContainer>
-          <S.TotalCount>Total pending customers: {totalCount}</S.TotalCount>
 
           <S.MobileList>
             {filteredCustomers.length > 0 ? (
@@ -434,14 +447,15 @@ export default function PendingCustomersTable({
         <S.PageInfo>
           Page {currentPage} of {Math.max(1, totalPages)}
         </S.PageInfo>
-        <S.PageButton
-          onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          aria-label="Next page"
-        >
-          Next
-          <ChevronRight size={16} />
-        </S.PageButton>
+<S.PageButton
+  onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+  disabled={totalPages <= 1 || currentPage === totalPages}
+  aria-label="Next page"
+>
+  Next
+  <ChevronRight size={16} />
+</S.PageButton>
+
       </S.Pagination>
     </S.Container>
   )

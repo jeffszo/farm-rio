@@ -51,6 +51,7 @@ export default function TaxValidationDetailsPage() {
   const [customerForm, setCustomerForm] = useState<CustomerForm | null>(null);
   const [loading, setLoading] = useState(true);
     const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
+    const [loadingApprove, setLoadingApprove] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
 const [modalContent, setModalContent] = useState({
@@ -130,7 +131,7 @@ const [modalContent, setModalContent] = useState({
 
   const handleApproval = async (approved: boolean) => {
     try {
-      setLoading(true);
+      setLoadingApprove(true);
       if (typeof id !== "string") {
         throw new Error("Invalid client ID.");
       }
@@ -203,7 +204,7 @@ const [modalContent, setModalContent] = useState({
       });
       setShowModal(true);
     } finally {
-      setLoading(false);
+      setLoadingApprove(false);
     }
   };
 
@@ -502,9 +503,15 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
           <S.Button onClick={() => handleApproval(false)} variant="secondary">
             Review
           </S.Button>
-          <S.Button onClick={() => handleApproval(true)} variant="primary">
-            Approve
-          </S.Button>
+<S.Button 
+  onClick={() => handleApproval(true)} 
+  variant="primary" 
+  disabled={loadingApprove}
+>
+  {loadingApprove ? "Approving..." : "Approve"}
+</S.Button>
+
+
         </S.ButtonContainer>
         {/* )} */}
 

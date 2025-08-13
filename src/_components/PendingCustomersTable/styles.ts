@@ -16,7 +16,7 @@ export const Container = styled.div`
 
 export const TitleWrapper = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: center ;
   align-items: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
@@ -25,7 +25,7 @@ export const TitleWrapper = styled.div`
 
 export const TitleContainer = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   color: #1f2937;
@@ -46,21 +46,14 @@ export const ExportButton = styled.button`
   font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
+  margin-left: 5rem;
   background-color: #374151;
   border: 2px solid #374151;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 
-  &:hover {
-    background-color: #1f2937;
-    border-color: #1f2937;
-    transform: translateY(-1px);
-  }
 
-  &:active {
-    transform: translateY(0);
-  }
 `
 
 export const Table = styled.table`
@@ -411,3 +404,5 @@ export const TotalClientsInfo = styled.div`
   font-weight: 600;
   color: #374151;
 `
+
+

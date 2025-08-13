@@ -838,8 +838,8 @@ export default function OnboardingForm() {
     placeholder="https://jooraccess.com/yourprofile"
     {...register("joor", {
       pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*$/,
-        message: "Please enter a valid URL.",
+          value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+  message: "Please enter a valid URL with http:// or https://",
       },
     })}
     error={!!errors.joor}

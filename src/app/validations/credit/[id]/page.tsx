@@ -162,6 +162,8 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+      const [loadingApprove, setLoadingApprove] = useState(false);
+
   const [feedback, setFeedback] = useState(""); // Unified feedback state for the textarea
 
   const [modalContent, setModalContent] = useState({
@@ -427,7 +429,7 @@ export default function ValidationDetailsPage() {
     console.log("Starting handleApproval. approved =", approved);
 
     try {
-      setLoading(true);
+      setLoadingApprove(true);
       console.log("Loading true");
 
       if (approved) {
@@ -527,7 +529,7 @@ export default function ValidationDetailsPage() {
     });
     setShowModal(true);
   } finally {
-    setLoading(false);
+    setLoadingApprove(false);
   }
 };
 
@@ -917,15 +919,13 @@ const closeModal = () => {
             Review
           </S.Button>
 
-          <S.Button
-            variant="primary"
-            onClick={() => {
-              console.log("Click detected!")
-              handleApproval(true)
-            }}
-          >
-            Approve
-          </S.Button>
+<S.Button 
+  onClick={() => handleApproval(true)} 
+  variant="primary" 
+  disabled={loadingApprove}
+>
+  {loadingApprove ? "Approving..." : "Approve"}
+</S.Button>
         </S.ButtonContainer>
 
 
