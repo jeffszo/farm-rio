@@ -795,9 +795,8 @@ export default function OnboardingForm() {
                     placeholder="https://instagram.com/yourprofile"
                     {...register("instagram", {
                       pattern: {
-                        value:
-                          /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/,
-                        message: "Please enter a valid Instagram URL.",
+ value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+  message: "Please enter a valid URL with http:// or https://",
                       },
                     })}
                     error={!!(errors as typeof errors).instagram}
