@@ -29,7 +29,14 @@ export async function getApprovedCustomers() {
       credit_discount
     `)
     .eq("status", "finished"); // Alterado para "finished" como status final do fluxo
+    
 
+
+
+
+
+
+    
   if (error) {
     console.error("Erro ao buscar formulários de clientes aprovados:", error.message);
     return [];

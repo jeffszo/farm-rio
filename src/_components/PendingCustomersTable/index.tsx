@@ -40,16 +40,14 @@ export default function PendingCustomersTable({
   const isWholesaleRoute = pathname?.includes("/validations/wholesale")
   const isTaxRoute = pathname?.includes("/validations/tax")
   const isCreditRoute = pathname?.includes("/validations/credit")
-  // const isCSCInitialRoute = pathname?.includes("/validations/csc")
-  // const isCSCFinalRoute = pathname?.includes("/validations/csc-final")
 
   const [filterStatus, setFilterStatus] = useState<string>("all")
-  const [filterCurrency, setFilterCurrency] = useState<string>("all")
+  const [filterCurrency, setFilterCurrency] = useState<string>("ALL")
   const [loadingCustomerId, setLoadingCustomerId] = useState<string | null>(null)
 
   const uniqueCurrencies = useMemo(() => {
     const currencies = new Set(customers.map((c) => c.currency))
-    return ["all", ...Array.from(currencies)]
+    return ["ALL", ...Array.from(currencies)]
   }, [customers])
 
   const filteredCustomers = useMemo(() => {
@@ -78,7 +76,7 @@ export default function PendingCustomersTable({
       filtered = filtered.filter((customer) => customer.status === statusMap[filterStatus as keyof typeof statusMap])
     }
 
-    if (filterCurrency !== "all") {
+    if (filterCurrency !== "ALL") {
       filtered = filtered.filter((customer) => customer.currency === filterCurrency)
     }
 
@@ -192,12 +190,7 @@ export default function PendingCustomersTable({
           <S.Title>Customers</S.Title>
         </S.TitleContainer>
 
-        {isCSCValidationsRoute && (
-          <S.ExportButton onClick={exportToExcel}>
-            <Download size={16} />
-            Export Excel
-          </S.ExportButton>
-        )}
+
       </S.TitleWrapper>
 
       {!isMobile ? (
@@ -209,56 +202,42 @@ export default function PendingCustomersTable({
                 Filter by status:
               </S.FilterTitle>
               <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="all">all status</option>
+                <option value="all">All status</option>
                 {isWholesaleRoute ? (
                   <>
-                    <option value="pending">pending</option>
+                    <option value="pending">Pending</option>
                     <option value="reviewRequestedByWholesaleCustomer">
-                      review requested by the wholesale team - customer
+                      Review requested by the wholesale team - customer
                     </option>
                   </>
                 ) : isTaxRoute ? (
                   <>
-                    <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-                                        <option value="approvedByCSCInitial">approved by the csc initial team</option>
+                    <option value="reviewRequestedByTaxCustomer">Review requested by the tax team - customer</option>
+                    <option value="approvedByCSCInitial">Approved by the csc initial team</option>
                   </>
                 ) : isCreditRoute ? (
                   <>
-                    <option value="approvedByTax">approved by the tax team</option>
+                    <option value="approvedByTax">Approved by the tax team</option>
 
                     <option value="reviewRequestedByCreditCustomer">
-                      review requested by the credit team - customer
+                      Review requested by the credit team - customer
                     </option>
                   </>
                 ) : (
                   <>
-                    <option value="finished">finished</option>
-                    {/* <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
-                    <option value="reviewRequestedByTax">review requested by the tax team</option>
-                    <option value="reviewRequestedByCredit">review requested by the credit team</option>
-                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option> */}
-                    <option value="approvedByWholesale">approved by the wholesale team</option>
-                    <option value="approvedByCredit">approved by the credit team</option>
-                    {/* <option value="approvedByTax">approved by the tax team</option> */}
-                    {/* <option value="approvedByCSC">approved by the csc final team</option> */}
-                    {/* <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option> */}
-                    {/* <option value="reviewRequestedByWholesaleCustomer">
-                      review requested by the wholesale team - customer
-                    </option> */}
-                    {/* <option value="reviewRequestedByCreditCustomer">
-                      review requested by the credit team - customer
-                    </option> */}
+                    <option value="finished">Finished</option>
+                    <option value="approvedByWholesale">Approved by the wholesale team</option>
+                    <option value="approvedByCredit">Approved by the credit team</option>
                     <option value="reviewRequestedByCSCInitialCustomer">
-                      review requested by the csc initial team - customer
+                      Review requested by the csc initial team - customer
                     </option>
                     <option value="reviewRequestedByCSCFinalCustomer">
-                      review requested by the csc final team - customer
+                      Review requested by the csc final team - customer
                     </option>
                   </>
                 )}
               </S.TableFilterSelect>
             </S.FilterGroup>
-
 
             <S.FilterGroup>
               <S.FilterTitle>
@@ -273,58 +252,69 @@ export default function PendingCustomersTable({
                 ))}
               </S.TableFilterSelect>
             </S.FilterGroup>
-                        <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
+
+                      <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
+                              <S.ButtonAndTotalClientsWrapper>
+          {isCSCValidationsRoute && (
+            <S.Button onClick={exportToExcel}>
+              <Download size={16} />
+              Export Excel
+            </S.Button>
+          )}
+        </S.ButtonAndTotalClientsWrapper>
 
           </S.TableFilterContainer>
 
-          <S.Table>
-            <thead>
-              <tr>
-                <S.TableHeader>DBA</S.TableHeader>
-                <S.TableHeader>Legal Name</S.TableHeader>
-                <S.TableHeader>Currency</S.TableHeader>
-                <S.TableHeader>Status</S.TableHeader>
-                <S.TableHeader>Date Created</S.TableHeader>
-                <S.TableHeader>Action</S.TableHeader>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <S.TableRow key={customer.id}>
-                    <S.TableData>{customer.customer_name}</S.TableData>
-                    <S.TableData>{customer.currency}</S.TableData>
-                    <S.TableData>{customer.dba_number}</S.TableData>
-                    <S.TableData>
-                      <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
-                    </S.TableData>
-                    <S.TableData>
-                      {new Date(customer.created_at).toLocaleString(navigator.language, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
-                    </S.TableData>
-                    <S.TableData>
-                      <S.Button
-                        onClick={() => handleViewDetails(customer.id)}
-                        disabled={loadingCustomerId === customer.id}
-                        aria-label={`See details of ${customer.customer_name}`}
-                      >
-                        {loadingCustomerId === customer.id ? "Loading..." : "See details"}
-                      </S.Button>
-                    </S.TableData>
-                  </S.TableRow>
-                ))
-              ) : (
-                <S.EmptyTableRow>
-                  <S.EmptyTableData colSpan={7}>
-                    <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
-                  </S.EmptyTableData>
-                </S.EmptyTableRow>
-              )}
-            </tbody>
-          </S.Table>
+          <S.TableScrollContainer>
+            <S.Table>
+              <thead>
+                <tr>
+                  <S.TableHeader>Status</S.TableHeader>
+                  <S.TableHeader>DBA</S.TableHeader>
+                  <S.TableHeader>Legal Name</S.TableHeader>
+                  <S.TableHeader>Currency</S.TableHeader>
+                  <S.TableHeader>Date Created</S.TableHeader>
+                  <S.TableHeader>Action</S.TableHeader>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.length > 0 ? (
+                  filteredCustomers.map((customer) => (
+                    <S.TableRow key={customer.id}>
+                      <S.TableData>
+                        <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
+                      </S.TableData>
+                      <S.TableData>{customer.dba_number}</S.TableData>
+                      <S.TableData>{customer.customer_name}</S.TableData>
+                      <S.TableData>{customer.currency}</S.TableData>
+                      <S.TableData>
+                        {new Date(customer.created_at).toLocaleString(navigator.language, {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                        })}
+                      </S.TableData>
+                      <S.TableData>
+                        <S.Button
+                          onClick={() => handleViewDetails(customer.id)}
+                          disabled={loadingCustomerId === customer.id}
+                          aria-label={`See details of ${customer.customer_name}`}
+                        >
+                          {loadingCustomerId === customer.id ? "Loading..." : "See details"}
+                        </S.Button>
+                      </S.TableData>
+                    </S.TableRow>
+                  ))
+                ) : (
+                  <S.EmptyTableRow>
+                    <S.EmptyTableData colSpan={7}>
+                      <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
+                    </S.EmptyTableData>
+                  </S.EmptyTableRow>
+                )}
+              </tbody>
+            </S.Table>
+          </S.TableScrollContainer>
         </>
       ) : (
         <>
@@ -338,47 +328,34 @@ export default function PendingCustomersTable({
                 <option value="all">All status</option>
                 {isWholesaleRoute ? (
                   <>
-                    <option value="pending">pending</option>
+                    <option value="pending">Pending</option>
                     <option value="reviewRequestedByWholesaleCustomer">
-                      review requested by the wholesale team - customer
+                      Review requested by the wholesale team - customer
                     </option>
                   </>
                 ) : isTaxRoute ? (
                   <>
-                    <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option>
-                                        <option value="approvedByCSCInitial">approved by the csc initial team</option>
+                    <option value="reviewRequestedByTaxCustomer">Review requested by the tax team - customer</option>
+                    <option value="approvedByCSCInitial">Approved by the csc initial team</option>
                   </>
                 ) : isCreditRoute ? (
                   <>
-                    <option value="approvedByTax">approved by the tax team</option>
+                    <option value="approvedByTax">Approved by the tax team</option>
 
                     <option value="reviewRequestedByCreditCustomer">
-                      review requested by the credit team - customer
+                      Review requested by the credit team - customer
                     </option>
                   </>
                 ) : (
                   <>
-                    {/* <option value="reviewRequestedByWholesale">review requested by the wholesale team</option>
-                    <option value="reviewRequestedByTax">review requested by the tax team</option>
-                    <option value="reviewRequestedByCredit">review requested by the credit team</option>
-                    <option value="reviewRequestedByCSC">review requested by the csc initial team</option> */}
-                    <option value="finished">finished</option>
-                    <option value="approvedByWholesale">approved by the wholesale team</option>
-                    <option value="approvedByCredit">approved by the credit team</option>
-                    {/* <option value="approvedByTax">approved by the tax team</option> */}
-                    {/* <option value="approvedByCSC">approved by the csc final team</option> */}
-                    {/* <option value="reviewRequestedByTaxCustomer">review requested by the tax team - customer</option> */}
-                    {/* <option value="reviewRequestedByWholesaleCustomer">
-                      review requested by the wholesale team - customer
-                    </option> */}
-                    {/* <option value="reviewRequestedByCreditCustomer">
-                      review requested by the credit team - customer
-                    </option> */}
+                    <option value="finished">Finished</option>
+                    <option value="approvedByWholesale">Approved by the wholesale team</option>
+                    <option value="approvedByCredit">Approved by the credit team</option>
                     <option value="reviewRequestedByCSCInitialCustomer">
-                      review requested by the csc initial team - customer
+                      Review requested by the csc initial team - customer
                     </option>
                     <option value="reviewRequestedByCSCFinalCustomer">
-                      review requested by the csc final team - customer
+                      Review requested by the csc final team - customer
                     </option>
                   </>
                 )}
@@ -447,16 +424,15 @@ export default function PendingCustomersTable({
         <S.PageInfo>
           Page {currentPage} of {Math.max(1, totalPages)}
         </S.PageInfo>
-<S.PageButton
-  onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-  disabled={totalPages <= 1 || currentPage === totalPages}
-  aria-label="Next page"
->
-  Next
-  <ChevronRight size={16} />
-</S.PageButton>
-
+        <S.PageButton
+          onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+          disabled={totalPages <= 1 || currentPage === totalPages}
+          aria-label="Next page"
+        >
+          Next
+          <ChevronRight size={16} />
+        </S.PageButton>
       </S.Pagination>
     </S.Container>
-  )
+  );
 }
