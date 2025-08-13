@@ -751,7 +751,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
   };
 
-  // if (loading) return <S.Message>Loading...</S.Message>;
+  if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
   if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
