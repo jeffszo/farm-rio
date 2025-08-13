@@ -499,7 +499,7 @@ const onSubmit = async (formData: IFormInputs) => {
                   {errors.customerInfo?.legalName && <S.ErrorMessage>{errors.customerInfo.legalName.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
+                  <S.Label htmlFor="dba">DBA</S.Label>
                   <S.Input placeholder="Trade name" type="string" id="dba"  {...register("customerInfo.dba", { required: "DBA is required" })}
                     error={!!errors.customerInfo?.dba}
                   />

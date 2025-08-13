@@ -737,7 +737,7 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
-                  <S.Label htmlFor="dba">DBA (if applicable)</S.Label>
+                  <S.Label htmlFor="dba">DBA</S.Label>
                   <S.Input
                     placeholder="Trade name"
                     type="string"
