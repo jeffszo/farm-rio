@@ -258,7 +258,7 @@ export default function PendingCustomersTable({
           {isCSCValidationsRoute && (
             <S.Button onClick={exportToExcel}>
               <Download size={16} />
-              Export Excel
+              Excel
             </S.Button>
           )}
         </S.ButtonAndTotalClientsWrapper>

@@ -431,8 +431,11 @@ export const TotalCount = styled.p`
 `;
 
 export const TotalClientsInfo = styled.div`
-  padding: 10px 16px;
-  margin-left: 37.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  margin-left: 42.5rem;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;

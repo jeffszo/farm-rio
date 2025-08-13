@@ -162,7 +162,7 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-      const [loadingApprove, setLoadingApprove] = useState(false);
+  const [loadingApprove, setLoadingApprove] = useState(false);
 
   const [feedback, setFeedback] = useState(""); // Unified feedback state for the textarea
 
@@ -174,6 +174,8 @@ export default function ValidationDetailsPage() {
   const router = useRouter();
   const [newDuns, setNewDuns] = useState("");
   const [editingDuns, setEditingDuns] = useState(false);
+          const [loadingReview, setloadingReview] = useState(false);
+
   const [savingDuns, setSavingDuns] = useState(false);
   const [validation, setValidation] = useState<ValidationDetails | null>(null); // Para mostrar os termos do wholesale
 
@@ -426,82 +428,90 @@ export default function ValidationDetailsPage() {
   };
 
   const handleApproval = async (approved: boolean) => {
-    console.log("Starting handleApproval. approved =", approved);
+  console.log("Starting handleApproval. approved =", approved);
+
+  // 🔹 Reseta o estado oposto e ativa o correto
+  if (approved) {
+    setloadingReview(false);
+    setLoadingApprove(true);
+  } else {
+    setLoadingApprove(false);
+    setloadingReview(true);
+  }
+
+  try {
+    if (approved) {
+      // Specific validations for approval for CREDIT TEAM
+      const requiredFields: (keyof CreditTerms)[] = [
+        "invoicing_company",
+        "warehouse",
+        "currency",
+        "payment_terms",
+      ];
+      const missingFields = requiredFields.filter((field) => !creditTerms[field]);
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Please fill in all required fields: ${missingFields.join(", ")}`
+        );
+      }
+      const creditLimitNum = Number(creditTerms.credit_limit);
+      const discountNum = Number(creditTerms.discount);
+      if (
+        isNaN(creditLimitNum) ||
+        isNaN(discountNum) ||
+        creditLimitNum < 0 ||
+        discountNum < 0
+      ) {
+        throw new Error("⚠️ The credit limit and discount must be non-negative");
+      }
+    } else {
+      // If rejecting, feedback is required
+      if (feedback.trim() === "") {
+        setModalContent({
+          title: "Alerta!",
+          description: "Feedback is required when sending to review.",
+          shouldRedirect: false,
+        });
+        setShowModal(true);
+        return;
+      }
+    }
+
+    console.log("Calling validateCreditCustomer");
+    await api.validateCreditCustomer(id as string, approved, {
+      credit_invoicing_company: creditTerms.invoicing_company,
+      credit_warehouse: creditTerms.warehouse,
+      credit_currency: creditTerms.currency,
+      credit_terms: creditTerms.payment_terms,
+      credit_credit: Number(creditTerms.credit_limit),
+      credit_discount: Number(creditTerms.discount),
+      credit_feedback: feedback.trim() === "" ? undefined : feedback,
+    });
+
+    console.log("Validation completed successfully");
 
     try {
-      setLoadingApprove(true);
-      console.log("Loading true");
+      const payload = {
+        name: customerForm?.buyer_name || "Cliente",
+        email: customerForm?.users?.email || "",
+      };
 
       if (approved) {
-        // Specific validations for approval for CREDIT TEAM
-        const requiredFields: (keyof CreditTerms)[] = [
-          "invoicing_company",
-          "warehouse",
-          "currency",
-          "payment_terms",
-        ];
-        const missingFields = requiredFields.filter((field) => !creditTerms[field]); // Usa creditTerms
-        if (missingFields.length > 0) {
-          throw new Error(
-            `Please fill in all required fields: ${missingFields.join(", ")}`
-          );
-        }
-        const creditLimitNum = Number(creditTerms.credit_limit);
-        const discountNum = Number(creditTerms.discount);
-        if (isNaN(creditLimitNum) || isNaN(discountNum) || creditLimitNum < 0 || discountNum < 0) {
-          throw new Error("⚠️ The credit limit and discount must be non-negative");
-        }
-      } else { // If rejecting, feedback is required
-          if (!approved && feedback.trim() === "") {
-    setModalContent({
-      title: "Alerta!",
-      description: "Feedback is required when sending to review.",
-      shouldRedirect: false, // Não redireciona em caso de erro
-    });
-    setShowModal(true);
-    return;
-  }
+        await fetch("/api/send/credit/send-approved-email", {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" },
+        });
+      } else {
+        await fetch("/api/send/credit/send-review-email", {
+          method: "POST",
+          body: JSON.stringify({ ...payload, feedback }),
+          headers: { "Content-Type": "application/json" },
+        });
       }
-
-      console.log("Calling validateCreditCustomer");
-      await api.validateCreditCustomer(id as string, approved, {
-        credit_invoicing_company: creditTerms.invoicing_company, // Usa creditTerms
-        credit_warehouse: creditTerms.warehouse, // Usa creditTerms
-        credit_currency: creditTerms.currency, // Usa creditTerms
-        credit_terms: creditTerms.payment_terms, // Usa creditTerms
-        credit_credit: Number(creditTerms.credit_limit), // Usa creditTerms
-        credit_discount: Number(creditTerms.discount), // Usa creditTerms, convertido para number
-        credit_feedback: feedback.trim() === "" ? undefined : feedback, // Passa o feedback do textarea
-      });
-
-      console.log("Validation completed successfully");
-
-      try {
-  const payload = {
-       name: customerForm?.buyer_name || "Cliente",
-        email: customerForm?.users?.email || "", 
-  };
-
-  if (approved) {
-    await fetch("/api/send/credit/send-approved-email", {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  } else {
-    await fetch("/api/send/credit/send-review-email", {
-      method: "POST",
-      body: JSON.stringify({ ...payload, feedback }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-} catch (emailError) {
-  console.error("Erro ao enviar e-mail:", emailError);
-}
+    } catch (emailError) {
+      console.error("Erro ao enviar e-mail:", emailError);
+    }
 
     if (customerForm) {
       setCustomerForm({
@@ -515,7 +525,7 @@ export default function ValidationDetailsPage() {
       description: approved
         ? "Customer approved! Forwarded to CSC team final."
         : "The form has been sent for the client's review. They can edit it now!",
-        shouldRedirect: true
+      shouldRedirect: true,
     });
     setShowModal(true);
     console.log("Success modal displayed");
@@ -525,13 +535,18 @@ export default function ValidationDetailsPage() {
       title: "Alerta!",
       description:
         err instanceof Error ? err.message : "Unknown error while approving.",
-        shouldRedirect: false
+      shouldRedirect: false,
     });
     setShowModal(true);
   } finally {
-    setLoadingApprove(false);
+    if (approved) {
+      setLoadingApprove(false);
+    } else {
+      setloadingReview(false);
+    }
   }
 };
+
 
 const closeModal = () => {
   setShowModal(false);
@@ -914,11 +929,9 @@ const closeModal = () => {
 
 
         <S.ButtonContainer>
-
           <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Review
+            {loadingReview ? "Reviewing..." : "Review" }
           </S.Button>
-
 <S.Button 
   onClick={() => handleApproval(true)} 
   variant="primary" 
@@ -926,6 +939,8 @@ const closeModal = () => {
 >
   {loadingApprove ? "Approving..." : "Approve"}
 </S.Button>
+
+
         </S.ButtonContainer>
 
 

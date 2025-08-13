@@ -529,8 +529,8 @@ export default function OnboardingForm() {
         setResaleCertificateError("Resale Certificate is required.");
       }
       if (imageFiles.length === 0) {
-        errorsList.push("At least one POS photo is required.");
-        setPosPhotosError("At least one POS photo is required.");
+        errorsList.push("POS photos are required");
+        setPosPhotosError("POS photos are required");
       }
 
       fieldsToValidate = [
@@ -725,7 +725,7 @@ export default function OnboardingForm() {
                   <S.Input
                     id="legalName"
                     {...register("customerInfo.legalName", {
-                      required: "Name is required",
+                      required: "Company Legal Name is required",
                     })}
                     error={!!errors.customerInfo?.legalName}
                   />

@@ -134,6 +134,9 @@ export default function ValidationDetailsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
+    const [loadingReview, setloadingReview] = useState(false);
+
+
   
 
    const cancelRef = useRef<HTMLButtonElement | null>(null);
@@ -656,7 +659,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
 
     try {
-      setLoading(true);
+      setloadingReview(true);
       console.log("Reviewing form for client editing...", { customerId: id });
 
       await api.reviewCustomer(id as string, feedback);
@@ -713,7 +716,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     });
     setShowModal(true);
   } finally {
-    setLoading(false);
+    setloadingReview(false);
   }
   }
 
@@ -1180,8 +1183,8 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
             Reject
           </S.Button>
 
-          <S.Button onClick={handleReview} variant="secondary">
-            Review
+          <S.Button onClick={handleReview} variant="secondary" disabled={loadingApprove}>
+            {loadingReview ? "Reviewing..." : "Review"}
           </S.Button>
 
 <S.Button 

@@ -89,6 +89,8 @@ export default function ValidationDetailsPage() {
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [feedback, setFeedback] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
+      const [loadingReview, setloadingReview] = useState(false);
+
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
@@ -272,108 +274,120 @@ export default function ValidationDetailsPage() {
     }
   };
 
-  const handleApproval = async (approved: boolean) => {
-    if (!id || typeof id !== "string") {
-        console.error("ID do cliente não encontrado.");
-        return;
-    }
+ const handleApproval = async (approved: boolean) => {
+  if (!id || typeof id !== "string") {
+    console.error("ID do cliente não encontrado.");
+    return;
+  }
 
- if (!approved && feedback.trim() === "") {
+  if (!approved && feedback.trim() === "") {
     setModalContent({
       title: "Error!",
       description: "Feedback is required when sending to review.",
-      shouldRedirect: false, // Permanece na mesma página para o usuário corrigir
+      shouldRedirect: false,
     });
     setShowModal(true);
     return;
   }
 
-   try {
-  setLoadingApprove(true);
-  // Chamar a função adequada com base no status, passando o feedback
-  if (customerForm?.status === "approved by the wholesale team" || customerForm?.status === "review requested by the csc initial team - customer") {
+  try {
+    // Define o loading correto para cada ação
+    if (approved) {
+      setLoadingApprove(true);
+    } else {
+      setloadingReview(true);
+    }
+
+    // Chamar a função adequada com base no status, passando o feedback
+    if (
+      customerForm?.status === "approved by the wholesale team" ||
+      customerForm?.status === "review requested by the csc initial team - customer"
+    ) {
       await api.validateCSCInitialCustomer(id, approved, feedback);
-      // ✅ Lógica de envio de e-mail para CSC inicial
+
+      // Envio de e-mail CSC inicial
       try {
-          const emailPayload = {
-              name: customerForm?.buyer_name || "Cliente",
-              email: customerForm?.users?.email || "",
-              feedback: feedback || "", // ✅ MUDANÇA AQUI: Usa o feedback do estado
-          };
-          const endpoint = approved
-              ? "/api/send/csc_initial/send-approved-email"
-              : "/api/send/csc_initial/send-review-email";
-          const emailResponse = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(emailPayload),
-          });
-          if (emailResponse.ok) {
-              console.log("Email sent successfully!");
-          } else {
-              console.error("Failed to send email:", await emailResponse.text());
-          }
+        const emailPayload = {
+          name: customerForm?.buyer_name || "Cliente",
+          email: customerForm?.users?.email || "",
+          feedback: feedback || "",
+        };
+        const endpoint = approved
+          ? "/api/send/csc_initial/send-approved-email"
+          : "/api/send/csc_initial/send-review-email";
+        const emailResponse = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailPayload),
+        });
+        if (emailResponse.ok) {
+          console.log("Email sent successfully!");
+        } else {
+          console.error("Failed to send email:", await emailResponse.text());
+        }
       } catch (emailError) {
-          console.error("Error sending email:", emailError);
+        console.error("Error sending email:", emailError);
       }
-  } else if (
+    } else if (
       customerForm?.status === "approved by the credit team" ||
-      customerForm?.status === "review requested by the csc final team - customer" 
-  ) {
+      customerForm?.status === "review requested by the csc final team - customer"
+    ) {
       await api.validateCSCFinalCustomer(id, approved, feedback);
-      // ✅ Lógica de envio de e-mail para CSC final
+
+      // Envio de e-mail CSC final
       try {
-          const emailPayload = {
-              name: customerForm?.buyer_name || "Cliente",
-              email: customerForm?.users?.email || "",
-              feedback: feedback || "", // ✅ MUDANÇA AQUI: Usa o feedback do estado
-          };
-          const endpoint = approved
-              ? "/api/send/csc_final/send-approved-email"
-              : "/api/send/csc_final/send-review-email";
-          const emailResponse = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(emailPayload),
-          });
-          if (emailResponse.ok) {
-              console.log("Email sent successfully!");
-          } else {
-              console.error("Failed to send email:", await emailResponse.text());
-          }
+        const emailPayload = {
+          name: customerForm?.buyer_name || "Cliente",
+          email: customerForm?.users?.email || "",
+          feedback: feedback || "",
+        };
+        const endpoint = approved
+          ? "/api/send/csc_final/send-approved-email"
+          : "/api/send/csc_final/send-review-email";
+        const emailResponse = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailPayload),
+        });
+        if (emailResponse.ok) {
+          console.log("Email sent successfully!");
+        } else {
+          console.error("Failed to send email:", await emailResponse.text());
+        }
       } catch (emailError) {
-          console.error("Error sending email:", emailError);
+        console.error("Error sending email:", emailError);
       }
-  } else {
-    throw new Error("Customer status is not valid for CSC validation");
+    } else {
+      throw new Error("Customer status is not valid for CSC validation");
+    }
+
+    // Modal com mensagem diferente para aprovação e revisão
+    setModalContent({
+      title: approved ? "Approved!" : "Review!",
+      description: approved
+        ? "Customer approved!"
+        : "The form has been sent for the client's review. They can edit it now.",
+      shouldRedirect: true,
+    });
+    setShowModal(true);
+  } catch (error) {
+    console.error("Erro ao validar cliente:", error);
+    setModalContent({
+      title: "Erro",
+      description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`,
+      shouldRedirect: false,
+    });
+    setShowModal(true);
+  } finally {
+    // Reseta apenas o loading que foi ativado
+    if (approved) {
+      setLoadingApprove(false);
+    } else {
+      setloadingReview(false);
+    }
   }
+};
 
-
-  // Exibe modal com mensagens diferentes para Aprovação e Revisão
-  setModalContent({
-    title: approved ? "Approved!" : "Review!",
-    description: approved
-      ? "Customer approved!"
-      : "The form has been sent for the client's review. They can edit it now.",
-      shouldRedirect:true,
-  });
-
-  setShowModal(true);
-} catch (error) {
-  console.error("Erro ao validar cliente:", error);
-  setModalContent({
-    title: "Erro",
-    description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`,
-    shouldRedirect: false,
-  });
-  setShowModal(true);
-} finally {
-  setLoadingApprove(false);
-}
-
-
-      
-  };
 
 
 // ... O restante do seu componente
@@ -887,25 +901,38 @@ validation.credit_discount !== null &&
 )}
 
 
-  <S.ButtonContainer>
-{customerForm.status !== "review requested by the csc final team - customer" && customerForm.status !== "approved by the credit team" && customerForm.status !== "finished" && (
-  <S.Button onClick={() => handleApproval(false)} variant="secondary">
-    Review
-  </S.Button>
-)}
+<S.ButtonContainer>
+  {customerForm.status !== "review requested by the csc final team - customer" &&
+   customerForm.status !== "approved by the credit team" &&
+   customerForm.status !== "finished" && (
+    <S.Button
+      onClick={async () => {
+        setloadingReview(true);
+        await handleApproval(false);
+        setloadingReview(false);
+      }}
+      variant="secondary"
+      disabled={loadingReview}
+    >
+      {loadingReview ? "Reviewing..." : "Review"}
+    </S.Button>
+  )}
 
-{customerForm.status !== "finished" && (
-     <S.Button 
-  onClick={() => handleApproval(true)} 
-  variant="primary" 
-  disabled={loading}
->
-  {loading ? "Loading..." : "Approve"}
-</S.Button>
-)}
-    
+  {customerForm.status !== "finished" && (
+    <S.Button
+      onClick={async () => {
+        setLoadingApprove(true);
+        await handleApproval(true);
+        setLoadingApprove(false);
+      }}
+      variant="primary"
+      disabled={loadingApprove}
+    >
+      {loadingApprove ? "Approving..." : "Approve"}
+    </S.Button>
+  )}
+</S.ButtonContainer>
 
-  </S.ButtonContainer>
 
 
         {showModal && (

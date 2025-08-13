@@ -15,21 +15,23 @@ export const ContainerMain = styled.div`
   }
 `;
 
-export const FormContainer = styled.div<{ stepOne?: boolean }>`
- width: ${({ stepOne }) => (stepOne ? "95%" : "100%")};
+export const FormContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "stepOne"
+})<{ stepOne?: boolean }>`
+  width: ${({ stepOne }) => (stepOne ? "95%" : "100%")};
   max-width: ${({ stepOne }) => (stepOne ? "1395px" : "1200px")};
   padding: 1.5rem;
   background: #ffffff;
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
   margin-top: 2rem;
 
   @media (max-width: 768px) {
     height: 100%;
-}
+  }
+`;
 
-
-`
 
 export const FormHeader = styled.div`
   margin-bottom: 2rem;
