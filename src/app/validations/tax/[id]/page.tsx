@@ -52,6 +52,8 @@ export default function TaxValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
     const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
     const [loadingApprove, setLoadingApprove] = useState(false);
+        const [loadingReview, setloadingReview] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
 const [modalContent, setModalContent] = useState({
@@ -130,83 +132,86 @@ const [modalContent, setModalContent] = useState({
   }, [id]);
 
   const handleApproval = async (approved: boolean) => {
-    try {
+  try {
+    // Ativa o loading específico para cada botão
+    if (approved) {
       setLoadingApprove(true);
-      if (typeof id !== "string") {
-        throw new Error("Invalid client ID.");
-      }
+    } else {
+      setloadingReview(true);
+    }
 
- if (!approved && feedback.trim() === "") {
-    setModalContent({
-      title: "Error!",
-      description: "Feedback is required when sending to review.",
-      shouldRedirect: false, // Não redireciona em caso de erro
-    });
-    setShowModal(true);
-    return;
-  }
+    if (typeof id !== "string") {
+      throw new Error("Invalid client ID.");
+    }
 
-      if (!approved && !feedback.trim()) {
-        setModalContent({
-          title: "Review!",
-          description: "The form has been sent for the client's review. They can edit it now",
-          shouldRedirect: true 
-        });
-        setShowModal(true);
-        return;
-      }
-
-      // Call the new validation function specific to Tax
-      await api.validateTaxCustomer(id, approved, {
-        tax_status: approved ? "approved" : "rejected",
-        tax_feedback: feedback.trim() === "" ? undefined : feedback, // Send notes if any
-      });
-
-
-      // ✅ Lógica de envio de e-mail para o time de Tax
-      try {
-          const emailPayload = {
-              name: customerForm?.buyer_name || "Cliente",
-              email: customerForm?.users?.email || "",
-              feedback: feedback || "", // ✅ Adiciona o feedback do estado
-          };
-          const endpoint = approved
-              ? "/api/send/tax/send-approved-email" // Endpoint para aprovação (assumindo que existe)
-              : "/api/send/tax/send-review-email"; // Endpoint fornecido no route.ts
-          const emailResponse = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(emailPayload),
-          });
-          if (emailResponse.ok) {
-              console.log("Email sent successfully!");
-          } else {
-              console.error("Failed to send email:", await emailResponse.text());
-          }
-      } catch (emailError) {
-          console.error("Error sending email:", emailError);
-      }
-
-      setModalContent({
-        title: "Success!",
-        description: approved
-          ? "Client approved! Forwarded to the credit team."
-          : "The form has been sent for the client's review. They can edit it now",
-          shouldRedirect: true
-      });
-      setShowModal(true);
-    } catch (err) {
-      console.error("Error validating client:", err);
+    // Exige feedback para revisão
+    if (!approved && feedback.trim() === "") {
       setModalContent({
         title: "Error!",
-        description: err instanceof Error ? err.message : "Unknown error",
-        shouldRedirect: false 
+        description: "Feedback is required when sending to review.",
+        shouldRedirect: false, // Não redireciona em caso de erro
       });
       setShowModal(true);
-    } finally {
-      setLoadingApprove(false);
+      return;
     }
-  };
+
+    // Valida cliente no time de Tax
+    await api.validateTaxCustomer(id, approved, {
+      tax_status: approved ? "approved" : "rejected",
+      tax_feedback: feedback.trim() === "" ? undefined : feedback,
+    });
+
+    // ✅ Envio de e-mail para o time de Tax
+    try {
+      const emailPayload = {
+        name: customerForm?.buyer_name || "Cliente",
+        email: customerForm?.users?.email || "",
+        feedback: feedback || "",
+      };
+      const endpoint = approved
+        ? "/api/send/tax/send-approved-email"
+        : "/api/send/tax/send-review-email";
+      const emailResponse = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPayload),
+      });
+      if (emailResponse.ok) {
+        console.log("Email sent successfully!");
+      } else {
+        console.error("Failed to send email:", await emailResponse.text());
+      }
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+    }
+
+    // Mensagem final de sucesso ou revisão
+    setModalContent({
+      title: approved ? "Success!" : "Review!",
+      description: approved
+        ? "Client approved! Forwarded to the credit team."
+        : "The form has been sent for the client's review. They can edit it now",
+      shouldRedirect: true,
+    });
+    setShowModal(true);
+  } catch (err) {
+    console.error("Error validating client:", err);
+    setModalContent({
+      title: "Error!",
+      description: err instanceof Error ? err.message : "Unknown error",
+      shouldRedirect: false,
+    });
+    setShowModal(true);
+  } finally {
+    // Desativa o loading do botão correto
+    if (approved) {
+      setLoadingApprove(false);
+    } else {
+      setloadingReview(false);
+    }
+  }
+};
+
 
 const closeModal = () => {
   setShowModal(false);
@@ -500,8 +505,9 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
         {/* Approve/Reject buttons for the Tax team
         {(customerForm.status === "approved by the CSC team initial" || customerForm.status === "rejected by the tax team") && ( */}
         <S.ButtonContainer>
-          <S.Button onClick={() => handleApproval(false)} variant="secondary">
-            Review
+          <S.Button onClick={() => handleApproval(false)} variant="secondary"   disabled={loadingReview}
+>
+            {loadingReview ? "Reviewing..." : "Review"}
           </S.Button>
 <S.Button 
   onClick={() => handleApproval(true)} 

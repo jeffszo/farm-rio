@@ -96,7 +96,9 @@ export const Table = styled.table`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   background-color: #ffffff;
   border: 1px solid #f0f0f0;
+  table-layout: fixed; /* garante colunas de tamanho fixo */
 `;
+
 
 export const TableHeader = styled.th`
   padding: 16px 20px;
@@ -109,7 +111,8 @@ export const TableHeader = styled.th`
   border-bottom: 1px solid #f0f0f0;
   text-align: left;
   position: relative;
-
+  width: calc(100% / 6); /* divide igualmente entre as 6 colunas */
+  
   &:not(:last-child)::after {
     content: "";
     position: absolute;
@@ -190,6 +193,7 @@ export const TableData = styled.td`
   font-weight: 500;
   text-align: left;
   position: relative;
+  width: calc(100% / 6); /* igual ao header */
 
   &:not(:last-child)::after {
     content: "";
@@ -215,9 +219,9 @@ export const StatusBadge = styled.span<{ status: string }>`
     switch (status) {
       case "pending":
         return `
-          color: #6b7280;
-          background-color: #f9fafb;
-          border-color: #e5e7eb;
+          color: #4b5563;
+          background-color: #f3f4f6;
+          border-color: #d1d5db;
         `;
       case "review requested by the tax team - customer":
       case "review requested by the wholesale team - customer":
@@ -240,8 +244,8 @@ export const StatusBadge = styled.span<{ status: string }>`
       case "finished":
         return `
           color: #374151;
-          background-color: #f9fafb;
-          border-color: #e5e7eb;
+          background-color: #f3f4f6;
+          border-color: #d1d5db;
         `;
       default:
         return `
@@ -435,7 +439,7 @@ export const TotalClientsInfo = styled.div`
   justify-content: center;
   align-items: center;
   padding: 10px;
-  margin-left: 42.5rem;
+  margin-left: 38.5rem;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;

@@ -209,6 +209,8 @@ export default function PendingCustomersTable({
                     <option value="reviewRequestedByWholesaleCustomer">
                       Review requested by the wholesale team - customer
                     </option>
+                                        <option value="finished">Finished</option>
+
                   </>
                 ) : isTaxRoute ? (
                   <>

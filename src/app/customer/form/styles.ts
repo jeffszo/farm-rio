@@ -233,19 +233,26 @@ export const FileNameText = styled.p`
 export const FilePreviewContainer = styled.div`
   margin-top: 0.5rem;
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.5rem;
-`
+`;
 
-export const FilePreview = styled.span`
-  background-color: #f0f0f0;
-  padding: 0.3rem 0.6rem;
+export const FilePreview = styled.div`
+  position: relative;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
-  font-size: 0.8rem;
-  color: #555;
-  display: inline-flex;
+  background-color: #f0f0f0;
+  display: flex;
   align-items: center;
-`
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #555;
+  font-weight: 500;
+  flex: 0 1 calc(33.333% - 0.5rem); /* até 3 por linha */
+  box-sizing: border-box;
+`;
+
 
 
 export const ReviewContainer = styled.div`

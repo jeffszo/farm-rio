@@ -593,7 +593,7 @@ const onSubmit = async (formData: IFormInputs) => {
   )}
 </S.FileInputContainer>
 
-                <S.FileInputContainer>
+   <S.FileInputContainer>
   <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
   <S.HiddenInput
     id="image-upload"
@@ -608,10 +608,39 @@ const onSubmit = async (formData: IFormInputs) => {
       ? `${imageFiles.length} file(s) selected`
       : "Attach image files"}
   </S.UploadButton>
+
+  {/* Preview com texto curto e botão de remover */}
+  {imageFiles.length > 0 && (
+    <S.FilePreviewContainer>
+      {imageFiles.map((_, index) => (
+        <S.FilePreview key={index}>
+          <span>img-{String(index + 1).padStart(2, "0")}</span>
+          <S.RemoveButton
+            type="button"
+            onClick={() =>
+              setImageFiles((prev) => prev.filter((_, i) => i !== index))
+            }
+            style={{
+              position: "absolute",
+              top: "-6px",
+              right: "-6px",
+              backgroundColor: "#fff",
+              borderRadius: "50%",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          >
+            <Trash2 size={14} />
+          </S.RemoveButton>
+        </S.FilePreview>
+      ))}
+    </S.FilePreviewContainer>
+  )}
+
   {posPhotosError && (
     <S.ErrorMessage>{posPhotosError}</S.ErrorMessage>
   )}
 </S.FileInputContainer>
+
 
 
                   </S.Grid>
