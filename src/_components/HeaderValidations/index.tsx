@@ -3,7 +3,6 @@
 import React from 'react'
 import { useRouter, usePathname } from "next/navigation"
 import * as S from "./styles"
-import Image from "next/image"
 import Logo from "../../../public/logo.png"
 import { LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
