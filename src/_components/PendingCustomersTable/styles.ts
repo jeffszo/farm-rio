@@ -151,7 +151,7 @@ export const FilterTitle = styled.span`
 `;
 
 export const TableFilterSelect = styled.select`
-  padding: 10px 12px;
+  padding: 4px 12px;
   font-size: 0.875rem;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -439,11 +439,42 @@ export const TotalClientsInfo = styled.div`
   justify-content: center;
   align-items: center;
   padding: 10px;
-  margin-left: 38.5rem;
+  margin-left: 25rem;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
+`;
+
+
+
+export const TableSearchInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  background-color: transparent;
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+`;
+
+
+
+export const SearchWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 12px;
+  background-color: #ffffff;
+
+  svg {
+    color: #6b7280;
+  }
 `;

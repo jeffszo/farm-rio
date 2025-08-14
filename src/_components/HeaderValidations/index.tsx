@@ -7,8 +7,6 @@ import Logo from "../../../public/logo.png"
 import { LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-
-
 const supabase = createClient();
 
 export default function HeaderValidations() {
@@ -25,6 +23,15 @@ export default function HeaderValidations() {
 
   const isAuthPage = pathname === "/" || pathname === "/signup"
 
+  // Detecta rota base do time
+  const getTeamBasePath = () => {
+    if (pathname.startsWith("/validations/wholesale")) return "/validations/wholesale"
+    if (pathname.startsWith("/validations/csc")) return "/validations/csc"
+    if (pathname.startsWith("/validations/tax")) return "/validations/tax"
+    if (pathname.startsWith("/validations/credit")) return "/validations/credit"
+    return "/" // fallback para home
+  }
+
   let logoutText = "Logout"
   if (pathname.startsWith("/validations/wholesale")) logoutText = "Wholesale Logout"
   else if (pathname.startsWith("/validations/csc")) logoutText = "CSC Logout"
@@ -34,11 +41,10 @@ export default function HeaderValidations() {
   return (
     <S.HeaderContainer>
       <S.HeaderContent>
-               <S.LogoImage
+        <S.LogoImage
           src={Logo}
           alt="Logo da Farm Rio"
-          style={{ cursor: "pointer" }}
-          onClick={() => router.push("/")} // Redireciona ao clicar
+          onClick={() => router.push(getTeamBasePath())}
         />
         {!isAuthPage && (
           <S.Logout onClick={handleLogout}>

@@ -165,21 +165,21 @@ export default function StatusClient({
         {formStatus === 'approved by the wholesale team' && (
           <div>
             Your form has been approved by the Wholesale team and is now under review by the CSC team.
-            {wholesaleFeedback && (
+            {/* {wholesaleFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
-            )}
+            )} */}
           </div>
         )}
         {formStatus === 'approved by the credit team' && (
           <div>
-            Your form has been approved by all teams! You&apos;re good to go!
-            {creditFeedback && (
+            Your form has been approved by the Credit team and is now under review by the CSC team.
+            {/* {creditFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{creditFeedback}</S.FeedbackContent>
               </S.FeedbackCard>
-            )}
+            )} */}
           </div>
         )}
       </S.ReviewSubtitle>

@@ -130,9 +130,9 @@ export default function LoginForm() {
 
       {apiError && <S.ErrorMessage>{apiError}</S.ErrorMessage>}
 
-{/*<S.ForgotPassword onClick={() => router.push("/reset-password")}>
+{/* <S.ForgotPassword onClick={() => router.push("/reset-password")}>
   Forgot your password? Reset it here!
-</S.ForgotPassword>*/}
+</S.ForgotPassword> */}
 
       <S.Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Loading..." : "Enter"}

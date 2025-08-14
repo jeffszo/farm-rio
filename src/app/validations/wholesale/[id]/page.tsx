@@ -375,6 +375,8 @@ export default function ValidationDetailsPage() {
     fetchUser();
   }, []);
 
+  
+
   const confirmRejectAction = () => {
     if (!feedback.trim()) {
       setModalContent({
@@ -754,6 +756,14 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
   };
 
+const formatUrl = (url?: string) =>
+  url
+    ? url.startsWith("http://") || url.startsWith("https://")
+      ? url
+      : `https://${url}`
+    : undefined
+
+
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
   if (!customerForm) return <S.Message>Form not found.</S.Message>;
@@ -863,48 +873,50 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
               )}
             </S.FormRow>
             <S.FormRow>
-              <strong>Instagram:</strong>{" "}
-              {customerForm.instagram ? (
-                <a
-                  href={customerForm.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Access Instagram
-                </a>
-              ) : (
-                "N/A"
-              )}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Website:</strong>{" "}
-              {customerForm.website ? (
-                <a
-                  href={customerForm.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Access Website
-                </a>
-              ) : (
-                "N/A"
-              )}
-            </S.FormRow>
+  <strong>Instagram:</strong>{" "}
+  {customerForm.instagram ? (
+    <a
+      href={formatUrl(customerForm.instagram)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Access Instagram
+    </a>
+  ) : (
+    "N/A"
+  )}
+</S.FormRow>
 
-            <S.FormRow>
-              <strong>JOOR:</strong>{" "}
-              {customerForm.joor ? (
-                <a
-                  href={customerForm.joor}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Access Profile
-                </a>
-              ) : (
-                "N/A"
-              )}
-            </S.FormRow>
+<S.FormRow>
+  <strong>Website:</strong>{" "}
+  {customerForm.website ? (
+    <a
+      href={formatUrl(customerForm.website)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Access Website
+    </a>
+  ) : (
+    "N/A"
+  )}
+</S.FormRow>
+
+<S.FormRow>
+  <strong>JOOR:</strong>{" "}
+  {customerForm.joor ? (
+    <a
+      href={formatUrl(customerForm.joor)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Access Profile
+    </a>
+  ) : (
+    "N/A"
+  )}
+</S.FormRow>
+
 
             <S.FormRow>
               <strong>Photos:</strong>{" "}

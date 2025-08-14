@@ -527,47 +527,36 @@ const onSubmit = async (formData: IFormInputs) => {
                   {errors.customerInfo?.dunNumber && <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="instagram">Instagram</S.Label>
-                  <S.Input
-                    id="instagram"
-                    type="url"
-                    placeholder="https://instagram.com/yourprofile"
-                    {...register("instagram", {
-                      pattern: {
- value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-  message: "Please enter a valid URL with http:// or https://",
-                      },
-                    })}
-                    error={!!errors.instagram}
-                  />
-                  {errors.instagram && <S.ErrorMessage>{errors.instagram.message}</S.ErrorMessage>}
-                </S.InputGroup>
-                <S.InputGroup>
-                  <S.Label htmlFor="website">Website</S.Label>
-                  <S.Input
-                    id="website"
-                    type="url"
-                    placeholder="https://yourwebsite.com"
-                    {...register("website", {
-                      pattern: {
-  value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-  message: "Please enter a valid Website URL with http:// or https://",
-                      },
-                    })}
-                    error={!!errors.website}
-                  />
-                  {errors.website && <S.ErrorMessage>{errors.website.message}</S.ErrorMessage>}
-                </S.InputGroup>
-                 <S.InputGroup>
-  <S.Label htmlFor="joor">JOOR profile - (if applicable)</S.Label>
+  <S.Label htmlFor="website">Website</S.Label>
+  <S.Input
+    id="website"
+    type="text" // permite digitar sem http(s)
+    placeholder="yourwebsite.com"
+    {...register("website", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+        message: "Please enter a valid Website URL",
+      },
+    })}
+    error={!!errors.website}
+  />
+  {errors.website && (
+    <S.ErrorMessage>
+      {errors.website.message}
+    </S.ErrorMessage>
+  )}
+</S.InputGroup>
+
+<S.InputGroup>
+  <S.Label htmlFor="joor">JOOR profile - if applicable</S.Label>
   <S.Input
     id="joor"
-    type="url"
-    placeholder="https://jooraccess.com/yourprofile"
+    type="text" // permite digitar sem http(s)
+    placeholder="jooraccess.com/yourprofile"
     {...register("joor", {
       pattern: {
-          value: /^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-  message: "Please enter a valid URL with http:// or https://",
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+        message: "Please enter a valid URL",
       },
     })}
     error={!!errors.joor}
@@ -576,6 +565,8 @@ const onSubmit = async (formData: IFormInputs) => {
     <S.ErrorMessage>{errors.joor.message}</S.ErrorMessage>
   )}
 </S.InputGroup>
+
+
                <S.FileInputContainer>
   <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
   <S.HiddenInput
