@@ -1,5 +1,6 @@
 import styled from "styled-components"
 import { theme } from '../../styles/theme';
+import Image from "next/image";
 
 export const HeaderContainer = styled.header`
   background-color: ${theme.colors.backgroundHeader};
@@ -34,3 +35,6 @@ export const Logout = styled.a`
   }
 `
 
+export const LogoImage = styled(Image)`
+  cursor: pointer;
+`;

@@ -8,6 +8,8 @@ import Logo from "../../../public/logo.png"
 import { LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
+
+
 const supabase = createClient();
 
 export default function HeaderValidations() {
@@ -33,7 +35,12 @@ export default function HeaderValidations() {
   return (
     <S.HeaderContainer>
       <S.HeaderContent>
-        <Image src={Logo} alt="Logo da Farm Rio" />
+               <S.LogoImage
+          src={Logo}
+          alt="Logo da Farm Rio"
+          style={{ cursor: "pointer" }}
+          onClick={() => router.push("/")} // Redireciona ao clicar
+        />
         {!isAuthPage && (
           <S.Logout onClick={handleLogout}>
             <LogOut /> {logoutText}
