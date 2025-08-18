@@ -59,18 +59,18 @@ export default function PendingCustomersTable({
       reviewRequestedByWholesale: "review requested by the wholesale team",
       reviewRequestedByTax: "review requested by the tax team",
       reviewRequestedByCredit: "review requested by the credit team",
-      reviewRequestedByCSC: "review requested by the governance initial team",
+      reviewRequestedByCSC: "review requested by the compilance team",
       approvedByWholesale: "approved by the wholesale team",
       approvedByCredit: "approved by the credit team",
       approvedByTax: "approved by the tax team",
       approvedByCSC: "approved by the governance final team",
-      approvedByCSCInitial: "approved by the governance initial team",
+      approvedByCSCInitial: "approved by the compliance team",
       finished: "finished",
       reviewRequestedByTaxCustomer: "review requested by the tax team - customer",
       reviewRequestedByWholesaleCustomer: "review requested by the wholesale team - customer",
       reviewRequestedByCreditCustomer: "review requested by the credit team - customer",
-      reviewRequestedByCSCInitialCustomer: "review requested by the governance initial team - customer",
-      reviewRequestedByCSCFinalCustomer: "review requested by the governance final team - customer",
+      reviewRequestedByCSCInitialCustomer: "review requested by the compilance team - customer",
+      reviewRequestedByCSCFinalCustomer: "review requested by the governance team - customer",
     }
 
     if (filterStatus !== "all") {
@@ -215,7 +215,7 @@ export default function PendingCustomersTable({
                   ) : isTaxRoute ? (
                     <>
                       <option value="reviewRequestedByTaxCustomer">Review requested by the tax team - customer</option>
-                      <option value="approvedByCSCInitial">Approved by the governance initial team</option>
+                      <option value="approvedByCSCInitial">Approved by the compliance team</option>
                     </>
                   ) : isCreditRoute ? (
                     <>
@@ -230,11 +230,11 @@ export default function PendingCustomersTable({
                       <option value="approvedByWholesale">Approved by the wholesale team</option>
                       <option value="approvedByCredit">Approved by the credit team</option>
                       <option value="reviewRequestedByCSCInitialCustomer">
-                        Review requested by the governance initial team - customer
+                        Review requested by the compilance team - customer
                       </option>
-                      <option value="reviewRequestedByCSCFinalCustomer">
+                      {/* <option value="reviewRequestedByCSCFinalCustomer">
                         Review requested by the governance final team - customer
-                      </option>
+                      </option> */}
                     </>
                   )}
                 </S.TableFilterSelect>

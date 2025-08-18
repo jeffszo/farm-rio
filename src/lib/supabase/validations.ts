@@ -8,7 +8,7 @@ function getNextStatus(teamRole: "wholesale" | "csc_initial" | "tax" | "credit" 
     case "wholesale":
       return "approved by the wholesale team";
     case "csc_initial":
-      return "approved by the governance initial team";
+      return "approved by the compliance team"; 
     case "tax":
       return "approved by the tax team";
     case "credit":
@@ -116,7 +116,7 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("csc_initial") : "review requested by the initial governance team";
+  const newStatus = approved ? getNextStatus("csc_initial") : "review requested by the compliance team";
   // const statusMessageForEmail = approved ? "aprovado pela equipe CSC Inicial" : "rejeitado pela equipe CSC Inicial";
 
   const updateData = {

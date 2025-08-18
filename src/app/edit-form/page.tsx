@@ -295,8 +295,8 @@ const onSubmit = async (formData: IFormInputs) => {
       newStatus = "review requested by the tax team - customer";
     } else if (previousFormStatus === "review requested by the credit team") {
       newStatus = "review requested by the credit team - customer";
-    } else if (previousFormStatus === "review requested by the initial governance team") {
-      newStatus = "review requested by the governance initial team - customer";
+    } else if (previousFormStatus === "review requested by the compliance team") {
+      newStatus = "review requested by the compliance team - customer";
     } else if (previousFormStatus === "review requested by the governance final team") {
       newStatus = "review requested by the governance final team - customer";
     }

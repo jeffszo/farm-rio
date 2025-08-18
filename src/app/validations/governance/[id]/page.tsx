@@ -301,7 +301,7 @@ export default function ValidationDetailsPage() {
     // Chamar a função adequada com base no status, passando o feedback
     if (
       customerForm?.status === "approved by the wholesale team" ||
-      customerForm?.status === "review requested by the csc initial team - customer"
+      customerForm?.status === "review requested by the compliance team - customer"
     ) {
       await api.validateCSCInitialCustomer(id, approved, feedback);
 

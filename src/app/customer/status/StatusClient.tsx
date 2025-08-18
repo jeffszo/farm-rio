@@ -53,8 +53,8 @@ export default function StatusClient({
   }, [initialUserId]);
 
   const canEditForm =
-    formStatus === 'review requested by the initial governance team' ||
-    formStatus === 'review requested by the governance final team' ||
+    formStatus === 'review requested by the compliance team' ||
+    formStatus === 'review requested by the governance team' ||
     formStatus === 'review requested by the tax team' ||
     formStatus === 'review requested by the credit team' ||
     formStatus === 'review requested by the wholesale team';
@@ -90,9 +90,9 @@ export default function StatusClient({
           </div>
         )}
         {/* ... (Todos os outros blocos de status e feedback) ... */}
-        {formStatus === 'review requested by the initial governance team' && (
+        {formStatus === 'review requested by the compliance team' && (
           <div>
-            Your form has been reviewed by the Governance Initial Team. Please check their feedback below
+            Your form has been reviewed by the compliance Team. Please check their feedback below
             {cscInitialFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
@@ -100,7 +100,7 @@ export default function StatusClient({
             )}
           </div>
         )}
-        {formStatus === 'review requested by the governance final team' && (
+        {formStatus === 'review requested by the governance team' && (
           <div>
             Your form has been reviewed by the Governance Final Team. Please check their feedback below
             {cscFinalFeedback && (
@@ -196,11 +196,18 @@ export default function StatusClient({
           </div>
         )} 
 
-         {formStatus === 'review requested by the governance initial team - customer' && (
+         {formStatus === 'review requested by the compliance team - customer' && (
           <div>
-            Your forwarded data is being analyzed by the governance team.
+            Your forwarded data is being analyzed by the Compliance Team.
           </div>
         )}
+
+                {formStatus === 'review requested by the governance final team - customer' && (
+          <div>
+            Your forwarded data is being analyzed by the Governance Team.
+          </div>
+        )}
+
 
 
 

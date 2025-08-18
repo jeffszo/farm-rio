@@ -523,7 +523,7 @@ export default function ValidationDetailsPage() {
     setModalContent({
       title: "Ok!",
       description: approved
-        ? "Customer approved! Forwarded to governance team final."
+        ? "Customer approved! Forwarded to the Governance team."
         : "The form has been sent for the client's review. They can edit it now!",
       shouldRedirect: true,
     });
