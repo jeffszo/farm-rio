@@ -53,8 +53,8 @@ export default function StatusClient({
   }, [initialUserId]);
 
   const canEditForm =
-    formStatus === 'review requested by the initial CSC team' ||
-    formStatus === 'review requested by the CSC final team' ||
+    formStatus === 'review requested by the initial governance team' ||
+    formStatus === 'review requested by the governance final team' ||
     formStatus === 'review requested by the tax team' ||
     formStatus === 'review requested by the credit team' ||
     formStatus === 'review requested by the wholesale team';
@@ -79,9 +79,9 @@ export default function StatusClient({
       <S.ReviewSubtitle>
         {/* ... (Todo o seu JSX para exibir os status e feedbacks) ... */}
         {formStatus === 'pending' && <div>Your form is currently pending review.</div>}
-        {formStatus === 'approved by the csc initial team' && (
+        {formStatus === 'approved by the governance initial team' && (
           <div>
-            Your form has been approved by the CSC Initial team and is now under review by the Tax team.
+            Your form has been approved by the Governance Initial team and is now under review by the Tax team.
             {cscInitialFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
@@ -90,9 +90,9 @@ export default function StatusClient({
           </div>
         )}
         {/* ... (Todos os outros blocos de status e feedback) ... */}
-        {formStatus === 'review requested by the initial CSC team' && (
+        {formStatus === 'review requested by the initial governance team' && (
           <div>
-            Your form has been reviewed by the CSC initial Team. Please check their feedback below
+            Your form has been reviewed by the Governance Initial Team. Please check their feedback below
             {cscInitialFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{cscInitialFeedback}</S.FeedbackContent>
@@ -100,9 +100,9 @@ export default function StatusClient({
             )}
           </div>
         )}
-        {formStatus === 'review requested by the CSC final team' && (
+        {formStatus === 'review requested by the governance final team' && (
           <div>
-            Your form has been reviewed by the CSC final Team. Please check their feedback below
+            Your form has been reviewed by the Governance Final Team. Please check their feedback below
             {cscFinalFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{cscFinalFeedback}</S.FeedbackContent>
@@ -164,7 +164,7 @@ export default function StatusClient({
         )}
         {formStatus === 'approved by the wholesale team' && (
           <div>
-            Your form has been approved by the Wholesale team and is now under review by the CSC team.
+            Your form has been approved by the Wholesale team and is now under review by the Governance team.
             {/* {wholesaleFeedback && (
               <S.FeedbackCard>
                 <S.FeedbackContent>{wholesaleFeedback}</S.FeedbackContent>
@@ -174,14 +174,37 @@ export default function StatusClient({
         )}
         {formStatus === 'approved by the credit team' && (
           <div>
-            Your form has been approved by the Credit team and is now under review by the CSC team.
-            {/* {creditFeedback && (
-              <S.FeedbackCard>
-                <S.FeedbackContent>{creditFeedback}</S.FeedbackContent>
-              </S.FeedbackCard>
-            )} */}
+            Your form has been approved by the Credit team and is now under review by the Governance team.
           </div>
         )}
+
+             {formStatus === 'review requested by the credit team - customer' && (
+          <div>
+            Your forwarded data is being analyzed by the credit team.
+          </div>
+        )}
+
+               {formStatus === 'review requested by the wholesale team - customer' && (
+          <div>
+            Your forwarded data is being analyzed by the wholesale team.
+          </div>
+        )}
+
+                   {formStatus === 'review requested by the tax team - customer' && (
+          <div>
+            Your forwarded data is being analyzed by the tax team.
+          </div>
+        )} 
+
+         {formStatus === 'review requested by the governance initial team - customer' && (
+          <div>
+            Your forwarded data is being analyzed by the governance team.
+          </div>
+        )}
+
+
+
+        
       </S.ReviewSubtitle>
 
       {canEditForm && (

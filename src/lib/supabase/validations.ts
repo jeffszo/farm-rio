@@ -8,7 +8,7 @@ function getNextStatus(teamRole: "wholesale" | "csc_initial" | "tax" | "credit" 
     case "wholesale":
       return "approved by the wholesale team";
     case "csc_initial":
-      return "approved by the csc initial team";
+      return "approved by the governance initial team";
     case "tax":
       return "approved by the tax team";
     case "credit":
@@ -116,7 +116,7 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
   // const customerEmail = customerData.email;
   // const customerName = customerData.customer_name;
 
-  const newStatus = approved ? getNextStatus("csc_initial") : "review requested by the initial CSC team";
+  const newStatus = approved ? getNextStatus("csc_initial") : "review requested by the initial governance team";
   // const statusMessageForEmail = approved ? "aprovado pela equipe CSC Inicial" : "rejeitado pela equipe CSC Inicial";
 
   const updateData = {
@@ -312,7 +312,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   }
 
   // Define o novo status com base na aprovação
-  const newStatus = approved ? getNextStatus("csc_final") : "review requested by the csc final team";
+  const newStatus = approved ? getNextStatus("csc_final") : "review requested by the governance final team";
   
   const updateData: { status: string; updated_at: string; csc_final_status?: string; csc_final_feedback?: string | null; } = {
     status: newStatus,
@@ -333,7 +333,7 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
     .eq("id", customerId);
 
   if (error) {
-    throw new Error(`Erro ao validar cliente pelo CSC Final: ${error.message}`);
+    throw new Error(`Erro ao validar cliente pelo governance final: ${error.message}`);
   }
 }
 

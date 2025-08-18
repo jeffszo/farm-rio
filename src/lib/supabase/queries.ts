@@ -55,8 +55,8 @@ export async function getPendingCSCValidations(
   // Todos os status combinados
   const statuses = [
     "approved by the credit team",
-    "review requested by the csc initial team - customer",
-    "review requested by the csc final team - customer",
+    "review requested by the governance initial team - customer",
+    "review requested by the governance final team - customer",
     "approved by the wholesale team",
     "finished"
     // Adicione outros status se houver mais que você deseja buscar nesta visão geral
@@ -86,7 +86,7 @@ export async function getPendingTaxValidations(page = 1, itemsPerPage = 10) {
   const { data, error, count } = await supabaseServerClient
     .from("customer_forms")
     .select("*", { count: "exact" })
-    .in("status", ["approved by the csc initial team", "review requested by the tax team - customer"]) // From CSC initial or rejected by tax
+    .in("status", ["approved by the governance initial team", "review requested by the tax team - customer"]) // From CSC initial or rejected by tax
     .range(from, to)
     .order("created_at", { ascending: true })
 

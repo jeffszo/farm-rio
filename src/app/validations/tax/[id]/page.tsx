@@ -489,10 +489,10 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                         <S.Divider /> 
 
                         <S.SectionTitle>
-              <MessageSquare  size={16} /> CSC Team Feedback
+              <MessageSquare  size={16} /> Governance Team Feedback
             </S.SectionTitle>
                                    <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.csc_initial_feedback || "No feedback provided by CSC Team."}
+              <strong>Feedback:</strong> {customerForm.csc_initial_feedback || "No feedback provided by Governance Team."}
             </S.FormRow>
           </S.FormSection>
         </S.FormDetails>

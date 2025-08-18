@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Users, ChevronLeft, ChevronRight, Download, Filter, Search  } from "lucide-react"
+import { Users, ChevronLeft, ChevronRight, Download, Filter, Search } from "lucide-react"
 import * as S from "./styles"
 import { useMediaQuery } from "react-responsive"
 import * as XLSX from "xlsx"
@@ -36,7 +36,7 @@ export default function PendingCustomersTable({
 }: Props) {
   const isMobile = useMediaQuery({ maxWidth: 768 })
   const pathname = usePathname()
-  const isCSCValidationsRoute = pathname?.includes("/validations/csc")
+  const isCSCValidationsRoute = pathname?.includes("/validations/governance")
   const isWholesaleRoute = pathname?.includes("/validations/wholesale")
   const isTaxRoute = pathname?.includes("/validations/tax")
   const isCreditRoute = pathname?.includes("/validations/credit")
@@ -59,18 +59,18 @@ export default function PendingCustomersTable({
       reviewRequestedByWholesale: "review requested by the wholesale team",
       reviewRequestedByTax: "review requested by the tax team",
       reviewRequestedByCredit: "review requested by the credit team",
-      reviewRequestedByCSC: "review requested by the csc initial team",
+      reviewRequestedByCSC: "review requested by the governance initial team",
       approvedByWholesale: "approved by the wholesale team",
       approvedByCredit: "approved by the credit team",
       approvedByTax: "approved by the tax team",
-      approvedByCSC: "approved by the csc final team",
-      approvedByCSCInitial: "approved by the csc initial team",
+      approvedByCSC: "approved by the governance final team",
+      approvedByCSCInitial: "approved by the governance initial team",
       finished: "finished",
       reviewRequestedByTaxCustomer: "review requested by the tax team - customer",
       reviewRequestedByWholesaleCustomer: "review requested by the wholesale team - customer",
       reviewRequestedByCreditCustomer: "review requested by the credit team - customer",
-      reviewRequestedByCSCInitialCustomer: "review requested by the csc initial team - customer",
-      reviewRequestedByCSCFinalCustomer: "review requested by the csc final team - customer",
+      reviewRequestedByCSCInitialCustomer: "review requested by the governance initial team - customer",
+      reviewRequestedByCSCFinalCustomer: "review requested by the governance final team - customer",
     }
 
     if (filterStatus !== "all") {
@@ -194,145 +194,149 @@ export default function PendingCustomersTable({
 
       {!isMobile ? (
         <>
-          <S.TableFilterContainer>
-            <S.FilterGroup>
-              <S.FilterTitle>
-                <Filter size={16} />
-                Filter by status:
-              </S.FilterTitle>
-              <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="all">All status</option>
-                {isWholesaleRoute ? (
-                  <>
-                    <option value="pending">Pending</option>
-                    <option value="reviewRequestedByWholesaleCustomer">
-                      Review requested by the wholesale team - customer
+          <S.TopControls>
+            <S.TableFilterContainer>
+              {/* filtros */}
+              <S.FilterGroup>
+                <S.FilterTitle>
+                  <Filter size={16} />
+                  Filter by status:
+                </S.FilterTitle>
+                <S.TableFilterSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                  <option value="all">All status</option>
+                  {isWholesaleRoute ? (
+                    <>
+                      <option value="pending">Pending</option>
+                      <option value="reviewRequestedByWholesaleCustomer">
+                        Review requested by the wholesale team - customer
+                      </option>
+                      <option value="finished">Finished</option>
+                    </>
+                  ) : isTaxRoute ? (
+                    <>
+                      <option value="reviewRequestedByTaxCustomer">Review requested by the tax team - customer</option>
+                      <option value="approvedByCSCInitial">Approved by the governance initial team</option>
+                    </>
+                  ) : isCreditRoute ? (
+                    <>
+                      <option value="approvedByTax">Approved by the tax team</option>
+                      <option value="reviewRequestedByCreditCustomer">
+                        Review requested by the credit team - customer
+                      </option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="finished">Finished</option>
+                      <option value="approvedByWholesale">Approved by the wholesale team</option>
+                      <option value="approvedByCredit">Approved by the credit team</option>
+                      <option value="reviewRequestedByCSCInitialCustomer">
+                        Review requested by the governance initial team - customer
+                      </option>
+                      <option value="reviewRequestedByCSCFinalCustomer">
+                        Review requested by the governance final team - customer
+                      </option>
+                    </>
+                  )}
+                </S.TableFilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterTitle>
+                  <Filter size={16} />
+                  Filter by currency:
+                </S.FilterTitle>
+                <S.TableFilterSelect value={filterCurrency} onChange={(e) => setFilterCurrency(e.target.value)}>
+                  {uniqueCurrencies.map((currency) => (
+                    <option key={currency} value={currency}>
+                      {currency}
                     </option>
-                    <option value="finished">Finished</option>
-                  </>
-                ) : isTaxRoute ? (
-                  <>
-                    <option value="reviewRequestedByTaxCustomer">Review requested by the tax team - customer</option>
-                    <option value="approvedByCSCInitial">Approved by the csc initial team</option>
-                  </>
-                ) : isCreditRoute ? (
-                  <>
-                    <option value="approvedByTax">Approved by the tax team</option>
-                    <option value="reviewRequestedByCreditCustomer">
-                      Review requested by the credit team - customer
-                    </option>
-                  </>
-                ) : (
-                  <>
-                    <option value="finished">Finished</option>
-                    <option value="approvedByWholesale">Approved by the wholesale team</option>
-                    <option value="approvedByCredit">Approved by the credit team</option>
-                    <option value="reviewRequestedByCSCInitialCustomer">
-                      Review requested by the csc initial team - customer
-                    </option>
-                    <option value="reviewRequestedByCSCFinalCustomer">
-                      Review requested by the csc final team - customer
-                    </option>
-                  </>
+                  ))}
+                </S.TableFilterSelect>
+              </S.FilterGroup>
+
+              <S.SearchWrapper>
+                <Search size={16} />
+                <S.TableSearchInput
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                />
+              </S.SearchWrapper>
+
+              {/* total clients alinhado ao ACTION */}
+              <S.ButtonAndTotalClientsWrapper $hasExcelButton={isCSCValidationsRoute}>
+                <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
+                {isCSCValidationsRoute && (
+                  <S.Button onClick={exportToExcel}>
+                    <Download size={16} />
+                    Excel
+                  </S.Button>
                 )}
-              </S.TableFilterSelect>
-            </S.FilterGroup>
+              </S.ButtonAndTotalClientsWrapper>
+            </S.TableFilterContainer>
+          </S.TopControls>
 
-            <S.FilterGroup>
-              <S.FilterTitle>
-                <Filter size={16} />
-                Filter by currency:
-              </S.FilterTitle>
-              <S.TableFilterSelect value={filterCurrency} onChange={(e) => setFilterCurrency(e.target.value)}>
-                {uniqueCurrencies.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
-              </S.TableFilterSelect>
-
-<S.SearchWrapper>
-  <Search size={16} />
-  <S.TableSearchInput
-    type="text"
-    placeholder="Search by name..."
-    value={searchName}
-    onChange={(e) => setSearchName(e.target.value)}
-  />
-</S.SearchWrapper>
-
-            </S.FilterGroup>
-
-            <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
-            <S.ButtonAndTotalClientsWrapper>
-              {isCSCValidationsRoute && (
-                <S.Button onClick={exportToExcel}>
-                  <Download size={16} />
-                  Excel
-                </S.Button>
-              )}
-            </S.ButtonAndTotalClientsWrapper>
-          </S.TableFilterContainer>
-
-          <S.TableScrollContainer>
-            <S.Table>
-              <thead>
-                <tr>
-                  <S.TableHeader>Status</S.TableHeader>
-                  <S.TableHeader>DBA</S.TableHeader>
-                  <S.TableHeader>Legal Name</S.TableHeader>
-                  <S.TableHeader>Currency</S.TableHeader>
-                  <S.TableHeader>Date Created</S.TableHeader>
-                  <S.TableHeader>Action</S.TableHeader>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
-                    <S.TableRow key={customer.id}>
-                      <S.TableData>
-                        <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
-                      </S.TableData>
-                      <S.TableData>{customer.dba_number}</S.TableData>
-                      <S.TableData>{customer.customer_name}</S.TableData>
-                      <S.TableData>{customer.currency}</S.TableData>
-                      <S.TableData>
-                        {new Date(customer.created_at).toLocaleString(navigator.language, {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}
-                      </S.TableData>
-                      <S.TableData>
-                        <S.Button
-  onClick={() => handleViewDetails(customer.id)}
-  disabled={
-    loadingCustomerId === customer.id ||
-    (isWholesaleRoute && customer.status.trim().toLowerCase() === "finished")
-  }
-  title={
-    isWholesaleRoute && customer.status.trim().toLowerCase() === "finished"
-      ? "The validation process has been completed"
-      : undefined
-  }
-  aria-label={`See details of ${customer.customer_name}`}
->
-  {loadingCustomerId === customer.id ? "Loading..." : "See details"}
-</S.Button>
-
-                      </S.TableData>
-                    </S.TableRow>
-                  ))
-                ) : (
-                  <S.EmptyTableRow>
-                    <S.EmptyTableData colSpan={7}>
-                      <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
-                    </S.EmptyTableData>
-                  </S.EmptyTableRow>
-                )}
-              </tbody>
-            </S.Table>
-          </S.TableScrollContainer>
+          <S.TableAndControlsWrapper>
+            <S.TableScrollContainer>
+              <S.Table>
+                <thead>
+                  <tr>
+                    <S.TableHeader>Status</S.TableHeader>
+                    <S.TableHeader>DBA</S.TableHeader>
+                    <S.TableHeader>Legal Name</S.TableHeader>
+                    <S.TableHeader>Currency</S.TableHeader>
+                    <S.TableHeader>Date Created</S.TableHeader>
+                    <S.TableHeader>Action</S.TableHeader>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCustomers.length > 0 ? (
+                    filteredCustomers.map((customer) => (
+                      <S.TableRow key={customer.id}>
+                        <S.TableData>
+                          <S.StatusBadge status={customer.status}>{customer.status}</S.StatusBadge>
+                        </S.TableData>
+                        <S.TableData>{customer.dba_number}</S.TableData>
+                        <S.TableData>{customer.customer_name}</S.TableData>
+                        <S.TableData>{customer.currency}</S.TableData>
+                        <S.TableData>
+                          {new Date(customer.created_at).toLocaleString(navigator.language, {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          })}
+                        </S.TableData>
+                        <S.TableData>
+                          <S.Button
+                            onClick={() => handleViewDetails(customer.id)}
+                            disabled={
+                              loadingCustomerId === customer.id ||
+                              (isWholesaleRoute && customer.status.trim().toLowerCase() === "finished")
+                            }
+                            title={
+                              isWholesaleRoute && customer.status.trim().toLowerCase() === "finished"
+                                ? "The validation process has been completed"
+                                : undefined
+                            }
+                            aria-label={`See details of ${customer.customer_name}`}
+                          >
+                            {loadingCustomerId === customer.id ? "Loading..." : "See details"}
+                          </S.Button>
+                        </S.TableData>
+                      </S.TableRow>
+                    ))
+                  ) : (
+                    <S.EmptyTableRow>
+                      <S.EmptyTableData colSpan={7}>
+                        <S.EmptyStateMessage>No customers found with the selected filter.</S.EmptyStateMessage>
+                      </S.EmptyTableData>
+                    </S.EmptyTableRow>
+                  )}
+                </tbody>
+              </S.Table>
+            </S.TableScrollContainer>
+          </S.TableAndControlsWrapper>
         </>
       ) : null}
 

@@ -330,7 +330,7 @@ export default function ValidationDetailsPage() {
       }
     } else if (
       customerForm?.status === "approved by the credit team" ||
-      customerForm?.status === "review requested by the csc final team - customer"
+      customerForm?.status === "review requested by the governance final team - customer"
     ) {
       await api.validateCSCFinalCustomer(id, approved, feedback);
 
@@ -358,7 +358,7 @@ export default function ValidationDetailsPage() {
         console.error("Error sending email:", emailError);
       }
     } else {
-      throw new Error("Customer status is not valid for CSC validation");
+      throw new Error("Customer status is not valid for Governance validation");
     }
 
     // Modal com mensagem diferente para aprovação e revisão
@@ -394,7 +394,7 @@ export default function ValidationDetailsPage() {
 const closeModal = () => {
   setShowModal(false);
   if (modalContent.shouldRedirect) { // <<-- O if verifica o valor da propriedade
-    router.push("/validations/csc");
+    router.push("/validations/governance");
   }
 };
 
@@ -767,7 +767,7 @@ const formatUrl = (url?: string) =>
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team" || customerForm.status === "finished" || customerForm.status === "review requested by the csc final team - customer" ) && validation && (
+          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team" || customerForm.status === "finished" || customerForm.status === "review requested by the governance final team - customer" ) && validation && (
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
@@ -913,7 +913,7 @@ validation.credit_discount !== null &&
 
 
 <S.ButtonContainer>
-  {customerForm.status !== "review requested by the csc final team - customer" &&
+  {customerForm.status !== "review requested by the governance final team - customer" &&
    customerForm.status !== "approved by the credit team" &&
    customerForm.status !== "finished" && (
     <S.Button

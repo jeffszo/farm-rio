@@ -625,7 +625,7 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     // Modal de sucesso para aprovação
     setModalContent({
       title: "Approved!",
-      description: "Client approved! Forwarded to the CSC team.",
+      description: "Customer approved! Forwarded to the Governance team.",
       shouldRedirect: true,
     });
     setShowModal(true);

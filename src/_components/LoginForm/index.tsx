@@ -93,7 +93,7 @@ export default function LoginForm() {
       } else if (finalRole === "credito") {
         router.push("/validations/credit");
       } else if (finalRole === "csc") {
-        router.push("/validations/csc");
+        router.push("/validations/governance");
       } else {
         await supabase.auth.signOut();
         setApiError("Papel de usuário inválido.");

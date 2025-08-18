@@ -34,7 +34,7 @@ export default function HeaderValidations() {
 
   let logoutText = "Logout"
   if (pathname.startsWith("/validations/wholesale")) logoutText = "Wholesale Logout"
-  else if (pathname.startsWith("/validations/csc")) logoutText = "CSC Logout"
+  else if (pathname.startsWith("/validations/governance")) logoutText = "Governance Logout"
   else if (pathname.startsWith("/validations/tax")) logoutText = "Tax Logout"
   else if (pathname.startsWith("/validations/credit")) logoutText = "Credit Logout"
 

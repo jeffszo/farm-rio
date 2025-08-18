@@ -62,7 +62,7 @@ export default function Page() {
       currentPage={currentPage}
       totalPages={totalPages}
       setCurrentPage={setCurrentPage}
-      onViewDetails={(id) => router.push(`/validations/csc/${id}`)}
+      onViewDetails={(id) => router.push(`/validations/governance/${id}`)}
     />
     
     

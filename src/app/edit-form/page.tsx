@@ -207,6 +207,9 @@ useEffect(() => {
     }
   };
 
+ 
+
+
 const onSubmit = async (formData: IFormInputs) => {
   console.log("🧪 termsSelected:", formData.buyerInfo?.terms);
 
@@ -216,7 +219,7 @@ const onSubmit = async (formData: IFormInputs) => {
 
     const userIdToUse = user?.id;
     if (!userIdToUse) {
-      setApiError("Erro: ID do usuário não disponível. Por favor, faça login novamente.");
+      setApiError("Error: User ID not available. Please log in again.");
       setIsUploading(false);
       return;
     }
@@ -292,10 +295,10 @@ const onSubmit = async (formData: IFormInputs) => {
       newStatus = "review requested by the tax team - customer";
     } else if (previousFormStatus === "review requested by the credit team") {
       newStatus = "review requested by the credit team - customer";
-    } else if (previousFormStatus === "review requested by the initial CSC team") {
-      newStatus = "review requested by the csc initial team - customer";
-    } else if (previousFormStatus === "review requested by the csc final team") {
-      newStatus = "review requested by the csc final team - customer";
+    } else if (previousFormStatus === "review requested by the initial governance team") {
+      newStatus = "review requested by the governance initial team - customer";
+    } else if (previousFormStatus === "review requested by the governance final team") {
+      newStatus = "review requested by the governance final team - customer";
     }
 
 
@@ -526,6 +529,29 @@ const onSubmit = async (formData: IFormInputs) => {
                   />
                   {errors.customerInfo?.dunNumber && <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>}
                 </S.InputGroup>
+
+
+<S.InputGroup>
+  <S.Label htmlFor="instagram">Instagram</S.Label>
+  <S.Input
+    id="instagram"
+    type="text" // permite digitar sem http(s)
+    placeholder="instagram.com/yourprofile"
+    {...register("instagram", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+        message: "Please enter a valid URL",
+      },
+    })}
+    error={!!errors.instagram}
+  />
+  {errors.instagram && (
+    <S.ErrorMessage>
+      {errors.instagram.message}
+    </S.ErrorMessage>
+  )}
+</S.InputGroup>
+
                 <S.InputGroup>
   <S.Label htmlFor="website">Website</S.Label>
   <S.Input

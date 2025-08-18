@@ -1,7 +1,6 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  // max-width: 1400px;
   margin: auto;
   height: 100%;
   padding: 2rem;
@@ -16,8 +15,8 @@ export const Container = styled.div`
 
 export const TitleWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center; /* Alinha os itens ao centro verticalmente */
+  justify-content: center;
+  align-items: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
@@ -25,9 +24,7 @@ export const TitleWrapper = styled.div`
 `;
 
 export const TitleContainer = styled.div`
-  flex-grow: 1; /* Faz o container do título crescer para o espaço disponível */
   display: flex;
-  justify-content: center; /* Centraliza o conteúdo (o título) */
   align-items: center;
   gap: 12px;
   color: #1f2937;
@@ -40,11 +37,21 @@ export const Title = styled.h2`
   color: #111827;
 `;
 
-export const ButtonAndTotalClientsWrapper = styled.div`
+export const ButtonAndTotalClientsWrapper = styled.div<{ $hasExcelButton: boolean }>`
   display: flex;
   align-items: center;
-  gap: 20px; /* Adiciona espaçamento entre os elementos */
+  gap: 10px;
+  margin-left: auto; /* empurra para a extrema direita */
+  /* mesmo padding dos th/td, para alinhar com ACTION */
+
+  @media (max-width: 1200px) {
+    width: 100%;
+    justify-content: flex-end;
+    padding-right: 0;
+    margin-left: 0;
+  }
 `;
+
 
 export const ExportButton = styled.button`
   display: flex;
@@ -62,14 +69,15 @@ export const ExportButton = styled.button`
 `;
 
 export const TableScrollContainer = styled.div`
+  width: 100%;
   max-height: 500px;
-  overflow-y: auto;
+  overflow-x: auto;
   border-radius: 8px;
   border: 1px solid #f0f0f0;
 
-  /* Estilização personalizada da scrollbar */
   &::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
   }
 
   &::-webkit-scrollbar-track {
@@ -96,9 +104,8 @@ export const Table = styled.table`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   background-color: #ffffff;
   border: 1px solid #f0f0f0;
-  table-layout: fixed; /* garante colunas de tamanho fixo */
+  table-layout: fixed;
 `;
-
 
 export const TableHeader = styled.th`
   padding: 16px 20px;
@@ -111,8 +118,10 @@ export const TableHeader = styled.th`
   border-bottom: 1px solid #f0f0f0;
   text-align: left;
   position: relative;
-  width: calc(100% / 6); /* divide igualmente entre as 6 colunas */
-  
+  min-width: 150px;
+  width: 100%;
+  white-space: nowrap;
+
   &:not(:last-child)::after {
     content: "";
     position: absolute;
@@ -126,19 +135,24 @@ export const TableHeader = styled.th`
 
 export const TableFilterContainer = styled.div`
   display: flex;
+  align-items: center;
   gap: 20px;
   margin-bottom: 24px;
   padding: 20px;
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #f0f0f0;  
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  width: 100%;
 `;
+
 
 export const FilterGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 `;
 
 export const FilterTitle = styled.span`
@@ -157,6 +171,7 @@ export const TableFilterSelect = styled.select`
   border-radius: 6px;
   background-color: #ffffff;
   min-width: 200px;
+  max-width: 100%;
   color: #374151;
   font-weight: 500;
   transition: all 0.2s ease-in-out;
@@ -174,7 +189,6 @@ export const TableFilterSelect = styled.select`
 
 export const TableRow = styled.tr`
   transition: all 0.2s ease-in-out;
-  /* cursor: pointer; */
   border-bottom: 1px solid #f9fafb;
 
   &:hover {
@@ -193,7 +207,8 @@ export const TableData = styled.td`
   font-weight: 500;
   text-align: left;
   position: relative;
-  width: calc(100% / 6); /* igual ao header */
+  min-width: 150px;
+  word-wrap: break-word;
 
   &:not(:last-child)::after {
     content: "";
@@ -218,11 +233,6 @@ export const StatusBadge = styled.span<{ status: string }>`
   ${({ status }) => {
     switch (status) {
       case "pending":
-        return `
-          color: #4b5563;
-          background-color: #f3f4f6;
-          border-color: #d1d5db;
-        `;
       case "review requested by the tax team - customer":
       case "review requested by the wholesale team - customer":
       case "review requested by the credit team - customer":
@@ -258,10 +268,10 @@ export const StatusBadge = styled.span<{ status: string }>`
 `;
 
 export const Button = styled.button`
-display: flex;
-justify-content:center;
-align-items: center;
-gap: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
   padding: 10px 16px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -313,6 +323,7 @@ export const Pagination = styled.div`
   background-color: #ffffff;
   border-radius: 8px;
   border: 1px solid #f0f0f0;
+  flex-wrap: wrap;
 `;
 
 export const PageButton = styled.button`
@@ -351,104 +362,19 @@ export const PageInfo = styled.span`
   padding: 0 16px;
 `;
 
-export const MobileList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-export const MobileListItem = styled.li`
-  padding: 20px;
-  background-color: #ffffff;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    border-color: #e5e7eb;
-  }
-`;
-
-export const MobileListItemTitle = styled.h4`
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin: 0;
-  color: #111827;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f3f4f6;
-`;
-
-export const MobileListItemContent = styled.p`
-  font-size: 0.875rem;
-  color: #374151;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-`;
-
-export const MobileFilterContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
-`;
-
-export const FilterLabel = styled.span`
-  font-size: 0.875rem;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-`;
-
-export const EmptyMobileState = styled.div`
-  padding: 32px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  background-color: #ffffff;
-`;
-
-export const TotalCount = styled.p`
-  font-size: 1rem;
-  color: #6b7280;
-  margin-bottom: 24px;
-  padding: 16px 20px;
-  background-color: #fafafa;
-  border-radius: 6px;
-  border: 1px solid #f0f0f0;
-  font-weight: 600;
-`;
-
 export const TotalClientsInfo = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 10px;
-  margin-left: 25rem;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
+  white-space: nowrap;
 `;
-
-
 
 export const TableSearchInput = styled.input`
   border: none;
@@ -461,20 +387,40 @@ export const TableSearchInput = styled.input`
   &::placeholder {
     color: #9ca3af;
   }
-`;
-
-
+`
 
 export const SearchWrapper = styled.div`
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  padding: 5px 12px;
+  padding: 6px 12px;
   background-color: #ffffff;
+  height: 32px;
+  box-sizing: border-box;
 
   svg {
     color: #6b7280;
   }
+`
+
+
+export const TopControls = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+`;
+
+
+
+
+
+export const TableAndControlsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 `;

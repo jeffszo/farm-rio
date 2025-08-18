@@ -65,7 +65,6 @@ export const ErrorMessage = styled.p`
 
 export const ForgotPassword = styled.a`
   font-size: 14px;
-  color: #586b7fff; 
   text-decoration: none; 
   margin-top: 0.25px;
   cursor: pointer;
