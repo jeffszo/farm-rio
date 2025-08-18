@@ -38,19 +38,20 @@ export const Title = styled.h2`
 `;
 
 export const ButtonAndTotalClientsWrapper = styled.div<{ $hasExcelButton: boolean }>`
+  grid-column: 6;         /* ocupa a coluna do ACTION */
+  justify-self: start;    /* alinha à ESQUERDA dessa coluna */
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto; /* empurra para a extrema direita */
-  /* mesmo padding dos th/td, para alinhar com ACTION */
+  padding-left: 12px;     /* mesmo padding dos TH/TD (20px) para “bater” com o texto */
 
   @media (max-width: 1200px) {
-    width: 100%;
-    justify-content: flex-end;
-    padding-right: 0;
-    margin-left: 0;
+    grid-column: 1 / -1;
+    justify-self: end;    /* no mobile, fica à direita */
+    padding-left: 0;
   }
 `;
+
 
 
 export const ExportButton = styled.button`
@@ -134,17 +135,21 @@ export const TableHeader = styled.th`
 `;
 
 export const TableFilterContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr)); /* espelha a tabela */
+  column-gap: 0;     /* sem gap lateral, como a tabela */
+  row-gap: 12px;
   margin-bottom: 24px;
-  padding: 20px;
+  padding: 20px;     /* mesmo “respiro” que TH/TD usam (20px) */
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid #f0f0f0;  
+  border: 1px solid #f0f0f0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  flex-wrap: wrap;
   width: 100%;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr; /* empilha no responsivo */
+  }
 `;
 
 
@@ -152,6 +157,7 @@ export const FilterGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-right: 14px;
   flex-wrap: wrap;
 `;
 
@@ -382,6 +388,7 @@ export const TableSearchInput = styled.input`
   font-size: 0.875rem;
   color: #374151;
   font-weight: 500;
+  
   background-color: transparent;
 
   &::placeholder {
@@ -391,21 +398,20 @@ export const TableSearchInput = styled.input`
 
 export const SearchWrapper = styled.div`
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 4px 12px;
   background-color: #ffffff;
-  height: 32px;
+  height: 32px;         /* mesma altura dos selects */
   box-sizing: border-box;
-
+  flex: 0 0 250px;      /* largura fixa controlada */
+  
   svg {
     color: #6b7280;
   }
 `
-
 
 export const TopControls = styled.div`
   display: flex;
@@ -424,3 +430,40 @@ export const TableAndControlsWrapper = styled.div`
   flex-direction: column;
   width: 100%;
 `;
+
+export const FiltersRow = styled.div`
+  grid-column: 1 / span 5;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: nowrap;
+`
+
+export const MobileFiltersContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  select, input {
+    width: 100%;
+  }
+`
+
+export const MobileTotalClients = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+`
