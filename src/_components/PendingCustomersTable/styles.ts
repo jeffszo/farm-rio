@@ -190,6 +190,17 @@ export const TableFilterSelect = styled.select`
   &:hover {
     border-color: #d1d5db;
   }
+
+    @media (max-width: 1499px) {
+      max-width: auto;
+      width: 130px;
+  }
+
+      @media (max-width: 1414px) {
+      max-width: auto;
+      width: 130px;
+  }
+
 `;
 
 export const TableRow = styled.tr`
@@ -393,6 +404,10 @@ export const TableSearchInput = styled.input`
   &::placeholder {
     color: #9ca3af;
   }
+
+ 
+
+
 `
 
 export const SearchWrapper = styled.div`
@@ -410,6 +425,8 @@ export const SearchWrapper = styled.div`
   svg {
     color: #6b7280;
   }
+
+  
 `
 
 export const TopControls = styled.div`
