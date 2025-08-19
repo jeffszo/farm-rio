@@ -18,6 +18,12 @@ export async function POST(req: Request) {
       to: email, 
       subject: `FARM RIO Onboarding - Review Requested`, 
       react: RejectedEmail({ feedback }),
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/wholesale-rejected-anexo.jpg',
+      filename: 'wholesale-rejected-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {

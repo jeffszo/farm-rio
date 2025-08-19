@@ -34,6 +34,12 @@ export async function POST(req: Request) {
       to: recipientEmail, 
       subject: `FARM RIO Onboarding - Your onboarding form has been submitted for internal review.`, 
       react: FormSubmissionConfirmationEmail(),
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/form-anexo.jpg',
+      filename: 'form-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {
