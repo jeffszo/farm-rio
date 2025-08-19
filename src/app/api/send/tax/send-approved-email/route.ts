@@ -19,6 +19,12 @@ export async function POST(req: Request) {
       to: email, 
       subject: `Your account has been approved by the Tax team!!`, 
       react: ApprovedEmail(),
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/tax-approved-anexo.jpg',
+      filename: 'tax-approved-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {

@@ -45,7 +45,7 @@ export const ButtonAndTotalClientsWrapper = styled.div<{ $hasExcelButton: boolea
   gap: 10px;
   padding-left: 12px;     /* mesmo padding dos TH/TD (20px) para “bater” com o texto */
 
-  @media (max-width: 1200px) {
+  @media (max-width: 768px) {
     grid-column: 1 / -1;
     justify-self: end;    /* no mobile, fica à direita */
     padding-left: 0;

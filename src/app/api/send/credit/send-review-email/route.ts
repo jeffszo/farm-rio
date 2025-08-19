@@ -19,6 +19,12 @@ export async function POST(req: Request) {
       to: email,
       subject: `FARM RIO Onboarding - Review Requested`,
       react: ReviewEmail({ feedback }), 
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/credit-review-anexo.jpg',
+      filename: 'credit-review-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {

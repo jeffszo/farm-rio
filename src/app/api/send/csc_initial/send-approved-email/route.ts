@@ -19,6 +19,12 @@ export async function POST(req: Request) {
       to: email, 
       subject: `FARM RIO Onboarding - Internal Review Update (2/5)`, 
       react: ApprovedEmail(),
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/compliance-approved-anexo.jpg',
+      filename: 'compliance-approved-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {

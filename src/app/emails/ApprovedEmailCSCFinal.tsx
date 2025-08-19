@@ -49,7 +49,7 @@ const h1 = {
 };
 
 const linkStyle = {
-  color: '#84C9FF',
+  color: '#030506',
   textDecoration: 'underline',
   fontSize: '14px',
 };

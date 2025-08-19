@@ -28,6 +28,10 @@ export const FormContainer = styled.div`
 
 `
 
+export const Link = styled.a`
+    color: '#030506';
+  text-decoration: 'underline';`
+
 export const FormHeader = styled.div`
   margin-bottom: 2rem;
 `

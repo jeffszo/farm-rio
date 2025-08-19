@@ -18,7 +18,13 @@ export async function POST(req: Request) {
       from: 'FARM RIO Onboarding <governance@customer.farmrio.com>',
       to: email, 
       subject: `FARM RIO Onboarding - Your onboarding is now complete!`, 
-      react: ApprovedEmail(),
+      react: ApprovedEmail(), 
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/cscfinal-approved-anexo.jpg',
+      filename: 'cscfinal-approved-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {

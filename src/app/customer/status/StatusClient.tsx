@@ -151,7 +151,7 @@ export default function StatusClient({
             )}
           </div>
         )}
-        {formStatus === 'finished' && <div>Your form has been successfully finalized!</div>}
+        {formStatus === 'finished' && <div>Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <S.Link> farmriowholesale.com. </S.Link> </div>}
         {formStatus === 'approved by the tax team' && (
           <div>
             Your form has been approved by the Tax team and is now under review by the Wholesale team.

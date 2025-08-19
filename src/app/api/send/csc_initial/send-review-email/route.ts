@@ -18,7 +18,13 @@ export async function POST(req: Request) {
       from: 'FARM RIO Onboarding <governance@customer.farmrio.com>',
       to: email,
       subject: `FARM RIO Onboarding - Review Requested`,
-      react: ReviewEmailCSCInitial({ name, feedback }), // ✅ Passando os props
+      react: ReviewEmailCSCInitial({ name, feedback }), 
+      attachments: [
+    {
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/compliance-review-anexo.jpg',
+      filename: 'compliance-review-anexo.jpg',
+    },
+  ],
     });
 
     if (error) {
