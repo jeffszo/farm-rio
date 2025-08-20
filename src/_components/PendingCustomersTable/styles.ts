@@ -50,6 +50,10 @@ export const ButtonAndTotalClientsWrapper = styled.div<{ $hasExcelButton: boolea
     justify-self: end;    /* no mobile, fica à direita */
     padding-left: 0;
   }
+
+    @media (max-width: 1200px) {
+    padding-left: 8px;  
+  }
 `;
 
 
@@ -158,6 +162,10 @@ export const FilterGroup = styled.div`
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+
+    @media (max-width: 1201px) {
+    gap: 0px;
+  }
 `;
 
 export const FilterTitle = styled.span`
@@ -168,7 +176,6 @@ export const FilterTitle = styled.span`
   font-weight: 600;
   color: #374151;
 `;
-
 export const TableFilterSelect = styled.select`
   padding: 4px 12px;
   font-size: 0.875rem;
@@ -191,16 +198,22 @@ export const TableFilterSelect = styled.select`
     border-color: #d1d5db;
   }
 
-    @media (max-width: 1499px) {
-      max-width: auto;
-      width: 130px;
+  /* Responsividade progressiva */
+  @media (max-width: 1499px) {
+    width: 130px;
   }
 
-      @media (max-width: 1414px) {
-      max-width: auto;
-      width: 130px;
+  @media (max-width: 1414px) {
+    width: 120px;
   }
 
+  @media (max-width: 1276px) {
+    width: 100px;
+  }
+
+  @media (max-width: 1200px) {
+    width: 90px;
+  }
 `;
 
 export const TableRow = styled.tr`
@@ -282,7 +295,6 @@ export const StatusBadge = styled.span<{ status: string }>`
     }
   }}
 `;
-
 export const Button = styled.button`
   display: flex;
   justify-content: center;
@@ -311,7 +323,16 @@ export const Button = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  /* Responsividade progressiva */
+  @media (max-width: 1276px) {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+
+
 `;
+
 
 export const EmptyTableRow = styled.tr`
   border-bottom: none;
@@ -390,6 +411,13 @@ export const TotalClientsInfo = styled.div`
   font-weight: 600;
   color: #374151;
   white-space: nowrap;
+
+    @media (max-width: 1276px) {
+    padding: 8px;
+    font-size: 0.75rem;
+  }
+
+  
 `;
 
 export const TableSearchInput = styled.input`
@@ -418,16 +446,29 @@ export const SearchWrapper = styled.div`
   border-radius: 6px;
   padding: 4px 12px;
   background-color: #ffffff;
-  height: 32px;         /* mesma altura dos selects */
-  box-sizing: border-box;
-  flex: 0 0 250px;      /* largura fixa controlada */
-  
+  height: 32px;
+  flex: 0 0 250px;
+
   svg {
     color: #6b7280;
   }
 
-  
-`
+  /* Responsividade progressiva */
+  @media (max-width: 1499px) {
+    flex: 0 0 180px;
+    padding: 4px 10px;
+  }
+
+  @media (max-width: 1276px) {
+    flex: 0 0 140px;
+    padding: 4px 8px;
+  }
+
+  @media (max-width: 1200px) {
+    flex: 0 0 120px;
+    padding: 4px 6px;
+  }
+`;
 
 export const TopControls = styled.div`
   display: flex;
@@ -453,7 +494,17 @@ export const FiltersRow = styled.div`
   align-items: center;
   gap: 20px;
   flex-wrap: nowrap;
-`
+
+  /* Responsividade progressiva */
+  @media (max-width: 1276px) {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 1200px) {
+    gap: 8px;
+  }
+`;
 
 export const MobileFiltersContainer = styled.div`
   display: flex;
