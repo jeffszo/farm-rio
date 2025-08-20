@@ -23,13 +23,12 @@ export default function HeaderValidations() {
 
   const isAuthPage = pathname === "/" || pathname === "/signup"
 
-  // Detecta rota base do time
   const getTeamBasePath = () => {
     if (pathname.startsWith("/validations/wholesale")) return "/validations/wholesale"
-    if (pathname.startsWith("/validations/csc")) return "/validations/csc"
+    if (pathname.startsWith("/validations/governance")) return "/validations/governance"
     if (pathname.startsWith("/validations/tax")) return "/validations/tax"
     if (pathname.startsWith("/validations/credit")) return "/validations/credit"
-    return "/" // fallback para home
+    return "/" 
   }
 
   let logoutText = "Logout"

@@ -236,6 +236,12 @@ const onSubmit = async (formData: IFormInputs) => {
       return;
     }
 
+      if (formData.buyerInfo?.estimatedPurchaseAmount !== undefined) {
+      formData.buyerInfo.estimatedPurchaseAmount = parseFloat(
+        Number(formData.buyerInfo.estimatedPurchaseAmount).toFixed(2)
+      );
+    }
+
     const termsSelected = formData.buyerInfo?.terms?.trim().toLowerCase();
     // AQUI: A condição já está correta, verificando se o termo é diferente de "100% prior to ship"
     if (termsSelected && termsSelected !== "100% prior to ship" && !financialStatementsFile) {
@@ -892,10 +898,33 @@ const onSubmit = async (formData: IFormInputs) => {
                   {errors.buyerInfo?.currency && <S.ErrorMessage>{errors.buyerInfo.currency.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="estimatedPurchaseAmount">Estimated Puchase Amount Per Season</S.Label>
-                  <S.Input type="number" id="estimatedPurchaseAmount" min={0} step="0.01" {...register("buyerInfo.estimatedPurchaseAmount", { required: "Estimated purchase amount is required", valueAsNumber: true, min: { value: 0, message: "Amount must be positive" } })} error={!!errors.buyerInfo?.estimatedPurchaseAmount} />
-                  {errors.buyerInfo?.estimatedPurchaseAmount && <S.ErrorMessage>{errors.buyerInfo.estimatedPurchaseAmount.message}</S.ErrorMessage>}
+                  <S.Label htmlFor="estimatedPurchaseAmount">
+                    Estimated Puchase Amount Per Season
+                  </S.Label>
+                  <S.Input
+                    id="estimatedPurchaseAmount"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...register("buyerInfo.estimatedPurchaseAmount", {
+                      required: "Estimated purchase amount is required",
+                      valueAsNumber: true,
+                      min: { value: 0, message: "Amount must be positive" },
+                    })}
+                    error={!!errors.buyerInfo?.estimatedPurchaseAmount}
+                  />
+                  {errors.buyerInfo?.estimatedPurchaseAmount && (
+                    <S.ErrorMessage>
+                      {errors.buyerInfo.estimatedPurchaseAmount.message}
+                    </S.ErrorMessage>
+                  )}
                 </S.InputGroup>
+
+
+
+
+
+
                 <S.FileInputContainer>
                   <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                     <S.Label htmlFor="financialStatements-upload">Financial Statements</S.Label>

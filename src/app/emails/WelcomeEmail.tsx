@@ -19,7 +19,7 @@ const main = {
 const table = {
   backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
   backgroundSize: 'cover',
-  backgroundColor: '#2e2e2e',
+  backgroundColor: '#769bb5',
   height: '448px', // Define a altura mínima
   width: '990px',
   margin: '0 auto'

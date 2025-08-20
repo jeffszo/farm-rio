@@ -18,7 +18,7 @@ const main = {
 const table = {
   backgroundImage: "url('https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/template-padrao.JPG')",
   backgroundSize: 'cover',
-  backgroundColor: '#2e2e2e', // Fundo de fallback
+  backgroundColor: '#769bb5', // Fundo de fallback
   height: '448px',
   width: '990px',
   margin: '0 auto'
@@ -49,7 +49,8 @@ const h1 = {
 };
 
 const linkStyle = {
-  color: '#030506',
+  cursor: 'pointer',
+  color: '#0a0a0a',
   textDecoration: 'underline',
   fontSize: '14px',
 };

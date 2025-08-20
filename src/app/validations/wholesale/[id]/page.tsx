@@ -1190,23 +1190,42 @@ const formatUrl = (url?: string) =>
           />
         </S.FeedbackGroup>
 
-        <S.ButtonContainer>
-          <S.Button onClick={onRejectClick} variant="secondary">
-            Reject
-          </S.Button>
+<S.ButtonContainer>
+  {customerForm.status === "finished" ? (
+    // 👉 Quando status finished, só mostra Review
+    <S.Button
+      onClick={handleReview}
+      variant="secondary"
+      disabled={loadingReview}
+    >
+      {loadingReview ? "Reviewing..." : "Review"}
+    </S.Button>
+  ) : (
+    // 👉 Caso contrário, mostra Reject + Review + Approve
+    <>
+      <S.Button onClick={onRejectClick} variant="secondary">
+        Reject
+      </S.Button>
 
-          <S.Button onClick={handleReview} variant="secondary" disabled={loadingApprove}>
-            {loadingReview ? "Reviewing..." : "Review"}
-          </S.Button>
+      <S.Button
+        onClick={handleReview}
+        variant="secondary"
+        disabled={loadingReview}
+      >
+        {loadingReview ? "Reviewing..." : "Review"}
+      </S.Button>
 
-<S.Button 
-  onClick={() => handleApproval(true)} 
-  variant="primary" 
-  disabled={loadingApprove}
->
-  {loadingApprove ? "Approving..." : "Approve"}
-</S.Button>
-        </S.ButtonContainer>
+      <S.Button
+        onClick={() => handleApproval(true)}
+        variant="primary"
+        disabled={loadingApprove}
+      >
+        {loadingApprove ? "Approving..." : "Approve"}
+      </S.Button>
+    </>
+  )}
+</S.ButtonContainer>
+
 
         {showModal && (
           <S.Modal>

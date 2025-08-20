@@ -79,7 +79,10 @@ const [modalContent, setModalContent] = useState({
               ? ((data.users[0] as { email?: string })?.email ?? "")
               : ((data.users as { email?: string })?.email ?? ""),
           },
-            financial_statements: "financial_statements" in data ? (typeof data.financial_statements === "string" ? data.financial_statements : JSON.stringify(data.financial_statements)) : "",
+           financial_statements:
+  data.financial_statements && typeof data.financial_statements === "string"
+    ? data.financial_statements.trim()
+    : "",
             photo_urls: "photo_urls" in data
               ? Array.isArray(data.photo_urls)
                 ? data.photo_urls
@@ -189,7 +192,7 @@ const [modalContent, setModalContent] = useState({
     setModalContent({
       title: approved ? "Success!" : "Review!",
       description: approved
-        ? "Client approved! Forwarded to the credit team."
+        ? "Client approved! Forwarded to the Credit team."
         : "The form has been sent for the client's review. They can edit it now",
       shouldRedirect: true,
     });
@@ -360,8 +363,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
             </S.FormRow>
 
                
-
-            <S.FormRow>
+<S.FormRow>
               <strong>Financial Statements: </strong>{" "}
               {customerForm.financial_statements ? (
                 <a
@@ -372,23 +374,10 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                   View PDF
                 </a>
               ) : (
-                "Not sent"
+                "N/A"
               )}
             </S.FormRow>
-            <S.FormRow>
-              <strong>Resale Certificate:</strong>{" "}
-              {customerForm.resale_certificate ? (
-                <a
-                  href={customerForm.resale_certificate}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View PDF
-                </a>
-              ) : (
-                "Not sent"
-              )}
-            </S.FormRow>
+
 
 <S.FormRow>
   <strong>Instagram:</strong>{" "}

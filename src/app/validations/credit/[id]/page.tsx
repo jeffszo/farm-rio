@@ -252,7 +252,11 @@ export default function ValidationDetailsPage() {
           // Apply the processing function for billing_address and shipping_address
           billing_address: processAddressArray(data.billing_address),
           shipping_address: processAddressArray(data.shipping_address),
-          financial_statements: "financial_statements" in data ? String(data.financial_statements) : "",
+          financial_statements:
+  data.financial_statements && typeof data.financial_statements === "string"
+    ? data.financial_statements.trim()
+    : "",
+
           photo_urls: (() => {
             if ("photo_urls" in data) {
               if (Array.isArray(data.photo_urls)) {
@@ -275,7 +279,11 @@ export default function ValidationDetailsPage() {
               : (data.users as { email?: string })?.email ?? "",
           },
           instagram: "instagram" in data ? (typeof data.instagram === "string" ? data.instagram : "") : "",
-          website: "website" in data ? String(data.website) : "",
+          website:
+  data.website && typeof data.website === "string" && data.website.trim().toLowerCase() !== "null"
+    ? data.website.trim()
+    : "",
+
           branding_mix: "branding_mix" in data
             ? typeof data.branding_mix === "string"
               ? data.branding_mix
@@ -657,7 +665,7 @@ const formatUrl = (url?: string) =>
                                 View PDF
                               </a>
                             ) : (
-                              "Not sent"
+                              "N/A"
                             )}
                           </S.FormRow>
 

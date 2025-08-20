@@ -132,41 +132,48 @@ export default function PendingCustomersTable({
         return
       }
 
-      const processedCustomers = approvedCustomers.map((customer) => {
-        const newCustomer: Record<string, unknown> = { ...customer }
+     const processedCustomers = approvedCustomers.map((customer) => {
+  const newCustomer: Record<string, unknown> = { ...customer }
 
-        try {
-          const shippingAddresses = JSON.parse(newCustomer.shipping_address as string)
-          delete newCustomer.shipping_address
-          if (Array.isArray(shippingAddresses)) {
-            shippingAddresses.forEach((address, index) => {
-              if (address && Object.keys(address).length > 0) {
-                const fullAddress = [address.street, address.city, address.state, address.zipCode, address.country]
-                  .filter(Boolean)
-                  .join(", ")
-                newCustomer[`shipping_address_${index + 1}`] = fullAddress
-              }
-            })
-          }
-        } catch {}
+  // Aqui você força o valor para duas casas decimais
+  if ("estimated_purchase_amount" in newCustomer) {
+    const value = Number(newCustomer.estimated_purchase_amount)
+    newCustomer.estimated_purchase_amount = value.toFixed(2) // string com 2 casas decimais
+  }
 
-        try {
-          const billingAddresses = JSON.parse(newCustomer.billing_address as string)
-          delete newCustomer.billing_address
-          if (Array.isArray(billingAddresses)) {
-            billingAddresses.forEach((address, index) => {
-              if (address && Object.keys(address).length > 0) {
-                const fullAddress = [address.street, address.city, address.state, address.zipCode, address.country]
-                  .filter(Boolean)
-                  .join(", ")
-                newCustomer[`billing_address_${index + 1}`] = fullAddress
-              }
-            })
-          }
-        } catch {}
-
-        return newCustomer
+  // Tratamento dos endereços
+  try {
+    const shippingAddresses = JSON.parse(newCustomer.shipping_address as string)
+    delete newCustomer.shipping_address
+    if (Array.isArray(shippingAddresses)) {
+      shippingAddresses.forEach((address, index) => {
+        if (address && Object.keys(address).length > 0) {
+          const fullAddress = [address.street, address.city, address.state, address.zipCode, address.country]
+            .filter(Boolean)
+            .join(", ")
+          newCustomer[`shipping_address_${index + 1}`] = fullAddress
+        }
       })
+    }
+  } catch {}
+
+  try {
+    const billingAddresses = JSON.parse(newCustomer.billing_address as string)
+    delete newCustomer.billing_address
+    if (Array.isArray(billingAddresses)) {
+      billingAddresses.forEach((address, index) => {
+        if (address && Object.keys(address).length > 0) {
+          const fullAddress = [address.street, address.city, address.state, address.zipCode, address.country]
+            .filter(Boolean)
+            .join(", ")
+          newCustomer[`billing_address_${index + 1}`] = fullAddress
+        }
+      })
+    }
+  } catch {}
+
+  return newCustomer
+})
 
       const worksheet = XLSX.utils.json_to_sheet(processedCustomers)
       const workbook = XLSX.utils.book_new()
@@ -308,15 +315,15 @@ export default function PendingCustomersTable({
                         <S.TableData>
                           <S.Button
                             onClick={() => handleViewDetails(customer.id)}
-                            disabled={
-                              loadingCustomerId === customer.id ||
-                              (isWholesaleRoute && customer.status.trim().toLowerCase() === "finished")
-                            }
-                            title={
-                              isWholesaleRoute && customer.status.trim().toLowerCase() === "finished"
-                                ? "The validation process has been completed"
-                                : undefined
-                            }
+                            // disabled={
+                            //   loadingCustomerId === customer.id ||
+                            //   (isWholesaleRoute && customer.status.trim().toLowerCase() === "finished")
+                            // }
+                            // title={
+                            //   isWholesaleRoute && customer.status.trim().toLowerCase() === "finished"
+                            //     ? "The validation process has been completed"
+                            //     : undefined
+                            // }
                             aria-label={`See details of ${customer.customer_name}`}
                           >
                             {loadingCustomerId === customer.id ? "Loading..." : "See details"}

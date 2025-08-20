@@ -177,6 +177,13 @@ export default function OnboardingForm() {
   const onSubmit = async (formData: IFormInputs) => {
     console.log("Submit button clicked. Starting onSubmit function.");
 
+      if (formData.buyerInfo?.estimatedPurchaseAmount !== undefined) {
+      formData.buyerInfo.estimatedPurchaseAmount = parseFloat(
+        Number(formData.buyerInfo.estimatedPurchaseAmount).toFixed(2)
+      );
+    }
+
+
     // Validação manual para o Resale Certificate e POS Photos
     if (!file) {
         setModalTitle("Validation Error");

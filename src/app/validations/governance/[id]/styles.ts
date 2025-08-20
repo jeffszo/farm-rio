@@ -72,14 +72,14 @@ export const FormSection = styled.div`
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 `
 
-export const SectionTitle = styled.h3`
-  font-size: 0.9rem;
-  font-weight: 600;
+export const SectionTitle = styled.span`
+  font-size: 0.95rem;  /* mesmo do texto normal */
+  font-weight: 600;     /* igual aos labels em Customer Details */
   color: #2d3748;
-  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  margin-bottom: 0.25rem;
 `
 
 export const FormRow = styled.div`
@@ -419,10 +419,9 @@ export const TermsSection = styled.div`
 `;
 
 export const InfoText = styled.p`
-  font-size: 0.95rem;
-  color: #2d3748;
-  font-weight: 500;
-  padding: 0.375rem 0;
+  gap: 0.5rem;
+  opacity: 0.7;
+
 `;
 
 export const AddressContainer = styled.div`
@@ -438,3 +437,12 @@ export const Divider = styled.hr`
   margin: 1.5rem 0;
 `;
 
+export const MainSectionTitle = styled.h3`
+  font-size: 1rem; /* levemente menor que Customer Details */
+  font-weight: 600;   /* negrito forte */
+  color: #2d3748;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`

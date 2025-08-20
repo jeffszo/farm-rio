@@ -55,6 +55,7 @@ interface CustomerForm {
   buyer_email: string;
   status: string;
   created_at: string;
+  currency: string;
   wholesale_feedback: string;
   credit_feedback: string;
   csc_initial_feedback: string;
@@ -152,6 +153,7 @@ export default function ValidationDetailsPage() {
             sales_tax_id: data.sales_tax_id,
             duns_number: data.duns_number,
             dba_number: data.dba_number,
+            currency: data.currency,
             resale_certificate: data.resale_certificate,
             photo_urls:
               "photo_urls" in data
@@ -423,7 +425,7 @@ const formatUrl = (url?: string) =>
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Erro: {error}</S.Message>;
-  if (!customerForm) return <S.Message>Formulário não encontrado.</S.Message>;
+  if (!customerForm) return <S.Message>Form not found.</S.Message>;
 
   let parsedBillingAddresses: Address[] = [];
   try {
@@ -544,6 +546,7 @@ const formatUrl = (url?: string) =>
                 )}
               </S.ValueWithCopy>
             </S.FormRow>
+            <S.FormRow> <strong>Customer Currency: </strong> {customerForm.currency} </S.FormRow>
 
             {/* D-U-N-S Number (Editable) */}
             <S.FormRow
@@ -771,44 +774,44 @@ const formatUrl = (url?: string) =>
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
-                <S.SectionTitle>
+                <S.MainSectionTitle>
                   <DollarSign size={16} /> Wholesale Terms
-                </S.SectionTitle>
+                </S.MainSectionTitle>
                 <S.TermsGrid>
                   <S.TermsSection>
-                    <label>
-                      <Building2 size={16} /> Invoicing Company
-                    </label>
+                    <S.SectionTitle>
+                      <Building2 size={16} /> Invoicing Company:
+                    </S.SectionTitle>
                     <S.InfoText>
                       {validation.wholesale_invoicing_company || "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <Warehouse size={16} /> Warehouse
-                    </label>
+                    <S.SectionTitle>
+                      <Warehouse size={16} /> Warehouse:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.wholesale_warehouse || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <CreditCard size={16} /> Currency
-                    </label>
+                    <S.SectionTitle>
+                      <CreditCard size={16} /> Company Currency:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.wholesale_currency || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <Calendar size={16} /> Payment Terms
-                    </label>
+                    <S.SectionTitle>
+                      <Calendar size={16} /> Payment Terms:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.wholesale_terms || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <DollarSign size={16} />  Estimated Puchase Amount Per Season
-                    </label>
+                    <S.SectionTitle>
+                      <DollarSign size={16} />  Estimated Puchase Amount Per Season:
+                    </S.SectionTitle>
                     <S.InfoText>
                       {validation.estimated_purchase_amount !== undefined &&
                       validation.estimated_purchase_amount !== null
@@ -818,9 +821,9 @@ const formatUrl = (url?: string) =>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <Percent size={16} /> Discount
-                    </label>
+                    <S.SectionTitle>
+                      <Percent size={16} /> Discount:
+                    </S.SectionTitle>
                     <S.InfoText>
                       {validation.wholesale_discount !== undefined &&
                       validation.wholesale_discount !== null
@@ -833,44 +836,43 @@ const formatUrl = (url?: string) =>
 
               {/* Credit Terms Section */}
               <S.FormSection>
-                <S.SectionTitle>
+                <S.MainSectionTitle>
                   <CreditCard size={16} /> Credit Terms
-                </S.SectionTitle>
+                </S.MainSectionTitle>
                 <S.TermsGrid>
                   <S.TermsSection>
-                    <label>
-                      <Building2 size={16} /> Invoicing Company
-                    </label>
+                    <S.SectionTitle>
+                      <Building2 size={16} /> Invoicing Company:
+                    </S.SectionTitle>
                     <S.InfoText>
                       {validation.credit_invoicing_company || "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <Warehouse size={16} /> Warehouse
-                    </label>
+                    <S.SectionTitle>
+                      <Warehouse size={16} /> Warehouse:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.credit_warehouse || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <CreditCard size={16} /> Currency
-                    </label>
+                    <S.SectionTitle>Company Currency:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.credit_currency || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <Calendar size={16} /> Payment Terms
-                    </label>
+                    <S.SectionTitle>
+                      <Calendar size={16} /> Payment Terms:
+                    </S.SectionTitle>
                     <S.InfoText>{validation.credit_terms || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
-                      <DollarSign size={16} /> Estimated Puchase Amount Per Season
-                    </label>
+                    <S.SectionTitle>
+                      <DollarSign size={16} /> Estimated Puchase Amount Per Season:
+                    </S.SectionTitle>
                     <S.InfoText>
                      {validation.estimated_purchase_amount !== undefined &&
 validation.estimated_purchase_amount !== null &&
@@ -882,9 +884,9 @@ validation.estimated_purchase_amount !== null &&
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <label>
+                    <S.SectionTitle>
                       <Percent size={16} /> Discount
-                    </label>
+                    </S.SectionTitle>
                     <S.InfoText>
 {validation.credit_discount !== undefined &&
 validation.credit_discount !== null &&
