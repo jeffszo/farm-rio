@@ -21,8 +21,8 @@ export async function POST(req: Request) {
       react: ApprovedEmail(), 
       attachments: [
     {
-      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/cscfinal-approved-anexo.jpg',
-      filename: 'cscfinal-approved-anexo.jpg',
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/csc-approved-anexo.jpg',
+      filename: 'csc-approved-anexo.jpg',
     },
   ],
     });

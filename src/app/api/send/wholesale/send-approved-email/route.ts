@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       react: ApprovedEmail(),
       attachments: [
     {
-      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/wholesale-approved-anexo.jpg',
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/wholesale-review-anexo.jpg',
       filename: 'wholesale-approved-anexo.jpg',
     },
   ],
