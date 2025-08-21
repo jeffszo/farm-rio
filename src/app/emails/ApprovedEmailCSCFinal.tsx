@@ -66,7 +66,7 @@ export const ApprovedEmailCSCFinal = () => (
             <Container style={container}>
               <Heading style={h1}>FARM RIO Onboarding - Your onboarding is now complete! (6/6) </Heading>
               <Text style={text}>
-                Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <Link style={linkStyle}>farmriowholesale.com. </Link>
+                Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <Link style={linkStyle} href="https://farmriowholesale.com/">www.farmriowholesale.com. </Link>
               </Text>
             </Container>
           </td>
