@@ -789,9 +789,11 @@ const formatUrl = (url?: string) =>
                 <S.FormRow>
                   <strong>Terms:</strong> {validation.wholesale_terms}
                 </S.FormRow>
-                <S.FormRow>
-                  <strong>Estimated Puchase Amount Per Season:</strong> {validation.estimated_purchase_amount}
-                </S.FormRow>
+   <S.FormRow>
+  <strong>Estimated Purchase Amount Per Season:</strong>{" "}
+  {Number(validation.estimated_purchase_amount).toFixed(2)}
+</S.FormRow>
+
                 <S.FormRow>
                   <strong>Discount:</strong> {validation.wholesale_discount}%
                 </S.FormRow>
