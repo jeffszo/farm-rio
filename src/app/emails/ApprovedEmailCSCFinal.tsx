@@ -64,7 +64,7 @@ export const ApprovedEmailCSCFinal = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>FARM RIO Onboarding - Your onboarding is now complete!</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Your onboarding is now complete! (6/6) </Heading>
               <Text style={text}>
                 Your onboarding is now complete! You are more than welcome to dive into the full FARM RIO experience by visiting <Link style={linkStyle}>farmriowholesale.com. </Link>
               </Text>

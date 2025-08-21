@@ -857,7 +857,7 @@ const formatUrl = (url?: string) =>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>Company Currency:
+                    <S.SectionTitle> <CreditCard size={16} /> Company Currency:
                     </S.SectionTitle>
                     <S.InfoText>{validation.credit_currency || "N/A"}</S.InfoText>
                   </S.TermsSection>

@@ -56,7 +56,7 @@ export const ApprovedEmailCSCInitial = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Heading style={h1}>FARM RIO Onboarding - Internal Review Update (2/5)</Heading>
+              <Heading style={h1}>FARM RIO Onboarding - Internal Review Update (3/6)</Heading>
               <Text style={text}>
                 Your account has been approved by our Governance Team and will now move forward to Tax reviewing.
               </Text>

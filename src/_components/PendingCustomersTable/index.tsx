@@ -273,8 +273,11 @@ export default function PendingCustomersTable({
               <S.ButtonAndTotalClientsWrapper $hasExcelButton={isCSCValidationsRoute}>
                 <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
                 {isCSCValidationsRoute && (
-                  <S.Button onClick={exportToExcel}>
-                    <Download size={16} />
+                  <S.Button style={{
+                    padding: "7px 15px",
+                    height: "30px"
+                  }} onClick={exportToExcel}>
+                    <Download size={14} />
                     Excel
                   </S.Button>
                 )}

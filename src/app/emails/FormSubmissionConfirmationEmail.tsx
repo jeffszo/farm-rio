@@ -57,7 +57,7 @@ export const FormSubmissionConfirmationEmail = () => (
         <tr>
           <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '20px' }}>
             <Container style={container}>
-              <Text style={h1}>FARM RIO Onboarding - Your onboarding form has been submitted for internal review.</Text>
+              <Text style={h1}>FARM RIO Onboarding - Your onboarding form has been submitted for internal review (1/6) </Text>
               <Text style={text}>
                 Thank you! Your onboarding form has been submitted for internal review. Please note that further updates may be requested during this process.
               </Text>

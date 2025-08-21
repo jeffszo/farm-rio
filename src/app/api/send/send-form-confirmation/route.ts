@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const { data, error } = await resend.emails.send({
       from: 'FARM RIO Onboarding <contact@customer.farmrio.com>',
       to: recipientEmail, 
-      subject: `FARM RIO Onboarding - Your onboarding form has been submitted for internal review.`, 
+      subject: `FARM RIO Onboarding - Your onboarding form has been submitted for internal review (1/6)`, 
       react: FormSubmissionConfirmationEmail(),
       attachments: [
     {

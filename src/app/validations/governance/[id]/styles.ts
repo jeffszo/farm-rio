@@ -73,8 +73,9 @@ export const FormSection = styled.div`
 `
 
 export const SectionTitle = styled.span`
-  font-size: 0.95rem;  /* mesmo do texto normal */
-  font-weight: 600;     /* igual aos labels em Customer Details */
+  
+  font-size: 0.95rem;  
+  font-weight: 600;     
   color: #2d3748;
   display: flex;
   align-items: center;
@@ -419,7 +420,9 @@ export const TermsSection = styled.div`
 `;
 
 export const InfoText = styled.p`
-  gap: 0.5rem;
+  /* gap: 0.5rem; */
+  font-size: 14px;
+  padding-left: 1.25rem;
   opacity: 0.7;
 
 `;
