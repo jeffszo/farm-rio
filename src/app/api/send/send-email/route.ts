@@ -26,8 +26,8 @@ export async function POST(req: Request) {
       react: WelcomeEmail({ name }),
       attachments: [
     {
-      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/welcome-anexo.jpg',
-      filename: 'welcome-anexo.jpg',
+      path: 'https://qfnidijiykdjnbbtfvbl.supabase.co/storage/v1/object/public/email-images/welcome-farm-anexo.jpg',
+      filename: 'welcome-farm-anexo.jpg',
     },
   ],
     });

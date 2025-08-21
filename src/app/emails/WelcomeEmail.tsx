@@ -41,7 +41,7 @@ const text = {
 };
 
 const linkStyle = {
-  color: '#84C9FF',
+  color: '#0a0a0a',
   textDecoration: 'underline',
   fontSize: '14px',
 };
