@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
@@ -10,12 +11,12 @@ import {
   User,
   MapPin,
   Mail,
-  Building2,
-  Warehouse,
-  CreditCard,
-  Calendar,
-  // DollarSign,
-  Percent,
+  // Building2,
+  // Warehouse,
+  // CreditCard,
+  // Calendar,
+  // // DollarSign,
+  // Percent,
   Pencil,
   Check,
   X,

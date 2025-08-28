@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from "react";
 import Select, { SingleValue } from "react-select";
@@ -34,8 +36,8 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
         borderColor: error ? "red" : "#18181b",
       },
     }),
-    valueContainer: (provided: any) => ({
-      ...provided,
+    valueContainer: (base: any, props: any) => ({
+      ...base,
       padding: "0 8px",
       display: "flex",
       alignItems: "center",
