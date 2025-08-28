@@ -86,6 +86,7 @@ interface ValidationDetails {
   credit_credit: number;
   estimated_purchase_amount: number;
   credit_discount: number;
+  terms: string;
 }
 
 export default function ValidationDetailsPage() {
