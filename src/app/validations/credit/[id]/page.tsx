@@ -113,6 +113,7 @@ interface ValidationDetails { // Interface para dados de validação existentes 
   credit_credit: string;
   credit_discount: string;
   estimated_purchase_amount: string;
+  terms: string;
 }
 
 
@@ -301,8 +302,8 @@ export default function ValidationDetailsPage() {
  tax_feedback: "tax_feedback" in data 
   ? (typeof data.tax_feedback === "string" && data.tax_feedback.trim() !== "" 
       ? data.tax_feedback 
-      : null) 
-  : null,
+      : "") 
+  : "",
 
         };
 
