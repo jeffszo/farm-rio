@@ -1122,22 +1122,48 @@ export default function OnboardingForm() {
 
 
 
-             <S.FileInputContainer>
-                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-                  <S.HiddenInput
-                    id="file-upload"
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                  />
-                  <S.UploadButton htmlFor="file-upload">
-                    <Upload size={16} />
-                    {file ? "1 file selected" : "Attach file (PDF)"}
-                  </S.UploadButton>
-                  {resaleCertificateError && (
-                    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
-                  )}
-                </S.FileInputContainer>
+<S.FileInputContainer>
+  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+  <S.HiddenInput
+    id="file-upload"
+    type="file"
+    accept="application/pdf"
+    onChange={handleFileChange}
+  />
+  <S.UploadButton htmlFor="file-upload">
+    <Upload size={16} />
+    {file ? "1 file selected" : "Attach file (PDF)"}
+  </S.UploadButton>
+
+  {/* Preview único com nome fake e botão de remover */}
+  {file && (
+    <S.FilePreviewContainer>
+      <S.FilePreview>
+        <span>file-01</span>
+        <S.RemoveButton
+          type="button"
+          onClick={() => setFile(null)}
+          style={{
+            position: "absolute",
+            top: "-6px",
+            right: "-6px",
+            backgroundColor: "#fff",
+            borderRadius: "50%",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }}
+        >
+          <Trash2 size={14} />
+        </S.RemoveButton>
+      </S.FilePreview>
+    </S.FilePreviewContainer>
+  )}
+
+  {resaleCertificateError && (
+    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
+
 
 
 
@@ -1895,44 +1921,68 @@ export default function OnboardingForm() {
                   )}{" "}
                 </S.InputGroup>
 
-                <S.FileInputContainer>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <S.Label htmlFor="financialStatements-upload">
-                      Financial Statements
-                    </S.Label>
-                    <S.InfoButton
-                      type="button"
-                      title="Most disclosed tax period"
-                    >
-                      <Info size={16} style={{ marginBottom: "0.5rem" }} />
-                    </S.InfoButton>
-                  </div>
-                  <S.HiddenInput
-                    id="financialStatements-upload"
-                    type="file"
-                    accept="application/pdf"
-                    {...register("buyerInfo.financialStatements")}
-                    onChange={handleFinancialStatementsFileChange}
-                  />
-                  <S.UploadButton htmlFor="financialStatements-upload">
-                    <Upload size={16} />
-                    {financialStatementsFile
-                      ? financialStatementsFile.name
-                      : "Attach file (PDF)"}
-                  </S.UploadButton>
-                  {errors.buyerInfo?.financialStatements &&
-                    stepFourAttemptedValidation && (
-                      <S.ErrorMessage>
-                        {errors.buyerInfo.financialStatements.message}
-                      </S.ErrorMessage>
-                    )}
-                </S.FileInputContainer>
+  <S.FileInputContainer>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "5px",
+    }}
+  >
+    <S.Label htmlFor="financialStatements-upload">
+      Financial Statements
+    </S.Label>
+    <S.InfoButton
+      type="button"
+      title="Most disclosed tax period"
+    >
+      <Info size={16} style={{ marginBottom: "0.5rem" }} />
+    </S.InfoButton>
+  </div>
+
+  <S.HiddenInput
+    id="financialStatements-upload"
+    type="file"
+    accept="application/pdf"
+    {...register("buyerInfo.financialStatements")}
+    onChange={handleFinancialStatementsFileChange}
+  />
+
+  <S.UploadButton htmlFor="financialStatements-upload">
+    <Upload size={16} />
+    {financialStatementsFile ? "1 file selected" : "Attach file (PDF)"}
+  </S.UploadButton>
+
+  {/* Preview com label fixo e botão de remover */}
+  {financialStatementsFile && (
+    <S.FilePreviewContainer>
+      <S.FilePreview>
+        <span>file-01</span>
+        <S.RemoveButton
+          type="button"
+          onClick={() => setFinancialStatementsFile(null)}
+          style={{
+            position: "absolute",
+            top: "-6px",
+            right: "-6px",
+            backgroundColor: "#fff",
+            borderRadius: "50%",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }}
+        >
+          <Trash2 size={14} />
+        </S.RemoveButton>
+      </S.FilePreview>
+    </S.FilePreviewContainer>
+  )}
+
+  {errors.buyerInfo?.financialStatements && stepFourAttemptedValidation && (
+    <S.ErrorMessage>
+      {errors.buyerInfo.financialStatements.message}
+    </S.ErrorMessage>
+  )}
+</S.FileInputContainer>
+
               </S.Grid>
 
               <S.AlertMessage>
