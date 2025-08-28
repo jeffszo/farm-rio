@@ -271,7 +271,7 @@ export default function PendingCustomersTable({
               </S.FiltersRow>
 
               <S.ButtonAndTotalClientsWrapper $hasExcelButton={isCSCValidationsRoute}>
-                <S.TotalClientsInfo>Total Clients: {totalCount}</S.TotalClientsInfo>
+                <S.TotalClientsInfo>Total Customers: {totalCount}</S.TotalClientsInfo>
                 {isCSCValidationsRoute && (
                   <S.Button style={{
                     padding: "7px 15px",
