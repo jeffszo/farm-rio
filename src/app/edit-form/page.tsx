@@ -262,6 +262,8 @@ export default function OnboardingForm() {
   // ajuste o caminho conforme necessário
 
 
+
+
   const router = useRouter();
   
   const [stepFourAttemptedValidation, setStepFourAttemptedValidation] = useState(false);
@@ -276,6 +278,7 @@ export default function OnboardingForm() {
     clearErrors,
     reset,
     control,
+    watch,
     setError,
   } = useForm<IFormInputs>({
     mode: "onChange",
@@ -307,6 +310,9 @@ export default function OnboardingForm() {
       clearErrors("buyerInfo.financialStatements");
     }
   };
+
+  const selectedCountry = watch("customerInfo.country");
+
 
 
 // Lógica de carregamento de dados centralizada
