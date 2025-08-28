@@ -48,7 +48,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 export const FormDetails = styled.div`
   display: grid;
   /* MODIFICAÇÃO AQUI: A coluna do meio (endereços) agora é 2x mais larga */
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 2fr 3fr 2fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
 

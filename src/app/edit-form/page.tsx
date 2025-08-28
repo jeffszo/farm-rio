@@ -3,11 +3,15 @@
 import React from "react";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { IFormInputs, AddressInput } from "@/types/form";
+import type { IFormInputs, AddressInput, Agent } from "@/types/form";
+import { createClient } from "@/lib/supabase/client";
+import CountrySelect from "@/_components/CountrySelect";
+
+
 
 import { api } from "@/lib/supabase/index";
 import {
@@ -28,6 +32,205 @@ const termsOptions = [
   { value: "Net 15", label: "Net 15" },
   { value: "Net 30", label: "Net 30" },
 ];
+
+const countryOptions = [
+  // { value: "AF", label: "Afghanistan" },
+  // { value: "AL", label: "Albania" },
+  // { value: "DZ", label: "Algeria" },
+  // { value: "AD", label: "Andorra" },
+  // { value: "AO", label: "Angola" },
+  // { value: "AG", label: "Antigua and Barbuda" },
+  // { value: "AR", label: "Argentina" },
+  // { value: "AM", label: "Armenia" },
+  // { value: "AU", label: "Australia" },
+  // { value: "AT", label: "Austria" },
+  // { value: "AZ", label: "Azerbaijan" },
+  // { value: "BS", label: "Bahamas" },
+  // { value: "BH", label: "Bahrain" },
+  // { value: "BD", label: "Bangladesh" },
+  // { value: "BB", label: "Barbados" },
+  // { value: "BY", label: "Belarus" },
+  // { value: "BE", label: "Belgium" },
+  // { value: "BZ", label: "Belize" },
+  // { value: "BJ", "label": "Benin" },
+  // { value: "BT", label: "Bhutan" },
+  // { value: "BO", label: "Bolivia" },
+  // { value: "BA", label: "Bosnia and Herzegovina" },
+  // { value: "BW", label: "Botswana" },
+  { value: "BR", label: "Brazil" },
+  // { value: "BN", label: "Brunei Darussalam" },
+  // { value: "BG", label: "Bulgaria" },
+  // { value: "BF", label: "Burkina Faso" },
+  // { value: "BI", label: "Burundi" },
+  // { value: "CV", label: "Cabo Verde" },
+  // { value: "KH", label: "Cambodia" },
+  // { value: "CM", label: "Cameroon" },
+  // { value: "CA", label: "Canada" },
+  // { value: "CF", label: "Central African Republic" },
+  // { value: "TD", label: "Chad" },
+  // { value: "CL", label: "Chile" },
+  // { value: "CN", label: "China" },
+  // { value: "CO", label: "Colombia" },
+  // { value: "KM", label: "Comoros" },
+  // { value: "CG", label: "Congo" },
+  // { value: "CD", label: "Congo, Democratic" },
+  // { value: "CR", label: "Costa Rica" },
+  // { value: "HR", label: "Croatia" },
+  // { value: "CU", label: "Cuba" },
+  // { value: "CY", label: "Cyprus" },
+  // { value: "CZ", label: "Czech Republic" },
+  // { value: "DK", label: "Denmark" },
+  // { value: "DJ", label: "Djibouti" },
+  // { value: "DM", label: "Dominica" },
+  // { value: "DO", label: "Dominican Republic" },
+  // { value: "EC", label: "Ecuador" },
+  // { value: "EG", label: "Egypt" },
+  // { value: "SV", label: "El Salvador" },
+  // { value: "GQ", label: "Equatorial Guinea" },
+  // { value: "ER", label: "Eritrea" },
+  // { value: "EE", label: "Estonia" },
+  // { value: "ET", label: "Ethiopia" },
+  // { value: "FJ", label: "Fiji" },
+  // { value: "FI", label: "Finland" },
+  { value: "FR", label: "France" },
+  // { value: "GA", label: "Gabon" },
+  // { value: "GM", label: "Gambia" },
+  // { value: "GE", label: "Georgia" },
+  // { value: "DE", label: "Germany" },
+  // { value: "GH", label: "Ghana" },
+  // { value: "GR", label: "Greece" },
+  // { value: "GD", label: "Grenada" },
+  // { value: "GT", label: "Guatemala" },
+  // { value: "GN", label: "Guinea" },
+  // { value: "GW", label: "Guinea-Bissau" },
+  // { value: "GY", label: "Guyana" },
+  // { value: "HT", label: "Haiti" },
+  // { value: "HN", label: "Honduras" },
+  // { value: "HU", label: "Hungary" },
+  // { value: "IS", label: "Iceland" },
+  // { value: "IN", label: "India" },
+  // { value: "ID", label: "Indonesia" },
+  // { value: "IR", label: "Iran" },
+  // { value: "IQ", label: "Iraq" },
+  // { value: "IE", label: "Ireland" },
+  // { value: "IL", label: "Israel" },
+  { value: "IT", label: "Italy" },
+  // { value: "JM", label: "Jamaica" },
+  // { value: "JP", label: "Japan" },
+  // { value: "JO", label: "Jordan" },
+  // { value: "KZ", label: "Kazakhstan" },
+  // { value: "KE", label: "Kenya" },
+  // { value: "KI", label: "Kiribati" },
+  // { value: "KP", label: "Korea, Democratic People's Republic of" },
+  // { value: "KR", label: "Korea, Republic of" },
+  // { value: "KW", label: "Kuwait" },
+  // { value: "KG", label: "Kyrgyzstan" },
+  // { value: "LA", label: "Laos" },
+  // { value: "LV", label: "Latvia" },
+  // { value: "LB", label: "Lebanon" },
+  // { value: "LS", label: "Lesotho" },
+  // { value: "LR", label: "Liberia" },
+  // { value: "LY", label: "Libya" },
+  // { value: "LI", label: "Liechtenstein" },
+  // { value: "LT", label: "Lithuania" },
+  // { value: "LU", label: "Luxembourg" },
+  // { value: "MK", label: "North Macedonia" },
+  // { value: "MG", label: "Madagascar" },
+  // { value: "MW", label: "Malawi" },
+  // { value: "MY", label: "Malaysia" },
+  // { value: "MV", label: "Maldives" },
+  // { value: "ML", label: "Mali" },
+  // { value: "MT", label: "Malta" },
+  // { value: "MH", label: "Marshall Islands" },
+  // { value: "MR", label: "Mauritania" },
+  // { value: "MU", label: "Mauritius" },
+  // { value: "MX", label: "Mexico" },
+  // { value: "FM", label: "Micronesia, Federated States of" },
+  // { value: "MD", label: "Moldova, Republic of" },
+  // { value: "MC", label: "Monaco" },
+  // { value: "MN", label: "Mongolia" },
+  // { value: "ME", label: "Montenegro" },
+  // { value: "MA", label: "Morocco" },
+  // { value: "MZ", label: "Mozambique" },
+  // { value: "MM", label: "Myanmar" },
+  // { value: "NA", label: "Namibia" },
+  // { value: "NR", label: "Nauru" },
+  // { value: "NP", label: "Nepal" },
+  // { value: "NL", label: "Netherlands" },
+  // { value: "NZ", label: "New Zealand" },
+  // { value: "NI", label: "Nicaragua" },
+  // { value: "NE", label: "Niger" },
+  // { value: "NG", label: "Nigeria" },
+  // { value: "NO", label: "Norway" },
+  // { value: "OM", label: "Oman" },
+  // { value: "PK", label: "Pakistan" },
+  // { value: "PW", label: "Palau" },
+  // { value: "PS", label: "Palestine, State of" },
+  // { value: "PA", label: "Panama" },
+  // { value: "PG", label: "Papua New Guinea" },
+  // { value: "PY", label: "Paraguay" },
+  // { value: "PE", label: "Peru" },
+  // { value: "PH", label: "Philippines" },
+  // { value: "PL", label: "Poland" },
+  // { value: "PT", label: "Portugal" },
+  // { value: "QA", label: "Qatar" },
+  // { value: "RO", label: "Romania" },
+  // { value: "RU", label: "Russian Federation" },
+  // { value: "RW", label: "Rwanda" },
+  // { value: "KN", label: "Saint Kitts and Nevis" },
+  // { value: "LC", label: "Saint Lucia" },
+  // { value: "VC", label: "Saint Vincent and the Grenadines" },
+  // { value: "WS", label: "Samoa" },
+  // { value: "SM", label: "San Marino" },
+  // { value: "ST", label: "Sao Tome and Principe" },
+  // { value: "SA", label: "Saudi Arabia" },
+  // { value: "SN", label: "Senegal" },
+  // { value: "RS", label: "Serbia" },
+  // { value: "SC", label: "Seychelles" },
+  // { value: "SL", label: "Sierra Leone" },
+  // { value: "SG", label: "Singapore" },
+  // { value: "SK", label: "Slovakia" },
+  // { value: "SI", label: "Slovenia" },
+  // { value: "SB", label: "Solomon Islands" },
+  // { value: "SO", label: "Somalia" },
+  // { value: "ZA", label: "South Africa" },
+  // { value: "SS", label: "South Sudan" },
+  { value: "ES", label: "Spain" },
+  // { value: "LK", label: "Sri Lanka" },
+  // { value: "SD", label: "Sudan" },
+  // { value: "SR", label: "Suriname" },
+  // { value: "SE", label: "Sweden" },
+  // { value: "CH", label: "Switzerland" },
+  // { value: "SY", label: "Syrian Arab Republic" },
+  // { value: "TJ", label: "Tajikistan" },
+  // { value: "TZ", label: "Tanzania" },
+  // { value: "TH", label: "Thailand" },
+  // { value: "TL", label: "Timor-Leste" },
+  // { value: "TG", label: "Togo" },
+  // { value: "TO", label: "Tonga" },
+  // { value: "TT", label: "Trinidad and Tobago" },
+  // { value: "TN", label: "Tunisia" },
+  // { value: "TR", label: "Turkey" },
+  // { value: "TM", label: "Turkmenistan" },
+  // { value: "TV", label: "Tuvalu" },
+  // { value: "UG", label: "Uganda" },
+  // { value: "UA", label: "Ukraine" },
+  // { value: "AE", label: "United Arab Emirates" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "US", label: "United States" },
+  // { value: "UY", label: "Uruguay" },
+  // { value: "UZ", label: "Uzbekistan" },
+  // { value: "VU", label: "Vanuatu" },
+  // { value: "VE", label: "Venezuela" },
+  // { value: "VN", label: "Viet Nam" },
+  // { value: "YE", label: "Yemen" },
+  // { value: "ZM", label: "Zambia" },
+  // { value: "ZW", label: "Zimbabwe" },
+];
+
+
+const supabase = createClient();
+
 
 const currencyOptions = [
   { value: "", label: "Select currency" },
@@ -54,6 +257,8 @@ export default function OnboardingForm() {
   const [, setPreviousFormStatus] = useState<string | null>(null);
   const [resaleCertificateError, setResaleCertificateError] = useState<string | null>(null);
   const [posPhotosError, setPosPhotosError] = useState<string | null>(null);
+    const [agents, setAgents] = useState<Agent[]>([]);
+
   // ajuste o caminho conforme necessário
 
 
@@ -70,6 +275,7 @@ export default function OnboardingForm() {
     setValue,
     clearErrors,
     reset,
+    control,
     setError,
   } = useForm<IFormInputs>({
     mode: "onChange",
@@ -119,36 +325,41 @@ useEffect(() => {
         } else {
           // Prepara os dados para o reset do formulário
           const formDataToReset = {
-            customerInfo: {
-              legalName: data.customer_name || "",
-              taxId: data.sales_tax_id || "",
-              dunNumber: data.duns_number || "",
-              dba: data.dba_number || "",
-            },
-            instagram: data.instagram || "",
-            website: data.website || "",
-            brandingMix: (data.branding_mix || []).join(", "),
-            apContact: {
-              firstName: data.ap_contact_name?.split(" ")[0] || "",
-              lastName: data.ap_contact_name?.split(" ")[1] || "",
-              email: data.ap_contact_email || "",
-              countryCode: data.ap_contact_country_code || "",
-              contactNumber: data.ap_contact_number || "",
-            },
-            buyerInfo: {
-              firstName: data.buyer_name?.split(" ")[0] || "",
-              lastName: data.buyer_name?.split(" ")[1] || "",
-              email: data.buyer_email || "",
-              countryCode: data.buyer_country_code || "",
-              buyerNumber: data.buyer_number || "",
-              terms: data.terms || "",
-              currency: data.currency || "",
-              estimatedPurchaseAmount: data.estimated_purchase_amount || "",
-            },
-            joor: data.joor || "",
-            billingAddress: typeof data.billing_address === "string" ? JSON.parse(data.billing_address) : data.billing_address || [],
-            shippingAddress: typeof data.shipping_address === "string" ? JSON.parse(data.shipping_address) : data.shipping_address || [],
-          };
+  customerInfo: {
+    legalName: data.customer_name || "",
+    taxId: data.sales_tax_id || "",
+    dunNumber: data.duns_number || "",
+    dba: data.dba_number || "",
+    country: data.country || "",
+    agentId: data.agent_id || "",
+  },
+  instagram: data.instagram || "",
+  website: data.website || "",
+  brandingMix: (data.branding_mix || []).join(", "),
+  apContact: {
+    firstName: data.ap_contact_name?.split(" ")[0] || "",
+    lastName: data.ap_contact_name?.split(" ")[1] || "",
+    email: data.ap_contact_email || "",
+    countryCode: data.ap_contact_country_code || "",
+    contactNumber: data.ap_contact_number || "",
+  },
+  buyerInfo: {
+    firstName: data.buyer_name?.split(" ")[0] || "",
+    lastName: data.buyer_name?.split(" ")[1] || "",
+    email: data.buyer_email || "",
+    countryCode: data.buyer_country_code || "",
+    buyerNumber: data.buyer_number || "",
+    terms: data.terms || "",
+    currency: data.currency || "",
+    estimatedPurchaseAmount: String(data.estimated_purchase_amount || ""),
+
+    category: data.category || "",
+  },
+  joor: data.joor || "",
+  billingAddress: typeof data.billing_address === "string" ? JSON.parse(data.billing_address) : data.billing_address || [],
+  shippingAddress: typeof data.shipping_address === "string" ? JSON.parse(data.shipping_address) : data.shipping_address || [],
+};
+
 
           reset(formDataToReset);
 
@@ -178,6 +389,14 @@ useEffect(() => {
   if (stepInUrl && !isNaN(parseInt(stepInUrl, 10))) {
     setCurrentStep(parseInt(stepInUrl, 10));
   }
+}, []);
+
+  useEffect(() => {
+  const fetchAgents = async () => {
+    const { data, error } = await supabase.from("agents").select("*");
+    if (!error) setAgents(data);
+  };
+  fetchAgents();
 }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,11 +455,6 @@ const onSubmit = async (formData: IFormInputs) => {
       return;
     }
 
-      if (formData.buyerInfo?.estimatedPurchaseAmount !== undefined) {
-      formData.buyerInfo.estimatedPurchaseAmount = parseFloat(
-        Number(formData.buyerInfo.estimatedPurchaseAmount).toFixed(2)
-      );
-    }
 
     const termsSelected = formData.buyerInfo?.terms?.trim().toLowerCase();
     // AQUI: A condição já está correta, verificando se o termo é diferente de "100% prior to ship"
@@ -313,6 +527,7 @@ const onSubmit = async (formData: IFormInputs) => {
       customer_name: formData.customerInfo?.legalName || null,
       sales_tax_id: formData.customerInfo?.taxId || null,
       duns_number: formData.customerInfo?.dunNumber || null,
+         agent_id: formData.customerInfo?.agentId || null,
       dba_number: formData.customerInfo?.dba || null,
       resale_certificate: fileUrl,
       billing_address: formData.billingAddress || [],
@@ -333,6 +548,7 @@ const onSubmit = async (formData: IFormInputs) => {
       terms: termsValue,
       currency: currencyValue,
       estimated_purchase_amount: formData.buyerInfo?.estimatedPurchaseAmount || null,
+      category: formData.buyerInfo?.category || null,
       financial_statements: financialStatementsFileUrl,
     };
 
@@ -374,7 +590,14 @@ const onSubmit = async (formData: IFormInputs) => {
         setPosPhotosError(null);
       }
 
-      fieldsToValidate = ["customerInfo.legalName", "customerInfo.taxId", "customerInfo.dba", "brandingMix", "instagram", "website"];
+      fieldsToValidate = [        "customerInfo.legalName",
+        "customerInfo.taxId",
+        "customerInfo.dba",
+        "customerInfo.country",
+        "customerInfo.agentId",
+        "brandingMix",
+        "instagram",
+        "website", ];
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       const isValidForm = await trigger(fieldsToValidate);
@@ -392,7 +615,7 @@ const onSubmit = async (formData: IFormInputs) => {
     } else if (currentStep === 3) {
       fieldsToValidate = ["apContact.firstName", "apContact.lastName", "apContact.email", "apContact.countryCode", "apContact.contactNumber"];
     } else if (currentStep === 4) {
-      fieldsToValidate = ["buyerInfo.firstName", "buyerInfo.lastName", "buyerInfo.email", "buyerInfo.countryCode", "buyerInfo.buyerNumber", "buyerInfo.terms", "buyerInfo.currency", "buyerInfo.estimatedPurchaseAmount"];
+      fieldsToValidate = ["buyerInfo.firstName", "buyerInfo.lastName", "buyerInfo.email", "buyerInfo.countryCode", "buyerInfo.buyerNumber", "buyerInfo.terms", "buyerInfo.currency", "buyerInfo.estimatedPurchaseAmount", "buyerInfo.category" ];
       setStepFourAttemptedValidation(true);
       const termsSelected = getValues("buyerInfo.terms");
 
@@ -524,6 +747,8 @@ const onSubmit = async (formData: IFormInputs) => {
                   />
                   {errors.customerInfo?.taxId && <S.ErrorMessage>{errors.customerInfo.taxId.message}</S.ErrorMessage>}
                 </S.InputGroup>
+
+                
                 <S.InputGroup>
                   <S.Label htmlFor="dunNumber">D-U-N-S</S.Label>
                   <S.Input
@@ -535,88 +760,55 @@ const onSubmit = async (formData: IFormInputs) => {
                   />
                   {errors.customerInfo?.dunNumber && <S.ErrorMessage>{errors.customerInfo.dunNumber.message}</S.ErrorMessage>}
                 </S.InputGroup>
+                
 
+                  <S.InputGroup>
+  <S.Label htmlFor="customerCountry">Country</S.Label>
+  <Controller
+    name="customerInfo.country"
+    control={control}
+    rules={{ required: "Country is required" }}
+    render={({ field }) => (
+      <CountrySelect
+        value={field.value || ""}
+        onChange={field.onChange}
+        options={countryOptions}
+      />
+    )}
+  />
+  {errors.customerInfo?.country && (
+    <S.ErrorMessage>{errors.customerInfo.country.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+            
 
 <S.InputGroup>
-  <S.Label htmlFor="instagram">Instagram</S.Label>
+  <S.Label htmlFor="customerAgent">Agent</S.Label>
   <S.Input
-    id="instagram"
-    type="text" // permite digitar sem http(s)
-    placeholder="instagram.com/yourprofile"
-    {...register("instagram", {
-      pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-        message: "Please enter a valid URL",
-      },
+    as="select"
+    id="customerAgent"
+    {...register("customerInfo.agentId", {
+      required: "Agent is required",
     })}
-    error={!!errors.instagram}
-  />
-  {errors.instagram && (
-    <S.ErrorMessage>
-      {errors.instagram.message}
-    </S.ErrorMessage>
-  )}
-</S.InputGroup>
-
-                <S.InputGroup>
-  <S.Label htmlFor="website">Website</S.Label>
-  <S.Input
-    id="website"
-    type="text" // permite digitar sem http(s)
-    placeholder="yourwebsite.com"
-    {...register("website", {
-      pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-        message: "Please enter a valid Website URL",
-      },
-    })}
-    error={!!errors.website}
-  />
-  {errors.website && (
-    <S.ErrorMessage>
-      {errors.website.message}
-    </S.ErrorMessage>
-  )}
-</S.InputGroup>
-
-<S.InputGroup>
-  <S.Label htmlFor="joor">JOOR profile - if applicable</S.Label>
-  <S.Input
-    id="joor"
-    type="text" // permite digitar sem http(s)
-    placeholder="jooraccess.com/yourprofile"
-    {...register("joor", {
-      pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-        message: "Please enter a valid URL",
-      },
-    })}
-    error={!!errors.joor}
-  />
-  {errors.joor && (
-    <S.ErrorMessage>{errors.joor.message}</S.ErrorMessage>
+    error={!!errors.customerInfo?.agentId}
+  >
+    <option value="" hidden>Select an agent</option>
+    {agents
+      .filter((agent) => agent.country === selectedCountry) // usa watch aqui
+      .map((agent) => (
+        <option key={agent.id} value={agent.id}>
+          {agent.name}
+        </option>
+      ))}
+  </S.Input>
+  {errors.customerInfo?.agentId && (
+    <S.ErrorMessage>{errors.customerInfo.agentId.message}</S.ErrorMessage>
   )}
 </S.InputGroup>
 
 
-               <S.FileInputContainer>
-  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-  <S.HiddenInput
-    id="file-upload"
-    type="file"
-    accept="application/pdf"
-    onChange={handleFileChange}
-  />
-  <S.UploadButton htmlFor="file-upload">
-    <Upload size={16} />
-    {file ? "1 file selected" : "Attach file (PDF)"}
-  </S.UploadButton>
-  {resaleCertificateError && (
-    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
-  )}
-</S.FileInputContainer>
 
-   <S.FileInputContainer>
+<S.FileInputContainer>
   <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
   <S.HiddenInput
     id="image-upload"
@@ -657,6 +849,8 @@ const onSubmit = async (formData: IFormInputs) => {
         </S.FilePreview>
       ))}
     </S.FilePreviewContainer>
+
+    
   )}
 
   {posPhotosError && (
@@ -664,18 +858,36 @@ const onSubmit = async (formData: IFormInputs) => {
   )}
 </S.FileInputContainer>
 
+            <S.FileInputContainer>
+  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+  <S.HiddenInput
+    id="file-upload"
+    type="file"
+    accept="application/pdf"
+    onChange={handleFileChange}
+  />
+  <S.UploadButton htmlFor="file-upload">
+    <Upload size={16} />
+    {file ? "1 file selected" : "Attach file (PDF)"}
+  </S.UploadButton>
+  {resaleCertificateError && (
+    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
+  )}
+</S.FileInputContainer>
 
 
-                  </S.Grid>
-              {/* O campo Branding Mix foi movido para fora do S.Grid */}
-              <S.InputGroup>
+
+
+ <S.InputGroup>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
+                                          marginBottom: "0",
+
                   }}
                 >
-                  <S.Label style={{ marginBottom: 0 }} htmlFor="brandingMix">
+                  <S.Label htmlFor="brandingMix">
                     Branding Mix
                   </S.Label>
                   <S.InfoButton
@@ -683,9 +895,12 @@ const onSubmit = async (formData: IFormInputs) => {
                     title="list all the brands you work with (separate the brands by comma"
                     style={{
                       display: "flex",
+                                            alignItems:"center",
+                      marginBottom: "0",
                     }}
                   >
-                    <Info size={16} />
+                                        <Info size={16} style={{ marginBottom: "0.5rem" }} />
+
                   </S.InfoButton>
                 </div>
                 <S.Input
@@ -706,7 +921,94 @@ const onSubmit = async (formData: IFormInputs) => {
                   </S.ErrorMessage>
                 )}
               </S.InputGroup>
-            </S.Section>
+
+              <S.InputGroup>
+  <S.Label htmlFor="instagram">Instagram</S.Label>
+  <S.Input
+    id="instagram"
+    type="text" // permite digitar sem http(s)
+    placeholder="instagram.com/yourprofile"
+    {...register("instagram", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+        message: "Please enter a valid URL",
+      },
+    })}
+    error={!!errors.instagram}
+  />
+  {errors.instagram && (
+    <S.ErrorMessage>
+      {errors.instagram.message}
+    </S.ErrorMessage>
+  )}
+</S.InputGroup>
+            
+
+
+
+
+
+                <S.InputGroup>
+  <S.Label htmlFor="website">Website</S.Label>
+  <S.Input
+    id="website"
+    type="text" // permite digitar sem http(s)
+    placeholder="yourwebsite.com"
+    {...register("website", {
+      pattern: {
+        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+        message: "Please enter a valid Website URL",
+      },
+    })}
+    error={!!errors.website}
+  />
+  {errors.website && (
+    <S.ErrorMessage>
+      {errors.website.message}
+    </S.ErrorMessage>
+  )}
+  
+</S.InputGroup>
+
+
+
+ 
+         
+                
+
+
+               
+
+  <S.InputGroup  >
+   <S.Label htmlFor="joor">JOOR profile - if applicable</S.Label>
+   <S.Input
+     id="joor"
+     type="text" // permite digitar sem http(s)
+     placeholder="jooraccess.com/yourprofile"
+     {...register("joor", {
+       pattern: {
+         value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+         message: "Please enter a valid URL",
+       },
+     })}
+     error={!!errors.joor}
+   />
+   {errors.joor && (
+     <S.ErrorMessage>{errors.joor.message}</S.ErrorMessage>
+   )}
+ </S.InputGroup>
+
+   
+
+
+
+
+
+
+
+                  </S.Grid>
+              {/* O campo Branding Mix foi movido para fora do S.Grid */}
+             </S.Section>
           )}
 
           {currentStep === 2 && (
@@ -885,40 +1187,78 @@ const onSubmit = async (formData: IFormInputs) => {
                 </S.PhoneInputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="terms">Terms</S.Label>
-                  <S.Input as="select" id="terms" style={{ width: "250px" }} {...register("buyerInfo.terms", { required: "Terms are required", validate: (value) => value !== "" || "Please select terms" })} error={!!errors.buyerInfo?.terms}>
+                  <S.Input as="select" id="terms"  {...register("buyerInfo.terms", { required: "Terms are required", validate: (value) => value !== "" || "Please select terms" })} error={!!errors.buyerInfo?.terms}>
                     {termsOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                   </S.Input>
                   {errors.buyerInfo?.terms && <S.ErrorMessage>{errors.buyerInfo.terms.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
                   <S.Label htmlFor="currency">Currency</S.Label>
-                  <S.Input as="select" id="currency" style={{ width: "250px" }} {...register("buyerInfo.currency", { required: "Currency is required", validate: (value) => value !== "" || "Please select a currency" })} error={!!errors.buyerInfo?.currency}>
+                  <S.Input as="select" id="currency"  {...register("buyerInfo.currency", { required: "Currency is required", validate: (value) => value !== "" || "Please select a currency" })} error={!!errors.buyerInfo?.currency}>
                     {currencyOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                   </S.Input>
                   {errors.buyerInfo?.currency && <S.ErrorMessage>{errors.buyerInfo.currency.message}</S.ErrorMessage>}
                 </S.InputGroup>
                 <S.InputGroup>
-                  <S.Label htmlFor="estimatedPurchaseAmount">
-                    Estimated Puchase Amount Per Season
-                  </S.Label>
-                  <S.Input
-                    id="estimatedPurchaseAmount"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    {...register("buyerInfo.estimatedPurchaseAmount", {
-                      required: "Estimated purchase amount is required",
-                      valueAsNumber: true,
-                      min: { value: 0, message: "Amount must be positive" },
-                    })}
-                    error={!!errors.buyerInfo?.estimatedPurchaseAmount}
-                  />
-                  {errors.buyerInfo?.estimatedPurchaseAmount && (
-                    <S.ErrorMessage>
-                      {errors.buyerInfo.estimatedPurchaseAmount.message}
-                    </S.ErrorMessage>
-                  )}
-                </S.InputGroup>
+                                  {" "}
+                                  <S.Label htmlFor="estimatedPurchaseAmount">
+                                    {" "}
+                                    Estimated Purchase Amount Per Season{" "}
+                                  </S.Label>{" "}
+                                  <S.Input
+                                    as="select"
+                                    id="estimatedPurchaseAmount"
+                                    {...register("buyerInfo.estimatedPurchaseAmount", {
+                                      required: "Estimated purchase amount is required",
+                                    })}
+                                    error={!!errors.buyerInfo?.estimatedPurchaseAmount}
+                                  >
+                                    {" "}
+                                    <option disabled hidden value="">Select range</option>{" "}
+                                    <option value="6000-10000">&nbsp;&nbsp;6,000 – 10,000</option>
+                                    <option value="11000-20000">11,000 – 20,000</option>{" "}
+                                    <option value="21000-30000">21,000 – 30,000</option>{" "}
+                                    <option value="31000-40000">31,000 – 40,000</option>{" "}
+                                    <option value="41000-50000">41,000 – 50,000</option>{" "}
+                                    <option value="51000-60000">51,000 – 60,000</option>{" "}
+                                    <option value="61000-70000">61,000 – 70,000</option>{" "}
+                                    <option value="71000-80000">71,000 – 80,000</option>{" "}
+                                    <option value="81000-90000">81,000 – 90,000</option>{" "}
+                                    <option value="91000-100000">91,000 – 100,000</option>{" "}
+                                    <option value="over100000">Over 100,000</option>{" "}
+                                  </S.Input>{" "}
+                                  {errors.buyerInfo?.estimatedPurchaseAmount && (
+                                    <S.ErrorMessage>
+                                      {" "}
+                                      {errors.buyerInfo.estimatedPurchaseAmount.message}{" "}
+                                    </S.ErrorMessage>
+                                  )}{" "}
+                                </S.InputGroup>
+                
+
+
+                                  <S.InputGroup>
+  <S.Label htmlFor="buyerCategory">Category</S.Label>
+  <S.Input
+    as="select"
+    id="buyerCategory"
+    {...register("buyerInfo.category", {
+      required: "Category is required",
+    })}
+    error={!!errors.buyerInfo?.category}
+  >
+    <option value="">Select a category</option>
+    <option value="Apparel">Apparel</option>
+    <option value="Swim">Swim</option>
+    <option value="Shoes">Shoes</option>
+    <option value="Handbags">Handbags</option>
+    <option value="Accessories">Accessories</option>
+    <option value="Others">Others</option>   
+  </S.Input>
+  {errors.buyerInfo?.category && (
+    <S.ErrorMessage>{errors.buyerInfo.category.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
 
 
 

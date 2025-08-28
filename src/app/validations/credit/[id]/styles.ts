@@ -47,9 +47,10 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
   gap: 1rem;
   margin-bottom: 1.5rem;
+  align-items: stretch; /* garante mesma altura dos cards */
 
   @media (max-width: 768px) {
     display: flex;
@@ -62,7 +63,10 @@ export const FormSection = styled.div`
   padding: 2rem 1rem;
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;           /* flexível */
+  flex-direction: column;  /* mantém layout vertical */
 `
+
 
 export const SectionTitle = styled.h3`
   font-size: 0.9rem;

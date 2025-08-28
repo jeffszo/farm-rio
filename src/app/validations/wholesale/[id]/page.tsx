@@ -49,6 +49,7 @@ interface CustomerForm {
   id: string;
   customer_name: string;
   sales_tax_id: string;
+  category: string;
   duns_number: string;
   dba_number: string;
   joor: string;
@@ -80,6 +81,11 @@ interface CustomerForm {
   };
   terms: string;
   currency: string;
+  agent?: {
+    name: string;
+    email?: string;
+    country: string;
+  };
 }
 
 type WholesaleTerms = {
@@ -225,102 +231,132 @@ export default function ValidationDetailsPage() {
         console.log(data);
 
         // Add a type assertion to help TypeScript understand the structure of data.users
-        const processedData: CustomerForm = {
-          users: {
-            email: Array.isArray(data.users)
-              ? ((data.users[0] as { email?: string })?.email ?? "")
-              : ((data.users as { email?: string })?.email ?? ""),
-          },
-          id: data.id ?? "",
-          user_id: data.user_id ?? "", // <-- Add this line to include user_id
-          customer_name: data.customer_name ?? "",
-          sales_tax_id: data.sales_tax_id ?? "",
-          duns_number: data.duns_number ?? "",
-          dba_number: data.dba_number ?? "",
-          financial_statements:
-            "financial_statements" in data
-              ? typeof data.financial_statements === "string"
-                ? data.financial_statements
-                : data.financial_statements
-                  ? JSON.stringify(data.financial_statements)
-                  : ""
-              : "",
-          resale_certificate: data.resale_certificate ?? "",
-          billing_address: processAddressArray(data.billing_address),
-          shipping_address: processAddressArray(data.shipping_address),
-          ap_contact_name: data.ap_contact_name ?? "",
-          ap_contact_email: data.ap_contact_email ?? "",
-          estimated_purchase_amount:
-            "estimated_purchase_amount" in data
-              ? typeof data.estimated_purchase_amount === "string"
-                ? data.estimated_purchase_amount
-                : data.estimated_purchase_amount
-                  ? JSON.stringify(data.estimated_purchase_amount)
-                  : ""
-              : "",
-          photo_urls: (() => {
-            if (!("photo_urls" in data)) return [];
-            const value = data.photo_urls;
-            if (Array.isArray(value))
-              return value.filter((v) => typeof v === "string");
-            if (typeof value === "string") {
-              try {
-                const parsed = JSON.parse(value);
-                return Array.isArray(parsed)
-                  ? parsed.filter((v) => typeof v === "string")
-                  : [];
-              } catch {
-                return [];
-              }
-            }
-            return [];
-          })(),
-          instagram:
-            "instagram" in data
-              ? typeof data.instagram === "string"
-                ? data.instagram
-                : ""
-              : "",
-          website:
-            "website" in data
-              ? typeof data.website === "string"
-                ? data.website
-                : data.website
-                  ? JSON.stringify(data.website)
-                  : ""
-              : "",
-          joor:
-            "joor" in data
-              ? typeof data.joor === "string"
-                ? data.joor
-                : data.joor
-                  ? JSON.stringify(data.joor)
-                  : ""
-              : "", // Adicionado o campo joor com verificação de existência
-          branding_mix:
-            "branding_mix" in data
-              ? typeof data.branding_mix === "string"
-                ? data.branding_mix
-                : data.branding_mix
-                  ? JSON.stringify(data.branding_mix)
-                  : ""
-              : "",
-          buyer_name:
-            typeof data.buyer_name === "string" ? data.buyer_name : "",
-          buyer_email: data.buyer_email ?? "",
-          status: data.status ?? "",
-          created_at: data.created_at ?? "",
-          wholesale_invoicing_company: data.credit_invoicing_company ?? "",
-          wholesale_warehouse: data.wholesale_warehouse ?? "",
-          wholesale_currency: data.wholesale_currency ?? "",
-          wholesale_terms: data.wholesale_terms ?? "",
-          wholesale_credit: data.wholesale_credit ?? "",
-          wholesale_discount: data.credit_discount ?? "",
-          terms: data.terms ?? "",
-          currency: data.currency ?? "",
-        };
+  const processedData: CustomerForm = {
+    users: {
+      email: Array.isArray(data.users)
+        ? ((data.users[0] as { email?: string })?.email ?? "")
+        : ((data.users as { email?: string })?.email ?? ""),
+    },
+    id: data.id ?? "",
+    user_id: data.user_id ?? "", // <-- Add this line to include user_id
+    customer_name: data.customer_name ?? "",
+    sales_tax_id: data.sales_tax_id ?? "",
+    duns_number: data.duns_number ?? "",
+    dba_number: data.dba_number ?? "",
+    category: data.category ?? "",
+    financial_statements:
+      "financial_statements" in data
+        ? typeof data.financial_statements === "string"
+          ? data.financial_statements
+          : data.financial_statements
+            ? JSON.stringify(data.financial_statements)
+            : ""
+        : "",
+    resale_certificate: data.resale_certificate ?? "",
+    billing_address: processAddressArray(data.billing_address),
+    shipping_address: processAddressArray(data.shipping_address),
+    ap_contact_name: data.ap_contact_name ?? "",
+    ap_contact_email: data.ap_contact_email ?? "",
+    estimated_purchase_amount:
+      "estimated_purchase_amount" in data
+        ? typeof data.estimated_purchase_amount === "string"
+          ? data.estimated_purchase_amount
+          : data.estimated_purchase_amount
+            ? JSON.stringify(data.estimated_purchase_amount)
+            : ""
+        : "",
+    photo_urls: (() => {
+      if (!("photo_urls" in data)) return [];
+      const value = data.photo_urls;
+      if (Array.isArray(value))
+        return value.filter((v) => typeof v === "string");
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed)
+            ? parsed.filter((v) => typeof v === "string")
+            : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    })(),
+    instagram:
+      "instagram" in data
+        ? typeof data.instagram === "string"
+          ? data.instagram
+          : ""
+        : "",
+    website:
+      "website" in data
+        ? typeof data.website === "string"
+          ? data.website
+          : data.website
+            ? JSON.stringify(data.website)
+            : ""
+        : "",
+    joor:
+      "joor" in data
+        ? typeof data.joor === "string"
+          ? data.joor
+          : data.joor
+            ? JSON.stringify(data.joor)
+            : ""
+        : "", // Adicionado o campo joor com verificação de existência
+    branding_mix:
+      "branding_mix" in data
+        ? typeof data.branding_mix === "string"
+          ? data.branding_mix
+          : data.branding_mix
+            ? JSON.stringify(data.branding_mix)
+            : ""
+        : "",
+    buyer_name:
+      typeof data.buyer_name === "string" ? data.buyer_name : "",
+    buyer_email: data.buyer_email ?? "",
+    status: data.status ?? "",
+    created_at: data.created_at ?? "",
+    wholesale_invoicing_company: data.credit_invoicing_company ?? "",
+    wholesale_warehouse: data.wholesale_warehouse ?? "",
+    wholesale_currency: data.currency ?? "",
+    wholesale_terms: data.wholesale_terms ?? "",
+    wholesale_credit: data.wholesale_credit ?? "",
+    wholesale_discount: data.credit_discount ?? "",
+    terms: data.terms ?? "",
+    currency: data.currency ?? "",
+     agent: data.agent_id
+    ? {
+        name: data.agent_id.name ?? "",
+        email: data.agent_id.email ?? "",
+        country: data.agent_id.country ?? "",
+      }
+    : undefined,
+  };
 
         setCustomerForm(processedData);
+
+        // --- INÍCIO DA CORREÇÃO ---
+        const customerCurrency = processedData.currency || "";
+
+        const invoicingCompanies = INVOICING_COMPANIES_BY_CURRENCY[customerCurrency] || [];
+        const initialInvoicingCompany = invoicingCompanies.length === 1 ? invoicingCompanies[0] : "";
+        
+        const fetchedTerms: WholesaleTerms = {
+          wholesale_invoicing_company: initialInvoicingCompany,
+          wholesale_warehouse: data.wholesale_warehouse ?? "",
+          wholesale_currency: customerCurrency,
+          wholesale_terms: "", // ✅ Mantém vazio para ser preenchido pela equipe de atacado
+          wholesale_credit: "",
+          wholesale_discount: "",
+          wholesale_feedback: "",
+        };
+        
+        setTerms(fetchedTerms);
+        setInitialTerms(fetchedTerms);
+        // --- FIM DA CORREÇÃO ---
+
+
         console.log(
           "Processed Billing Addresses (after parse):",
           processedData.billing_address
@@ -329,18 +365,6 @@ export default function ValidationDetailsPage() {
           "Processed Shipping Addresses (after parse):",
           processedData.shipping_address
         );
-
-        const fetchedTerms: WholesaleTerms = {
-          wholesale_invoicing_company: "",
-          wholesale_warehouse: "",
-          wholesale_currency: "",
-          wholesale_terms: "",
-          wholesale_credit: "",
-          wholesale_discount: "",
-          wholesale_feedback: "", // Initialize feedback for wholesale
-        };
-        setTerms(fetchedTerms);
-        setInitialTerms(fetchedTerms); // Define initialTerms here
 
         setFeedback(""); // Initialize the feedback state for the textarea
       } catch (err) {
@@ -430,21 +454,23 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
       setAvailableInvoicingCompanies(companies);
 
       // Pré-seleciona se houver apenas uma empresa
-      if (companies.length === 1) {
-        setTerms((prev) => ({
-          ...prev,
-          wholesale_invoicing_company: companies[0],
-          // Limpa o warehouse ao mudar a currency
-          wholesale_warehouse: "",
-        }));
-      } else {
-        // Limpa a empresa se houver mais de uma ou nenhuma
-        setTerms((prev) => ({
-          ...prev,
-          wholesale_invoicing_company: "",
-          wholesale_warehouse: "",
-        }));
-      }
+if (companies.length === 1) {
+  setTerms((prev) => ({
+    ...prev,
+    wholesale_invoicing_company: companies[0],
+    // mantém o que já veio do Supabase
+    wholesale_warehouse: prev.wholesale_warehouse,
+  }));
+} else {
+  setTerms((prev) => ({
+    ...prev,
+    wholesale_invoicing_company: "",
+    // mantém o warehouse atual, não reseta
+    wholesale_warehouse: prev.wholesale_warehouse,
+  }));
+}
+
+
     } else {
       setAvailableInvoicingCompanies([]);
       setTerms((prev) => ({
@@ -455,27 +481,36 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     }
   }, [terms.wholesale_currency]);
 
-  // useEffect para buscar warehouses
-  useEffect(() => {
-    const fetchWarehouses = async () => {
-      if (!terms.wholesale_invoicing_company) {
-        setWarehouses([]);
-        return;
+useEffect(() => {
+  const fetchWarehouses = async () => {
+    if (!terms.wholesale_invoicing_company) {
+      setWarehouses([]);
+      return;
+    }
+    try {
+      const warehouses = await api.getWarehousesByCompany(
+        terms.wholesale_invoicing_company
+      );
+
+      const names = warehouses.map((w: { name: string }) => w.name);
+      setWarehouses(names);
+
+      // 🔥 Ajuste: se só tem 1 warehouse ou nenhum foi selecionado ainda,
+      // seta automaticamente no estado
+      if (names.length === 1 || !terms.wholesale_warehouse) {
+        setTerms((prev) => ({
+          ...prev,
+          wholesale_warehouse: names[0],
+        }));
       }
-      try {
-        const warehouses = await api.getWarehousesByCompany(
-          terms.wholesale_invoicing_company
-        );
-        setWarehouses(
-          warehouses.map((warehouse: { name: string }) => warehouse.name)
-        );
-      } catch (err) {
-        console.error("Error fetching warehouses:", err);
-        setWarehouses([]);
-      }
-    };
-    fetchWarehouses();
-  }, [terms.wholesale_invoicing_company]);
+    } catch (err) {
+      console.error("Error fetching warehouses:", err);
+      setWarehouses([]);
+    }
+  };
+  fetchWarehouses();
+}, [terms.wholesale_invoicing_company]);
+
 
   const handleTermChange = (
     field: keyof WholesaleTerms,
@@ -568,16 +603,16 @@ const executeReject = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     setLoadingApprove(true)
 
     // Valida campos obrigatórios
-    const requiredFields: (keyof WholesaleTerms)[] = [
-      "wholesale_invoicing_company",
-      "wholesale_warehouse",
-      "wholesale_currency",
-      "wholesale_terms",
-    ];
-    const missingFields = requiredFields.filter((field) => !terms[field]);
-    if (missingFields.length > 0) {
-      throw new Error(`Please fill in all required fields: ${missingFields.join(", ")}`);
-    }
+    // const requiredFields: (keyof WholesaleTerms)[] = [
+    //   "wholesale_invoicing_company",
+    //   "wholesale_warehouse",
+    //   "wholesale_currency",
+    //   "wholesale_terms",
+    // ];
+    // const missingFields = requiredFields.filter((field) => !terms[field]);
+    // if (missingFields.length > 0) {
+    //   throw new Error(`Please fill in all required fields: ${missingFields.join(", ")}`);
+    // }
     if (Number(terms.wholesale_credit) < 0 || Number(terms.wholesale_discount) < 0) {
       throw new Error("⚠️ Credit limit and discount must be non-negative!");
     }
@@ -844,6 +879,8 @@ const formatUrl = (url?: string) =>
               )}
             </S.FormRow>
 
+      
+
             <S.FormRow>
               <S.FormRow>
                 <strong>Financial Statements: </strong>{" "}
@@ -872,6 +909,16 @@ const formatUrl = (url?: string) =>
                 "Not sent"
               )}
             </S.FormRow>
+<S.FormRow>
+  <strong>Country:</strong> {customerForm.agent?.country || "Not provided"}
+</S.FormRow>
+<S.FormRow>
+  <strong>Agent:</strong> {customerForm.agent?.name || "Not provided"}
+</S.FormRow>
+
+
+
+
             <S.FormRow>
   <strong>Instagram:</strong>{" "}
   {customerForm.instagram ? (
@@ -1008,6 +1055,9 @@ const formatUrl = (url?: string) =>
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
             </S.FormRow>
+                       <S.FormRow>
+              <strong>Buyer Category:</strong> {customerForm.category}
+            </S.FormRow>
 
             {/* <S.Divider />  */}
 
@@ -1021,7 +1071,7 @@ const formatUrl = (url?: string) =>
         </S.FormDetails>
 
         {/* NOVO CARD PARA EXIBIR TERMOS E CONDIÇÕES */}
-        <S.TermsCard>
+        {/* <S.TermsCard>
           <S.TermsTitle>Terms (filled in by the customer)</S.TermsTitle>
           <S.TermsCardContent>
             <S.FieldGroup>
@@ -1048,7 +1098,7 @@ const formatUrl = (url?: string) =>
               </S.Value>
             </S.FieldGroup>
           </S.TermsCardContent>
-        </S.TermsCard>
+        </S.TermsCard> */}
 
         <S.TermsContainer>
           <S.TermsHeader>
@@ -1056,23 +1106,63 @@ const formatUrl = (url?: string) =>
           </S.TermsHeader>
           <S.TermsGrid>
             <S.TermsSection>
-              <label>
-                <CreditCard size={16} /> Currency
-              </label>
+  <label>
+    <CreditCard size={16} /> Currency
+  </label>
+  <S.Select
+  disabled
+    value={terms.wholesale_currency}
+    onChange={(e) =>
+      handleTermChange("wholesale_currency", e.target.value)
+    }
+  >
+    <option value="">Select currency</option>
+    {CURRENCIES.map((currency) => (
+      <option key={currency} value={currency}>
+        {currency}
+      </option>
+    ))}
+  </S.Select>
+</S.TermsSection>
 
-              <S.Select
-                value={terms.wholesale_currency}
+<S.TermsSection>
+  <label>
+    <Calendar size={16} /> Payment Terms
+  </label>
+<S.Select value={customerForm.terms} disabled>
+  <option value={customerForm.terms}>
+    {customerForm.terms || "N/A"}
+  </option>
+</S.Select>
+
+</S.TermsSection>
+
+<S.TermsSection>
+  <label>
+    <DollarSign size={16} /> Estimated Purchase Amount Per Season
+  </label>
+  <S.Select
+    value={customerForm.estimated_purchase_amount || ""}
+    disabled>
+        <option value={customerForm.estimated_purchase_amount}>
+    {customerForm.estimated_purchase_amount || "N/A"}
+  </option>
+  
+  </S.Select>
+</S.TermsSection>
+            <S.TermsSection>
+              <label>
+                <Percent size={16} /> Discount
+              </label>
+              <S.NumericInput
+                // CORREÇÃO: Garante que o valor nunca seja null, usando "" como fallback.
+                value={terms.wholesale_discount ?? ""}
                 onChange={(e) =>
-                  handleTermChange("wholesale_currency", e.target.value)
+                  handleTermChange("wholesale_discount", e.target.value)
                 }
-              >
-                <option value="">Select currency</option>
-                {CURRENCIES.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
-              </S.Select>
+                min="0"
+                step="0.01"
+              />
             </S.TermsSection>
 
             <S.TermsSection>
@@ -1113,7 +1203,6 @@ const formatUrl = (url?: string) =>
                 }
                 disabled={!terms.wholesale_invoicing_company}
               >
-                <option value="">Select warehouse</option>
                 {warehouses.length > 0 ? (
                   warehouses.map((warehouse) => (
                     <option key={warehouse} value={warehouse}>
@@ -1128,55 +1217,12 @@ const formatUrl = (url?: string) =>
               </S.Select>
             </S.TermsSection>
 
-            <S.TermsSection>
-              <label>
-                <Calendar size={16} /> Payment Terms
-              </label>
-              <S.Select
-                value={terms.wholesale_terms}
-                onChange={(e) =>
-                  handleTermChange("wholesale_terms", e.target.value)
-                }
-              >
-                <option value="">Select payment terms</option>
-                {PAYMENT_TERMS.map((term, index) => (
-                  <option key={`${term}-${index}`} value={term}>
-                    {term}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
 
-            {/* NOVO CAMPO: Credit Limit (substitui Estimated purchase amount) */}
-            {/* <S.TermsSection>
-  <label>
-    <DollarSign size={16} /> Estimated Amount
-  </label>
-  <S.NumericInput
-    // CORREÇÃO: Garante que o valor nunca seja null, usando "" como fallback.
-    value={terms.wholesale_credit ?? ''}
-    onChange={(e) =>
-      handleTermChange("wholesale_credit", e.target.value)
-    }
-    min="0"
-    step="0.01"
-  />
-</S.TermsSection> */}
 
-            <S.TermsSection>
-              <label>
-                <Percent size={16} /> Discount
-              </label>
-              <S.NumericInput
-                // CORREÇÃO: Garante que o valor nunca seja null, usando "" como fallback.
-                value={terms.wholesale_discount ?? ""}
-                onChange={(e) =>
-                  handleTermChange("wholesale_discount", e.target.value)
-                }
-                min="0"
-                step="0.01"
-              />
-            </S.TermsSection>
+
+
+
+
           </S.TermsGrid>
         </S.TermsContainer>
 
@@ -1201,7 +1247,6 @@ const formatUrl = (url?: string) =>
       {loadingReview ? "Reviewing..." : "Review"}
     </S.Button>
   ) : (
-    // 👉 Caso contrário, mostra Reject + Review + Approve
     <>
       <S.Button onClick={onRejectClick} variant="secondary">
         Reject

@@ -75,8 +75,14 @@ interface CustomerForm {
   credit_discount?: string;
   credit_feedback?: string; // Added new field for credit feedback
   user_id: string; 
+  category: string;
   users: {
     email: string;
+  };
+  agent?: {
+    name: string;
+    email?: string;
+    country: string;
   };
 }
 
@@ -105,7 +111,7 @@ interface ValidationDetails { // Interface para dados de validação existentes 
   credit_terms: string;
   credit_credit: string;
   credit_discount: string;
-  estimated_purchase_amount: number;
+  estimated_purchase_amount: string;
 }
 
 
@@ -291,7 +297,12 @@ export default function ValidationDetailsPage() {
                 ? JSON.stringify(data.branding_mix)
                 : ""
             : "",
-          tax_feedback: "tax_feedback" in data ? (typeof data.tax_feedback === "string" ? data.tax_feedback : JSON.stringify(data.tax_feedback ?? "")) : "",
+ tax_feedback: "tax_feedback" in data 
+  ? (typeof data.tax_feedback === "string" && data.tax_feedback.trim() !== "" 
+      ? data.tax_feedback 
+      : null) 
+  : null,
+
         };
 
         setCustomerForm(processedData);
@@ -450,18 +461,18 @@ export default function ValidationDetailsPage() {
   try {
     if (approved) {
       // Specific validations for approval for CREDIT TEAM
-      const requiredFields: (keyof CreditTerms)[] = [
-        "invoicing_company",
-        "warehouse",
-        "currency",
-        "payment_terms",
-      ];
-      const missingFields = requiredFields.filter((field) => !creditTerms[field]);
-      if (missingFields.length > 0) {
-        throw new Error(
-          `Please fill in all required fields: ${missingFields.join(", ")}`
-        );
-      }
+      // const requiredFields: (keyof CreditTerms)[] = [
+      //   "invoicing_company",
+      //   "warehouse",
+      //   "currency",
+      //   "payment_terms",
+      // ];
+      // const missingFields = requiredFields.filter((field) => !creditTerms[field]);
+      // if (missingFields.length > 0) {
+      //   throw new Error(
+      //     `Please fill in all required fields: ${missingFields.join(", ")}`
+      //   );
+      // }
       const creditLimitNum = Number(creditTerms.credit_limit);
       const discountNum = Number(creditTerms.discount);
       if (
@@ -684,6 +695,13 @@ const formatUrl = (url?: string) =>
               )}
             </S.FormRow>
 
+<S.FormRow>
+  <strong>Country:</strong> {customerForm.agent?.country || "Not provided"}
+</S.FormRow>
+<S.FormRow>
+  <strong>Agent:</strong> {customerForm.agent?.name || "Not provided"}
+</S.FormRow>
+
 
                         <S.FormRow>
   <strong>Instagram:</strong>{" "}
@@ -761,17 +779,28 @@ const formatUrl = (url?: string) =>
                 <div>No shipping addresses provided.</div>
               )}
             </S.FormRow>
-            <S.SectionTitle style={{marginTop:"32px"}}>
-              <Mail size={16} /> Billing Contacts
-            </S.SectionTitle>
-            <S.FormRow>
-              <strong>Buyer Name:</strong> {customerForm.buyer_name}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>Buyer Email:</strong> {customerForm.buyer_email}
-            </S.FormRow>
+            
+            
 
           </S.FormSection>
+
+
+          <S.FormSection>
+  <S.SectionTitle>
+    <Mail size={16} /> Billing Contacts
+  </S.SectionTitle>
+  <S.FormRow>
+    <strong>Buyer Name:</strong> {customerForm.buyer_name}
+  </S.FormRow>
+  <S.FormRow>
+    <strong>Buyer Email:</strong> {customerForm.buyer_email}
+  </S.FormRow>
+  <S.FormRow>
+    <strong>Buyer Category:</strong> {customerForm.category}
+  </S.FormRow>
+</S.FormSection>
+
+
 
             {validation && (
             <S.TermsCardsContainer>
@@ -787,11 +816,11 @@ const formatUrl = (url?: string) =>
                   <strong>Currency:</strong> {validation.wholesale_currency}
                 </S.FormRow>
                 <S.FormRow>
-                  <strong>Terms:</strong> {validation.wholesale_terms}
+                  <strong>Terms:</strong> {validation.terms}
                 </S.FormRow>
    <S.FormRow>
   <strong>Estimated Purchase Amount Per Season:</strong>{" "}
-  {Number(validation.estimated_purchase_amount).toFixed(2)}
+  {validation.estimated_purchase_amount}
 </S.FormRow>
 
                 <S.FormRow>
@@ -808,7 +837,11 @@ const formatUrl = (url?: string) =>
               <MessageSquare  size={16} /> Team Feedback
             </S.SectionTitle>
             <S.FormRow>
-  <strong>Tax Feedback:</strong> {customerForm.tax_feedback || "No feedback provided by Tax Team."}
+  <strong>Tax Feedback:</strong>{" "}
+{customerForm.tax_feedback && customerForm.tax_feedback.trim() !== ""
+  ? customerForm.tax_feedback
+  : "No feedback provided by Tax Team."}
+
 </S.FormRow>
 
 
@@ -819,118 +852,7 @@ const formatUrl = (url?: string) =>
 
 
 
-        <S.TermsContainer>
-          <S.TermsTitle>Validation Terms (Credit Team)</S.TermsTitle>
-
-
-          <S.TermsGrid>
-            <S.TermsSection>
-              <label>
-                <CreditCard size={16} /> Currency
-              </label>
-              <S.Select
-                value={creditTerms.currency}
-                onChange={(e) => handleCreditTermChange("currency", e.target.value)}
-              >
-                <option value="">Select currency</option>
-                {CURRENCIES.map((currency) => (
-                  <option key={currency} value={currency}>
-                    {currency}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
-
-            <S.TermsSection>
-              <label>
-                <Building2 size={16} /> Invoicing Company
-              </label>
-              <S.Select
-                value={
-                  availableCreditInvoicingCompanies.length === 1
-                    ? availableCreditInvoicingCompanies[0]
-                    : creditTerms.invoicing_company
-                }
-                onChange={(e) => handleCreditTermChange("invoicing_company", e.target.value)}
-                disabled={!creditTerms.currency}
-              >
-                <option value="">Select company</option>
-                {availableCreditInvoicingCompanies.map((company) => (
-                  <option key={company} value={company}>
-                    {company}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
-
-            <S.TermsSection>
-              <label>
-                <Warehouse size={16} /> Warehouse
-              </label>
-              <S.Select
-                value={creditTerms.warehouse}
-                onChange={(e) => handleCreditTermChange("warehouse", e.target.value)}
-                disabled={!creditTerms.invoicing_company} // Desabilita até que a invoicing_company seja selecionada
-              >
-                <option value="">Select warehouse</option>
-                {/* Se não houver invoicing_company selecionada, creditWarehouses estará vazio */}
-                {creditWarehouses.length > 0 ? (
-                    creditWarehouses.map((warehouse) => (
-                        <option key={warehouse} value={warehouse}>
-                            {warehouse}
-                        </option>
-                    ))
-                ) : (
-                    <option value="" disabled>
-                        Select an Invoicing Company first
-                    </option>
-                )}
-              </S.Select>
-            </S.TermsSection>
-
-            <S.TermsSection>
-              <label>
-                <Calendar size={16} /> Payment Terms
-              </label>
-              <S.Select
-                value={creditTerms.payment_terms}
-                onChange={(e) => handleCreditTermChange("payment_terms", e.target.value)}
-              >
-                <option value="">Select terms</option>
-                {PAYMENT_TERMS.map((term, index) => (
-                  <option key={`${term}-${index}`} value={term}>
-                    {term}
-                  </option>
-                ))}
-              </S.Select>
-            </S.TermsSection>
-
-            {/* <S.TermsSection>
-              <label>
-                <DollarSign size={16} /> Estimated Amount
-              </label>
-              <S.NumericInput
-                value={creditTerms.credit_limit}
-                onChange={(e) => handleCreditTermChange("credit_limit", e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </S.TermsSection> */}
-
-            <S.TermsSection>
-              <label>
-                <Percent size={16} /> Discount
-              </label>
-              <S.NumericInput
-                value={creditTerms.discount}
-                onChange={(e) => handleCreditTermChange("discount", e.target.value)}
-                min="0"
-                max="100"
-                step="0.1"
-              />
-            </S.TermsSection>
-          </S.TermsGrid>
-        </S.TermsContainer>
+   
 
 
                 {/* {(customerForm.status === "approved by the tax team" ||

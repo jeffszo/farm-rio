@@ -12,6 +12,7 @@ export async function submitForm(formData: unknown, userId: string) {
     sales_tax_id: string;
     joor: string;
     resale_certificate?: string | null;
+    country: string;
     billing_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
     shipping_address: unknown[]; // Usar 'any[]' ou definir uma interface para o endereço
     ap_contact_name: string;
@@ -30,7 +31,9 @@ export async function submitForm(formData: unknown, userId: string) {
     website?: string | null; // Adicionado
     terms?: string | null; // Adicionado
     currency?: string | null; // Adicionado
-    estimated_purchase_amount?: number | null; // Adicionado
+    agent_id?: string | null;
+     category?: string | null;  
+    estimated_purchase_amount?: string | null; // Adicionado
     financial_statements?: string | null; // Adicionado (URL do arquivo)
     status: string; // Adicionado, embora já estivesse no payload, é bom explicitá-lo aqui
   }
@@ -40,6 +43,7 @@ export async function submitForm(formData: unknown, userId: string) {
       customer_name,
       sales_tax_id,
       joor,
+      country,
       resale_certificate,
       billing_address,
       shipping_address,
@@ -60,6 +64,8 @@ export async function submitForm(formData: unknown, userId: string) {
       terms, // Desestruturado
       currency, // Desestruturado
       estimated_purchase_amount, // Desestruturado
+      category,
+      agent_id,
       financial_statements, // Desestruturado
       status, // Desestruturado (se vier do formData)
     } = formData as FormData;
@@ -80,6 +86,7 @@ export async function submitForm(formData: unknown, userId: string) {
       user_id: userId,
       customer_name,
       joor,
+      country,
       sales_tax_id,
       resale_certificate: resale_certificate ?? null,
       billing_address: JSON.stringify(billing_address),
@@ -101,6 +108,8 @@ export async function submitForm(formData: unknown, userId: string) {
       terms: terms ?? null, // Adicionado ao payload
       currency: currency ?? null, // Adicionado ao payload
       estimated_purchase_amount: estimated_purchase_amount ?? null, // Adicionado ao payload
+       category: category ?? null, 
+       agent_id: agent_id ?? null,
       financial_statements: financial_statements ?? null, // Adicionado ao payload
       status: status ?? "pending", // Garante que o status seja 'pending' se não for fornecido
     };

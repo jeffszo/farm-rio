@@ -21,12 +21,12 @@ export async function getApprovedCustomers() {
       billing_address,
       shipping_address,
       id,
-      credit_invoicing_company,
-      credit_warehouse,
-      credit_currency,
+      wholesale_invoicing_company,
+      wholesale_warehouse,
+      wholesale_currency,
       estimated_purchase_amount,
       terms,
-      credit_discount
+      wholesale_discount
     `)
     .eq("status", "finished"); // Alterado para "finished" como status final do fluxo
     
@@ -209,9 +209,17 @@ export async function getCustomerValidationDetails(id: string) {
       financial_statements,
       estimated_purchase_amount,
       currency,
+      category,
       joor,
       terms,
-      users(email)
+      country,
+      agent_id,
+      users(email),
+      agent_id (
+      name,
+      email,
+      country
+    )
     `)
     .eq("id", id)
     .single();

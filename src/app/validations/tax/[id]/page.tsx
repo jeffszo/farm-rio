@@ -33,7 +33,7 @@ interface CustomerForm {
   status: string;
   created_at: string;
   financial_statements: string;
-
+  category: string;
   photo_urls: string[]; // Changed to array of strings
   instagram: string;
   website: string;
@@ -473,6 +473,9 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
             </S.FormRow>
             <S.FormRow>
               <strong>Buyer Email:</strong> {customerForm.buyer_email}
+            </S.FormRow>
+                        <S.FormRow>
+              <strong>Buyer Category:</strong> {customerForm.category}
             </S.FormRow>
 
                         <S.Divider /> 

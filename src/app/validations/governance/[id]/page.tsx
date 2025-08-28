@@ -61,8 +61,14 @@ interface CustomerForm {
   csc_initial_feedback: string;
   csc_final_feedback: string;
   user_id: string;
+  category: string;
   users: {
     email: string;
+  };
+  agent?: {
+    name: string;
+    email?: string;
+    country: string;
   };
 }
 
@@ -98,7 +104,7 @@ export default function ValidationDetailsPage() {
     shouldRedirect: false
   });
   const router = useRouter();
-
+  const [taxIdCopied, setTaxIdCopied] = useState<boolean>(false);
   // States for editable DUNS field ONLY
   const [editingDuns, setEditingDuns] = useState(false);
   const [editedDuns, setEditedDuns] = useState("");
@@ -153,6 +159,7 @@ export default function ValidationDetailsPage() {
             sales_tax_id: data.sales_tax_id,
             duns_number: data.duns_number,
             dba_number: data.dba_number,
+            category: data.category,
             currency: data.currency,
             resale_certificate: data.resale_certificate,
             photo_urls:
@@ -235,6 +242,13 @@ export default function ValidationDetailsPage() {
               : (data.users && typeof (data.users as { email?: unknown }).email === "string"
                   ? { email: (data.users as { email: string }).email }
                   : { email: "" }),
+                       agent: data.agent_id
+    ? {
+        name: data.agent_id.name ?? "",
+        email: data.agent_id.email ?? "",
+        country: data.agent_id.country ?? "",
+      }
+    : undefined,
           };
           setCustomerForm(customerFormData);
           // Initialize editable DUNS state with fetched data
@@ -491,25 +505,19 @@ const formatUrl = (url?: string) =>
     parsedPhotoUrls = []; // Fallback to empty array on error
   }
 
-  const handleCopyToClipboard = async (text: string) => {
+const handleCopyToClipboard = async (text: string, field: 'taxId') => {
     try {
-      await navigator.clipboard.writeText(text);
-      setModalContent({
-        title: "Success!",
-        description: "Tax ID number copied to clipboard!",
-        shouldRedirect: false,
-      });
-      setShowModal(true);
+        await navigator.clipboard.writeText(text);
+        if (field === 'taxId') {
+            setTaxIdCopied(true);
+            setTimeout(() => setTaxIdCopied(false), 1000); // Volta ao ícone original após 2 segundos
+        }
+        // Removed dunsCopied logic as it's unused
     } catch (err) {
-      console.error("Erro ao copiar: ", err);
-      setModalContent({
-        title: "Error!",
-        description: "Failed to copy Tax ID number..",
-        shouldRedirect: false,
-      });
-      setShowModal(true);
+        console.error("Error copying:", err);
+        // Você pode adicionar um tratamento visual para erro aqui se desejar, mas a requisição é para sucesso.
     }
-  };
+};
 
 
 
@@ -532,20 +540,17 @@ const formatUrl = (url?: string) =>
             <S.FormRow>
               <strong>Name:</strong> {customerForm.customer_name}
             </S.FormRow>
-            <S.FormRow>
-              <strong>Tax ID:</strong>{" "}
-              <S.ValueWithCopy>
-                {/* Novo Styled Component para alinhar valor e botão */}
-                {customerForm.sales_tax_id}
-                {customerForm.sales_tax_id && (
-                  <S.CopyButton
-                    onClick={() => handleCopyToClipboard(customerForm.sales_tax_id)}
-                  >
-                    <Copy size={16} />
-                  </S.CopyButton>
-                )}
-              </S.ValueWithCopy>
-            </S.FormRow>
+           <S.FormRow>
+  <strong>Tax ID:</strong>
+  <S.ValueWithCopy>
+    {customerForm.sales_tax_id}
+    {customerForm.sales_tax_id && (
+      <S.CopyButton onClick={() => handleCopyToClipboard(customerForm.sales_tax_id, 'taxId')}>
+        {taxIdCopied ? <Check size={16} /> : <Copy size={16} />}
+      </S.CopyButton>
+    )}
+  </S.ValueWithCopy>
+</S.FormRow>
             <S.FormRow> <strong>Customer Currency: </strong> {customerForm.currency} </S.FormRow>
 
             {/* D-U-N-S Number (Editable) */}
@@ -597,6 +602,13 @@ const formatUrl = (url?: string) =>
             <S.FormRow>
               <strong>DBA:</strong> {customerForm.dba_number || "N/A"}
             </S.FormRow>
+<S.FormRow>
+  <strong>Country:</strong> {customerForm.agent?.country || "Not provided"}
+</S.FormRow>
+<S.FormRow>
+  <strong>Agent:</strong> {customerForm.agent?.name || "Not provided"}
+</S.FormRow>
+
            <S.FormRow>
   <strong>Instagram:</strong>{" "}
   {customerForm.instagram ? (
@@ -742,6 +754,11 @@ const formatUrl = (url?: string) =>
               <strong>Buyer Email:</strong> {customerForm.buyer_email || "N/A"}
             </S.FormRow>
 
+                      <S.FormRow>
+              <strong>Buyer Category:</strong> {customerForm.category || "N/A"}
+            </S.FormRow>
+
+
                 <S.Divider />
 
               
@@ -805,7 +822,7 @@ const formatUrl = (url?: string) =>
                     <S.SectionTitle>
                       <Calendar size={16} /> Payment Terms:
                     </S.SectionTitle>
-                    <S.InfoText>{validation.wholesale_terms || "N/A"}</S.InfoText>
+                    <S.InfoText>{validation.terms || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
@@ -815,7 +832,7 @@ const formatUrl = (url?: string) =>
                     <S.InfoText>
                       {validation.estimated_purchase_amount !== undefined &&
                       validation.estimated_purchase_amount !== null
-                        ? validation.estimated_purchase_amount.toFixed(2)
+                        ? validation.estimated_purchase_amount
                         : "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
@@ -835,7 +852,7 @@ const formatUrl = (url?: string) =>
               </S.FormSection>
 
               {/* Credit Terms Section */}
-              <S.FormSection>
+              {/* <S.FormSection>
                 <S.MainSectionTitle>
                   <CreditCard size={16} /> Credit Terms
                 </S.MainSectionTitle>
@@ -896,7 +913,7 @@ validation.credit_discount !== null &&
                     </S.InfoText>
                   </S.TermsSection>
                 </S.TermsGrid>
-              </S.FormSection>
+              </S.FormSection> */}
             </>
           )}
         </S.FormDetails>

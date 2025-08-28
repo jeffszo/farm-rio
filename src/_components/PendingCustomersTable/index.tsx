@@ -136,10 +136,10 @@ export default function PendingCustomersTable({
   const newCustomer: Record<string, unknown> = { ...customer }
 
   // Aqui você força o valor para duas casas decimais
-  if ("estimated_purchase_amount" in newCustomer) {
-    const value = Number(newCustomer.estimated_purchase_amount)
-    newCustomer.estimated_purchase_amount = value.toFixed(2) // string com 2 casas decimais
-  }
+  // if ("estimated_purchase_amount" in newCustomer) {
+  //   const value = Number(newCustomer.estimated_purchase_amount)
+  //   newCustomer.estimated_purchase_amount = value.toFixed(2) // string com 2 casas decimais
+  // }
 
   // Tratamento dos endereços
   try {

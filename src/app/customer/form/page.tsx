@@ -2,10 +2,13 @@
 "use client";
 import React from "react";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as S from "./styles";
-import type { IFormInputs, AddressInput } from "../../../types/form";
-import { createClient } from '@/lib/supabase/client';
+import type { IFormInputs, AddressInput, Agent } from "../../../types/form";
+import { createClient } from "@/lib/supabase/client";
+import CountrySelect from "@/_components/CountrySelect";
+
+
 
 import { useRouter } from "next/navigation";
 import {
@@ -17,10 +20,9 @@ import {
   Trash2,
   Info,
   CircleAlert,
-  CircleX
+  CircleX,
 } from "lucide-react";
 import { api } from "../../../lib/supabase/index";
-
 
 const supabase = createClient();
 // Opções para os selects (adicione/ajuste conforme suas telas de validação)
@@ -29,6 +31,201 @@ const termsOptions = [
   { value: "100% Prior to Ship", label: "100% Prior to Ship" },
   { value: "Net 15", label: "Net 15" },
   { value: "Net 30", label: "Net 30" },
+];
+
+const countryOptions = [
+  // { value: "AF", label: "Afghanistan" },
+  // { value: "AL", label: "Albania" },
+  // { value: "DZ", label: "Algeria" },
+  // { value: "AD", label: "Andorra" },
+  // { value: "AO", label: "Angola" },
+  // { value: "AG", label: "Antigua and Barbuda" },
+  // { value: "AR", label: "Argentina" },
+  // { value: "AM", label: "Armenia" },
+  // { value: "AU", label: "Australia" },
+  // { value: "AT", label: "Austria" },
+  // { value: "AZ", label: "Azerbaijan" },
+  // { value: "BS", label: "Bahamas" },
+  // { value: "BH", label: "Bahrain" },
+  // { value: "BD", label: "Bangladesh" },
+  // { value: "BB", label: "Barbados" },
+  // { value: "BY", label: "Belarus" },
+  // { value: "BE", label: "Belgium" },
+  // { value: "BZ", label: "Belize" },
+  // { value: "BJ", "label": "Benin" },
+  // { value: "BT", label: "Bhutan" },
+  // { value: "BO", label: "Bolivia" },
+  // { value: "BA", label: "Bosnia and Herzegovina" },
+  // { value: "BW", label: "Botswana" },
+  { value: "BR", label: "Brazil" },
+  // { value: "BN", label: "Brunei Darussalam" },
+  // { value: "BG", label: "Bulgaria" },
+  // { value: "BF", label: "Burkina Faso" },
+  // { value: "BI", label: "Burundi" },
+  // { value: "CV", label: "Cabo Verde" },
+  // { value: "KH", label: "Cambodia" },
+  // { value: "CM", label: "Cameroon" },
+  // { value: "CA", label: "Canada" },
+  // { value: "CF", label: "Central African Republic" },
+  // { value: "TD", label: "Chad" },
+  // { value: "CL", label: "Chile" },
+  // { value: "CN", label: "China" },
+  // { value: "CO", label: "Colombia" },
+  // { value: "KM", label: "Comoros" },
+  // { value: "CG", label: "Congo" },
+  // { value: "CD", label: "Congo, Democratic" },
+  // { value: "CR", label: "Costa Rica" },
+  // { value: "HR", label: "Croatia" },
+  // { value: "CU", label: "Cuba" },
+  // { value: "CY", label: "Cyprus" },
+  // { value: "CZ", label: "Czech Republic" },
+  // { value: "DK", label: "Denmark" },
+  // { value: "DJ", label: "Djibouti" },
+  // { value: "DM", label: "Dominica" },
+  // { value: "DO", label: "Dominican Republic" },
+  // { value: "EC", label: "Ecuador" },
+  // { value: "EG", label: "Egypt" },
+  // { value: "SV", label: "El Salvador" },
+  // { value: "GQ", label: "Equatorial Guinea" },
+  // { value: "ER", label: "Eritrea" },
+  // { value: "EE", label: "Estonia" },
+  // { value: "ET", label: "Ethiopia" },
+  // { value: "FJ", label: "Fiji" },
+  // { value: "FI", label: "Finland" },
+  { value: "FR", label: "France" },
+  // { value: "GA", label: "Gabon" },
+  // { value: "GM", label: "Gambia" },
+  // { value: "GE", label: "Georgia" },
+  // { value: "DE", label: "Germany" },
+  // { value: "GH", label: "Ghana" },
+  // { value: "GR", label: "Greece" },
+  // { value: "GD", label: "Grenada" },
+  // { value: "GT", label: "Guatemala" },
+  // { value: "GN", label: "Guinea" },
+  // { value: "GW", label: "Guinea-Bissau" },
+  // { value: "GY", label: "Guyana" },
+  // { value: "HT", label: "Haiti" },
+  // { value: "HN", label: "Honduras" },
+  // { value: "HU", label: "Hungary" },
+  // { value: "IS", label: "Iceland" },
+  // { value: "IN", label: "India" },
+  // { value: "ID", label: "Indonesia" },
+  // { value: "IR", label: "Iran" },
+  // { value: "IQ", label: "Iraq" },
+  // { value: "IE", label: "Ireland" },
+  // { value: "IL", label: "Israel" },
+  { value: "IT", label: "Italy" },
+  // { value: "JM", label: "Jamaica" },
+  // { value: "JP", label: "Japan" },
+  // { value: "JO", label: "Jordan" },
+  // { value: "KZ", label: "Kazakhstan" },
+  // { value: "KE", label: "Kenya" },
+  // { value: "KI", label: "Kiribati" },
+  // { value: "KP", label: "Korea, Democratic People's Republic of" },
+  // { value: "KR", label: "Korea, Republic of" },
+  // { value: "KW", label: "Kuwait" },
+  // { value: "KG", label: "Kyrgyzstan" },
+  // { value: "LA", label: "Laos" },
+  // { value: "LV", label: "Latvia" },
+  // { value: "LB", label: "Lebanon" },
+  // { value: "LS", label: "Lesotho" },
+  // { value: "LR", label: "Liberia" },
+  // { value: "LY", label: "Libya" },
+  // { value: "LI", label: "Liechtenstein" },
+  // { value: "LT", label: "Lithuania" },
+  // { value: "LU", label: "Luxembourg" },
+  // { value: "MK", label: "North Macedonia" },
+  // { value: "MG", label: "Madagascar" },
+  // { value: "MW", label: "Malawi" },
+  // { value: "MY", label: "Malaysia" },
+  // { value: "MV", label: "Maldives" },
+  // { value: "ML", label: "Mali" },
+  // { value: "MT", label: "Malta" },
+  // { value: "MH", label: "Marshall Islands" },
+  // { value: "MR", label: "Mauritania" },
+  // { value: "MU", label: "Mauritius" },
+  // { value: "MX", label: "Mexico" },
+  // { value: "FM", label: "Micronesia, Federated States of" },
+  // { value: "MD", label: "Moldova, Republic of" },
+  // { value: "MC", label: "Monaco" },
+  // { value: "MN", label: "Mongolia" },
+  // { value: "ME", label: "Montenegro" },
+  // { value: "MA", label: "Morocco" },
+  // { value: "MZ", label: "Mozambique" },
+  // { value: "MM", label: "Myanmar" },
+  // { value: "NA", label: "Namibia" },
+  // { value: "NR", label: "Nauru" },
+  // { value: "NP", label: "Nepal" },
+  // { value: "NL", label: "Netherlands" },
+  // { value: "NZ", label: "New Zealand" },
+  // { value: "NI", label: "Nicaragua" },
+  // { value: "NE", label: "Niger" },
+  // { value: "NG", label: "Nigeria" },
+  // { value: "NO", label: "Norway" },
+  // { value: "OM", label: "Oman" },
+  // { value: "PK", label: "Pakistan" },
+  // { value: "PW", label: "Palau" },
+  // { value: "PS", label: "Palestine, State of" },
+  // { value: "PA", label: "Panama" },
+  // { value: "PG", label: "Papua New Guinea" },
+  // { value: "PY", label: "Paraguay" },
+  // { value: "PE", label: "Peru" },
+  // { value: "PH", label: "Philippines" },
+  // { value: "PL", label: "Poland" },
+  // { value: "PT", label: "Portugal" },
+  // { value: "QA", label: "Qatar" },
+  // { value: "RO", label: "Romania" },
+  // { value: "RU", label: "Russian Federation" },
+  // { value: "RW", label: "Rwanda" },
+  // { value: "KN", label: "Saint Kitts and Nevis" },
+  // { value: "LC", label: "Saint Lucia" },
+  // { value: "VC", label: "Saint Vincent and the Grenadines" },
+  // { value: "WS", label: "Samoa" },
+  // { value: "SM", label: "San Marino" },
+  // { value: "ST", label: "Sao Tome and Principe" },
+  // { value: "SA", label: "Saudi Arabia" },
+  // { value: "SN", label: "Senegal" },
+  // { value: "RS", label: "Serbia" },
+  // { value: "SC", label: "Seychelles" },
+  // { value: "SL", label: "Sierra Leone" },
+  // { value: "SG", label: "Singapore" },
+  // { value: "SK", label: "Slovakia" },
+  // { value: "SI", label: "Slovenia" },
+  // { value: "SB", label: "Solomon Islands" },
+  // { value: "SO", label: "Somalia" },
+  // { value: "ZA", label: "South Africa" },
+  // { value: "SS", label: "South Sudan" },
+  { value: "ES", label: "Spain" },
+  // { value: "LK", label: "Sri Lanka" },
+  // { value: "SD", label: "Sudan" },
+  // { value: "SR", label: "Suriname" },
+  // { value: "SE", label: "Sweden" },
+  // { value: "CH", label: "Switzerland" },
+  // { value: "SY", label: "Syrian Arab Republic" },
+  // { value: "TJ", label: "Tajikistan" },
+  // { value: "TZ", label: "Tanzania" },
+  // { value: "TH", label: "Thailand" },
+  // { value: "TL", label: "Timor-Leste" },
+  // { value: "TG", label: "Togo" },
+  // { value: "TO", label: "Tonga" },
+  // { value: "TT", label: "Trinidad and Tobago" },
+  // { value: "TN", label: "Tunisia" },
+  // { value: "TR", label: "Turkey" },
+  // { value: "TM", label: "Turkmenistan" },
+  // { value: "TV", label: "Tuvalu" },
+  // { value: "UG", label: "Uganda" },
+  // { value: "UA", label: "Ukraine" },
+  // { value: "AE", label: "United Arab Emirates" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "US", label: "United States" },
+  // { value: "UY", label: "Uruguay" },
+  // { value: "UZ", label: "Uzbekistan" },
+  // { value: "VU", label: "Vanuatu" },
+  // { value: "VE", label: "Venezuela" },
+  // { value: "VN", label: "Viet Nam" },
+  // { value: "YE", label: "Yemen" },
+  // { value: "ZM", label: "Zambia" },
+  // { value: "ZW", label: "Zimbabwe" },
 ];
 
 const currencyOptions = [
@@ -40,6 +237,7 @@ const currencyOptions = [
 
 export default function OnboardingForm() {
   const [file, setFile] = useState<File | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [financialStatementsFile, setFinancialStatementsFile] =
     useState<File | null>(null);
@@ -49,23 +247,26 @@ export default function OnboardingForm() {
   const [, setIsSameAsBilling] = useState(false);
   const [billingAddress, setbillingAddress] = useState<number[]>([0]);
   const [currentStep, setCurrentStep] = useState(1);
+  
   const totalSteps = 4;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{ id: string; userType?: string } | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [apiError, setApiError] = useState<string | null>(null);
 
   // Novos estados para erros específicos de campos de arquivo
-  const [resaleCertificateError, setResaleCertificateError] = useState<string | null>(null);
+  const [resaleCertificateError, setResaleCertificateError] = useState<
+    string | null
+  >(null);
   const [posPhotosError, setPosPhotosError] = useState<string | null>(null);
 
   // New states for dynamic modal content
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [modalIcon, setModalIcon] = useState<React.ElementType | null>(null);
 
   const router = useRouter();
@@ -80,7 +281,9 @@ export default function OnboardingForm() {
     trigger,
     getValues,
     setValue,
+    watch,
     clearErrors,
+    control,
     setError,
   } = useForm<IFormInputs>({
     mode: "onChange",
@@ -101,6 +304,8 @@ export default function OnboardingForm() {
     },
   });
 
+  const selectedCountry = watch("customerInfo.country");
+
   const handleFinancialStatementsFileChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -118,10 +323,7 @@ export default function OnboardingForm() {
       setFinancialStatementsFile(selectedFile);
       clearErrors("buyerInfo.financialStatements");
       setApiError(null);
-      console.log(
-        "Financial Statements file selected:",
-        selectedFile.name
-      );
+      console.log("Financial Statements file selected:", selectedFile.name);
     } else {
       setFinancialStatementsFile(null);
       clearErrors("buyerInfo.financialStatements");
@@ -139,6 +341,14 @@ export default function OnboardingForm() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+  const fetchAgents = async () => {
+    const { data, error } = await supabase.from("agents").select("*");
+    if (!error) setAgents(data);
+  };
+  fetchAgents();
+}, []);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -150,10 +360,7 @@ export default function OnboardingForm() {
       }
       setFile(selectedFile);
       setResaleCertificateError(null); // Limpa o erro quando um arquivo válido é selecionado
-      console.log(
-        "Resale Certificate file selected:",
-        selectedFile.name
-      );
+      console.log("Resale Certificate file selected:", selectedFile.name);
     } else {
       setFile(null);
       console.log("No Resale Certificate file selected.");
@@ -177,40 +384,35 @@ export default function OnboardingForm() {
   const onSubmit = async (formData: IFormInputs) => {
     console.log("Submit button clicked. Starting onSubmit function.");
 
-      if (formData.buyerInfo?.estimatedPurchaseAmount !== undefined) {
-      formData.buyerInfo.estimatedPurchaseAmount = parseFloat(
-        Number(formData.buyerInfo.estimatedPurchaseAmount).toFixed(2)
-      );
-    }
-
-
+ 
     // Validação manual para o Resale Certificate e POS Photos
     if (!file) {
-        setModalTitle("Validation Error");
-        setModalMessage("Resale Certificate is required.");
-        setModalIcon(() => CircleX);
-        setIsModalOpen(true);
-        setIsUploading(false);
-        setResaleCertificateError("Resale Certificate is required.");
-        return;
+      setModalTitle("Validation Error");
+      setModalMessage("Resale Certificate is required.");
+      setModalIcon(() => CircleX);
+      setIsModalOpen(true);
+      setIsUploading(false);
+      setResaleCertificateError("Resale Certificate is required.");
+      return;
     } else {
-        setResaleCertificateError(null);
+      setResaleCertificateError(null);
     }
     if (imageFiles.length === 0) {
-        setModalTitle("Validation Error");
-        setModalMessage("At least one POS photo is required.");
-        setModalIcon(() => CircleX);
-        setIsModalOpen(true);
-        setIsUploading(false);
-        setPosPhotosError("At least one POS photo is required.");
-        return;
+      setModalTitle("Validation Error");
+      setModalMessage("At least one POS photo is required.");
+      setModalIcon(() => CircleX);
+      setIsModalOpen(true);
+      setIsUploading(false);
+      setPosPhotosError("At least one POS photo is required.");
+      return;
     } else {
-        setPosPhotosError(null);
+      setPosPhotosError(null);
     }
 
     console.log("📥 Form submission started.");
 
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
     console.log("🔐 Supabase session data:", sessionData);
     console.log("🧾 Access Token:", sessionData?.session?.access_token);
     if (sessionError) {
@@ -271,14 +473,19 @@ export default function OnboardingForm() {
       "buyerInfo.financialStatements",
     ]);
 
-    if (!allFieldsValid || financialStatementsError || Object.keys(errors).length > 0) {
+    if (
+      !allFieldsValid ||
+      financialStatementsError ||
+      Object.keys(errors).length > 0
+    ) {
       console.log("Final form submission validation failed. Errors:", errors);
       let displayMessage = "";
       if (financialStatementsError && specificErrorMessage) {
         displayMessage = specificErrorMessage;
       } else {
-        const firstErrorMessage = Object.values(errors)
-          .find((e: unknown) => typeof e === "object" && e !== null && "message" in e)?.message;
+        const firstErrorMessage = Object.values(errors).find(
+          (e: unknown) => typeof e === "object" && e !== null && "message" in e
+        )?.message;
 
         if (firstErrorMessage) {
           displayMessage = firstErrorMessage;
@@ -301,8 +508,9 @@ export default function OnboardingForm() {
       setIsUploading(true);
       console.log("isUploading set to true.");
 
-      let { data: { user: currentUser } } = await supabase.auth.getUser();
-
+      let {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
 
       if (!currentUser) {
         console.log("🔁 Buscando currentUser dentro do onSubmit...");
@@ -328,7 +536,7 @@ export default function OnboardingForm() {
             action_link: "",
             email_confirmed_at: "",
             phone_confirmed_at: "",
-            is_anonymous: false
+            is_anonymous: false,
           };
         }
       }
@@ -336,7 +544,9 @@ export default function OnboardingForm() {
       if (!currentUser || !currentUser.id) {
         console.error("⚠️ Usuário não autenticado no momento do submit.");
         setModalTitle("Authentication Error");
-        setModalMessage("Your session has expired or you are not logged in. Please log in again.");
+        setModalMessage(
+          "Your session has expired or you are not logged in. Please log in again."
+        );
         setModalIcon(() => CircleX);
         setIsModalOpen(true);
         setIsUploading(false);
@@ -362,13 +572,14 @@ export default function OnboardingForm() {
             fileUrl
           );
         } catch (error) {
-          console.error(
-            "Error uploading resale certificate file:",
-            error
-          );
+          console.error("Error uploading resale certificate file:", error);
 
           setModalTitle("Upload Error");
-          setModalMessage(error instanceof Error ? error.message : "Error uploading file. Please try again.");
+          setModalMessage(
+            error instanceof Error
+              ? error.message
+              : "Error uploading file. Please try again."
+          );
           setModalIcon(() => CircleX);
           setIsModalOpen(true);
 
@@ -391,7 +602,11 @@ export default function OnboardingForm() {
             console.error(`Error uploading image ${imageFile.name}:`, error);
 
             setModalTitle("Upload Error");
-            setModalMessage(error instanceof Error ? error.message : "Error uploading images. Please try again.");
+            setModalMessage(
+              error instanceof Error
+                ? error.message
+                : "Error uploading images. Please try again."
+            );
             setModalIcon(() => CircleX);
             setIsModalOpen(true);
 
@@ -419,7 +634,11 @@ export default function OnboardingForm() {
           console.error("Error uploading Financial Statements:", error);
 
           setModalTitle("Upload Error");
-          setModalMessage(error instanceof Error ? error.message : "Error uploading Financial Statements. Please try again.");
+          setModalMessage(
+            error instanceof Error
+              ? error.message
+              : "Error uploading Financial Statements. Please try again."
+          );
           setModalIcon(() => CircleX);
           setIsModalOpen(true);
 
@@ -444,6 +663,7 @@ export default function OnboardingForm() {
         duns_number: formData.customerInfo?.dunNumber || null,
         dba_number: formData.customerInfo?.dba || null,
         joor: formData.joor || null,
+        country: formData.customerInfo?.country || null,
         resale_certificate: fileUrl,
         billing_address: formData.billingAddress || [],
         shipping_address: formData.shippingAddress || [],
@@ -466,9 +686,11 @@ export default function OnboardingForm() {
         website: formData.website || null,
         terms: termsValue,
         currency: currencyValue,
-        estimated_purchase_amount:
-          formData.buyerInfo?.estimatedPurchaseAmount || null,
+        estimated_purchase_amount: formData.buyerInfo?.estimatedPurchaseAmount || null,
+
         financial_statements: financialStatementsFileUrl,
+         category: formData.buyerInfo?.category || null,
+         agent_id: formData.customerInfo?.agentId || null,
       };
 
       console.log("Payload being sent to submitForm:", payload);
@@ -477,36 +699,41 @@ export default function OnboardingForm() {
       console.log("Form submitted successfully via API.");
 
       try {
-      const emailConfirmationPayload = {
-        name: formData.buyerInfo?.firstName || "Cliente",
-      };
-      console.log("Payload de email de confirmação:", emailConfirmationPayload);
+        const emailConfirmationPayload = {
+          name: formData.buyerInfo?.firstName || "Cliente",
+        };
+        console.log(
+          "Payload de email de confirmação:",
+          emailConfirmationPayload
+        );
 
-      const emailResponse = await fetch("/api/send/send-form-confirmation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailConfirmationPayload),
-      });
+        const emailResponse = await fetch("/api/send/send-form-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emailConfirmationPayload),
+        });
 
-      if (emailResponse.ok) {
-        console.log("E-mail de confirmação enviado com sucesso!");
-      } else {
-        const errorData = await emailResponse.json();
-        console.error("Falha ao enviar e-mail de confirmação:", errorData);
+        if (emailResponse.ok) {
+          console.log("E-mail de confirmação enviado com sucesso!");
+        } else {
+          const errorData = await emailResponse.json();
+          console.error("Falha ao enviar e-mail de confirmação:", errorData);
+        }
+      } catch (emailError) {
+        console.error(
+          "Erro ao tentar enviar e-mail de confirmação:",
+          emailError
+        );
       }
-    } catch (emailError) {
-      console.error("Erro ao tentar enviar e-mail de confirmação:", emailError);
-    }
 
       setModalTitle("Success!");
       setModalMessage("Your form has been submitted successfully!");
       setModalIcon(() => CircleCheck);
       setIsModalOpen(true);
       console.log("Modal set to open with success message.");
-        setTimeout(() => {
-        router.push('/');
+      setTimeout(() => {
+        router.push("/");
       }, 2000);
-
     } catch (error: unknown) {
       console.error(
         "GENERAL error submitting the form:",
@@ -515,8 +742,7 @@ export default function OnboardingForm() {
 
       setModalIcon(() => CircleX);
       setIsModalOpen(true);
-      router.push("/")
-
+      router.push("/");
     } finally {
       setIsUploading(false);
       console.log("isUploading set to false. End of onSubmit function.");
@@ -544,6 +770,8 @@ export default function OnboardingForm() {
         "customerInfo.legalName",
         "customerInfo.taxId",
         "customerInfo.dba",
+        "customerInfo.country",
+        "customerInfo.agentId",
         "brandingMix",
         "instagram",
         "website",
@@ -588,6 +816,7 @@ export default function OnboardingForm() {
         "buyerInfo.terms",
         "buyerInfo.currency",
         "buyerInfo.estimatedPurchaseAmount",
+        "buyerInfo.category",
       ];
       setStepFourAttemptedValidation(true);
 
@@ -598,7 +827,8 @@ export default function OnboardingForm() {
         termsSelected !== "100% Prior to Ship" &&
         !financialStatementsFile
       ) {
-        const errorMessage = "Financial Statements are required if terms are not 100% Prior to Ship.";
+        const errorMessage =
+          "Financial Statements are required if terms are not 100% Prior to Ship.";
         errorsList.push(errorMessage);
         setError("buyerInfo.financialStatements", {
           type: "required",
@@ -619,7 +849,9 @@ export default function OnboardingForm() {
       }
     }
 
-    const isValid = await trigger(fieldsToValidate as Parameters<typeof trigger>[0]);
+    const isValid = await trigger(
+      fieldsToValidate as Parameters<typeof trigger>[0]
+    );
 
     if (!isValid) {
       // Coleta erros do react-hook-form
@@ -690,17 +922,14 @@ export default function OnboardingForm() {
       clearErrors("shippingAddress.0.state");
       clearErrors("shippingAddress.0.county");
       clearErrors("shippingAddress.0.country");
-      console.log(
-        "Shipping address populated based on billing address."
-      );
+      console.log("Shipping address populated based on billing address.");
     } else {
       console.warn("Billing address not found to copy.");
     }
     setIsSameAsBilling(true);
   };
 
-  useEffect(() => {
-  }, []);
+  useEffect(() => {}, []);
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -777,6 +1006,7 @@ export default function OnboardingForm() {
                   )}
                 </S.InputGroup>
 
+                
                 <S.InputGroup>
                   <S.Label htmlFor="dunNumber">D-U-N-S</S.Label>
                   <S.Input
@@ -792,52 +1022,218 @@ export default function OnboardingForm() {
                       {errors.customerInfo.dunNumber.message}
                     </S.ErrorMessage>
                   )}
+                </S.InputGroup>  
+
+                <S.InputGroup>
+  <S.Label htmlFor="customerCountry">Country</S.Label>
+  <Controller
+    name="customerInfo.country"
+    control={control} // do useForm()
+    rules={{ required: "Country is required" }}
+    render={({ field }) => (
+      <CountrySelect
+        value={field.value || ""}
+        onChange={field.onChange}
+        options={countryOptions}
+        // error={fieldState?.error?.message}
+      />
+    )}
+  />
+  {errors.customerInfo?.country && (
+    <S.ErrorMessage>{errors.customerInfo.country.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+
+
+<S.InputGroup>
+  <S.Label htmlFor="customerAgent">Agent</S.Label>
+  <S.Input
+    as="select"
+    id="customerAgent"
+    {...register("customerInfo.agentId", {
+      required: "Agent is required",
+    })}
+    error={!!errors.customerInfo?.agentId}
+  >
+    <option value="" hidden>Select an agent</option>
+    {agents
+      .filter((agent) => agent.country === selectedCountry) // usa watch aqui
+      .map((agent) => (
+        <option key={agent.id} value={agent.id}>
+          {agent.name}
+        </option>
+      ))}
+  </S.Input>
+  {errors.customerInfo?.agentId && (
+    <S.ErrorMessage>{errors.customerInfo.agentId.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+
+
+ <S.FileInputContainer>
+                  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
+                  <S.HiddenInput
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                  <S.UploadButton htmlFor="image-upload">
+                    <Upload size={16} />
+                    {imageFiles.length > 0
+                      ? `${imageFiles.length} file(s) selected`
+                      : "Attach image files"}
+                  </S.UploadButton>
+
+                  {/* Lista de imagens selecionadas com botão de remover */}
+                  {imageFiles.length > 0 && (
+                    <S.FilePreviewContainer>
+                      {imageFiles.map((_, index) => (
+                        <S.FilePreview key={index}>
+                          <span>img-{String(index + 1).padStart(2, "0")}</span>
+                          <S.RemoveButton
+                            type="button"
+                            onClick={() =>
+                              setImageFiles((prev) =>
+                                prev.filter((_, i) => i !== index)
+                              )
+                            }
+                            style={{
+                              position: "absolute",
+                              top: "-6px",
+                              right: "-6px",
+                              backgroundColor: "#fff",
+                              borderRadius: "50%",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </S.RemoveButton>
+                        </S.FilePreview>
+                      ))}
+                    </S.FilePreviewContainer>
+                  )}
+
+                  {posPhotosError && (
+                    <S.ErrorMessage>{posPhotosError}</S.ErrorMessage>
+                  )}
+                </S.FileInputContainer>
+
+
+
+             <S.FileInputContainer>
+                  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
+                  <S.HiddenInput
+                    id="file-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileChange}
+                  />
+                  <S.UploadButton htmlFor="file-upload">
+                    <Upload size={16} />
+                    {file ? "1 file selected" : "Attach file (PDF)"}
+                  </S.UploadButton>
+                  {resaleCertificateError && (
+                    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
+                  )}
+                </S.FileInputContainer>
+
+
+
+
+              
+
+                           <S.InputGroup>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    
+                  }}
+                >
+                  <S.Label htmlFor="brandingMix">
+                    Branding Mix
+                  </S.Label>
+                  <S.InfoButton
+                    type="button"
+                    title="list all the brands you work with (separate the brands by comma"
+                    style={{
+                      display: "flex",
+                      alignItems:"center",
+                      marginBottom: "0",
+                    }}
+                  >
+                    <Info size={16} style={{ marginBottom: "0.5rem" }} />
+                  </S.InfoButton>
+                </div>
+                <S.Input
+                  style={{
+                    width: "426px", // Ocupa a largura total abaixo do grid
+                    height: "200px",
+                  }}
+                  as="textarea" // Usar textarea para multi-linhas
+                  id="brandingMix"
+                  {...register("brandingMix", {
+                    required: "Brand/Branding Mix is required",
+                  })}
+                  error={!!errors.brandingMix}
+                />
+                {errors.brandingMix && (
+                  <S.ErrorMessage>{errors.brandingMix.message}</S.ErrorMessage>
+                )}
+              </S.InputGroup>
+
+                               <S.InputGroup>
+                  <S.Label htmlFor="instagram">Instagram</S.Label>
+                  <S.Input
+                    id="instagram"
+                    type="text" // permite digitar sem http(s)
+                    placeholder="instagram.com/yourprofile"
+                    {...register("instagram", {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                        message: "Please enter a valid URL",
+                      },
+                    })}
+                    error={!!errors.instagram}
+                  />
+                  {errors.instagram && (
+                    <S.ErrorMessage>{errors.instagram.message}</S.ErrorMessage>
+                  )}
                 </S.InputGroup>
 
                 <S.InputGroup>
-  <S.Label htmlFor="instagram">Instagram</S.Label>
-  <S.Input
-    id="instagram"
-    type="text" // permite digitar sem http(s)
-    placeholder="instagram.com/yourprofile"
-    {...register("instagram", {
-      pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-        message: "Please enter a valid URL",
-      },
-    })}
-    error={!!errors.instagram}
-  />
-  {errors.instagram && (
-    <S.ErrorMessage>
-      {errors.instagram.message}
-    </S.ErrorMessage>
-  )}
-</S.InputGroup>
+                  <S.Label htmlFor="website">Website</S.Label>
+                  <S.Input
+                    id="website"
+                    type="text" // permite digitar sem http(s)
+                    placeholder="yourwebsite.com"
+                    {...register("website", {
+                      pattern: {
+                        value:
+                          /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
+                        message: "Please enter a valid Website URL",
+                      },
+                    })}
+                    error={!!errors.website}
+                  />
+                  {errors.website && (
+                    <S.ErrorMessage>{errors.website.message}</S.ErrorMessage>
+                  )}
+                </S.InputGroup>
 
 
-               <S.InputGroup>
-  <S.Label htmlFor="website">Website</S.Label>
-  <S.Input
-    id="website"
-    type="text" // permite digitar sem http(s)
-    placeholder="yourwebsite.com"
-    {...register("website", {
-      pattern: {
-        value: /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d{1,5})?(\/\S*)?$/,
-        message: "Please enter a valid Website URL",
-      },
-    })}
-    error={!!errors.website}
-  />
-  {errors.website && (
-    <S.ErrorMessage>
-      {errors.website.message}
-    </S.ErrorMessage>
-  )}
-</S.InputGroup>
+               
 
-<S.InputGroup>
+
+              
+
+   
+
+                
+                 <S.InputGroup  >
   <S.Label htmlFor="joor">JOOR profile - if applicable</S.Label>
   <S.Input
     id="joor"
@@ -856,119 +1252,17 @@ export default function OnboardingForm() {
   )}
 </S.InputGroup>
 
+      
+             
 
-
-                <S.FileInputContainer>
-  <S.Label htmlFor="file-upload">Resale Certificate</S.Label>
-  <S.HiddenInput
-    id="file-upload"
-    type="file"
-    accept="application/pdf"
-    onChange={handleFileChange}
-  />
-  <S.UploadButton htmlFor="file-upload">
-    <Upload size={16} />
-    {file ? "1 file selected" : "Attach file (PDF)"}
-  </S.UploadButton>
-  {resaleCertificateError && (
-    <S.ErrorMessage>{resaleCertificateError}</S.ErrorMessage>
-  )}
-</S.FileInputContainer>
-
-               <S.FileInputContainer>
-  <S.Label htmlFor="image-upload">Upload POS Photos</S.Label>
-  <S.HiddenInput
-    id="image-upload"
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={handleImageChange}
-  />
-  <S.UploadButton htmlFor="image-upload">
-    <Upload size={16} />
-    {imageFiles.length > 0
-      ? `${imageFiles.length} file(s) selected`
-      : "Attach image files"}
-  </S.UploadButton>
-
-  {/* Lista de imagens selecionadas com botão de remover */}
-{imageFiles.length > 0 && (
-  <S.FilePreviewContainer>
-    {imageFiles.map((_, index) => (
-      <S.FilePreview key={index}>
-        <span>img-{String(index + 1).padStart(2, "0")}</span>
-        <S.RemoveButton
-          type="button"
-          onClick={() =>
-            setImageFiles((prev) => prev.filter((_, i) => i !== index))
-          }
-          style={{
-            position: "absolute",
-            top: "-6px",
-            right: "-6px",
-            backgroundColor: "#fff",
-            borderRadius: "50%",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-          }}
-        >
-          <Trash2 size={14} />
-        </S.RemoveButton>
-      </S.FilePreview>
-    ))}
-  </S.FilePreviewContainer>
-)}
-
-
-
-  {posPhotosError && (
-    <S.ErrorMessage>{posPhotosError}</S.ErrorMessage>
-  )}
-</S.FileInputContainer>
-
-
+  
               </S.Grid>
               {/* O campo Branding Mix foi movido para fora do S.Grid */}
-              <S.InputGroup>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <S.Label style={{ marginBottom: 0 }} htmlFor="brandingMix">
-                    Branding Mix
-                  </S.Label>
-                  <S.InfoButton
-                    type="button"
-                    title="list all the brands you work with (separate the brands by comma"
-                    style={{
-                      display: "flex",
-                    }}
-                  >
-                    <Info size={16} />
-                  </S.InfoButton>
-                </div>
-                <S.Input
-                  style={{
-                    width: "522px", // Ocupa a largura total abaixo do grid
-                    height: "200px",
-                  }}
-                  as="textarea" // Usar textarea para multi-linhas
-                  id="brandingMix"
-                  {...register("brandingMix", {
-                    required: "Brand/Branding Mix is required",
-                  })}
-                  error={!!errors.brandingMix}
-                />
-                {errors.brandingMix && (
-                  <S.ErrorMessage>
-                    {errors.brandingMix.message}
-                  </S.ErrorMessage>
-                )}
-              </S.InputGroup>
+                            
+              
+              
             </S.Section>
           )}
-
 
           {currentStep === 2 && (
             <S.CompactSection>
@@ -1494,7 +1788,6 @@ export default function OnboardingForm() {
                 <S.InputGroup>
                   <S.Label htmlFor="terms">Terms</S.Label>
                   <S.Input
-                    style={{ width: "250px" }}
                     as="select"
                     id="terms"
                     {...register("buyerInfo.terms", {
@@ -1518,9 +1811,32 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
+  <S.Label htmlFor="category">Category</S.Label>
+  <S.Input
+    as="select"
+    id="category"
+    {...register("buyerInfo.category", {
+      required: "Category is required",
+    })}
+    error={!!errors.buyerInfo?.category}
+  >
+    <option value="">Select a category</option>
+    <option value="Apparel">Apparel</option>
+    <option value="Swim">Swim</option>
+    <option value="Shoes">Shoes</option>
+    <option value="Handbags">Handbags</option>
+    <option value="Accessories">Accessories</option>
+    <option value="Others">Others</option>    
+  </S.Input>
+  {errors.buyerInfo?.category && (
+    <S.ErrorMessage>{errors.buyerInfo.category.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+
+
+                <S.InputGroup>
                   <S.Label htmlFor="currency">Currency</S.Label>
                   <S.Input
-                    style={{ width: "250px" }}
                     as="select"
                     id="currency"
                     {...register("buyerInfo.currency", {
@@ -1544,26 +1860,39 @@ export default function OnboardingForm() {
                 </S.InputGroup>
 
                 <S.InputGroup>
+                  {" "}
                   <S.Label htmlFor="estimatedPurchaseAmount">
-                    Estimated Puchase Amount Per Season
-                  </S.Label>
+                    {" "}
+                    Estimated Purchase Amount Per Season{" "}
+                  </S.Label>{" "}
                   <S.Input
+                    as="select"
                     id="estimatedPurchaseAmount"
-                    type="number"
-                    min={0}
-                    step="0.01"
                     {...register("buyerInfo.estimatedPurchaseAmount", {
                       required: "Estimated purchase amount is required",
-                      valueAsNumber: true,
-                      min: { value: 0, message: "Amount must be positive" },
                     })}
                     error={!!errors.buyerInfo?.estimatedPurchaseAmount}
-                  />
+                  >
+                    {" "}
+                    <option value="">&nbsp;&nbsp;Select range</option>{" "}
+                    <option value="6000-10000">&nbsp;&nbsp;6,000 – 10,000</option>
+                    <option value="11000-20000">11,000 – 20,000</option>{" "}
+                    <option value="21000-30000">21,000 – 30,000</option>{" "}
+                    <option value="31000-40000">31,000 – 40,000</option>{" "}
+                    <option value="41000-50000">41,000 – 50,000</option>{" "}
+                    <option value="51000-60000">51,000 – 60,000</option>{" "}
+                    <option value="61000-70000">61,000 – 70,000</option>{" "}
+                    <option value="71000-80000">71,000 – 80,000</option>{" "}
+                    <option value="81000-90000">81,000 – 90,000</option>{" "}
+                    <option value="91000-100000">91,000 – 100,000</option>{" "}
+                    <option value="over100000">Over 100,000</option>{" "}
+                  </S.Input>{" "}
                   {errors.buyerInfo?.estimatedPurchaseAmount && (
                     <S.ErrorMessage>
-                      {errors.buyerInfo.estimatedPurchaseAmount.message}
+                      {" "}
+                      {errors.buyerInfo.estimatedPurchaseAmount.message}{" "}
                     </S.ErrorMessage>
-                  )}
+                  )}{" "}
                 </S.InputGroup>
 
                 <S.FileInputContainer>
@@ -1572,7 +1901,6 @@ export default function OnboardingForm() {
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
-
                     }}
                   >
                     <S.Label htmlFor="financialStatements-upload">
@@ -1582,7 +1910,7 @@ export default function OnboardingForm() {
                       type="button"
                       title="Most disclosed tax period"
                     >
-                      <Info size={16} style={{marginBottom: "0.5rem"}} />
+                      <Info size={16} style={{ marginBottom: "0.5rem" }} />
                     </S.InfoButton>
                   </div>
                   <S.HiddenInput
@@ -1609,7 +1937,8 @@ export default function OnboardingForm() {
 
               <S.AlertMessage>
                 ALL ACCOUNTS START WITH 100% PRIOR TO SHIPMENT PAYMENTS <br />
-                You may request alternative payment terms, which will be subject to FARM Rio discretionary approval
+                You may request alternative payment terms, which will be subject
+                to FARM Rio discretionary approval
               </S.AlertMessage>
             </S.Section>
           )}
@@ -1633,33 +1962,32 @@ export default function OnboardingForm() {
         </form>
       </S.FormContainer>
 
-{isModalOpen && (
-  <S.ModalOverlay>
-    <S.ModalContent>
-      <S.ModalTitle>
-        {modalTitle === "Success!" ? (
-  <CircleCheck size={48} />
-) : (
-  <CircleAlert size={48} />
-)}
-
-      </S.ModalTitle>
-      <S.ModalMessage>{modalMessage}</S.ModalMessage>
-      <S.ModalButton
-        onClick={() => {
-          setIsModalOpen(false);
-          if (modalTitle === "Success!") {
-            setTimeout(() => {
-              router.push("/");
-            });
-          }
-        }}
-      >
-        OK
-      </S.ModalButton>
-    </S.ModalContent>
-  </S.ModalOverlay>
-)}
+      {isModalOpen && (
+        <S.ModalOverlay>
+          <S.ModalContent>
+            <S.ModalTitle>
+              {modalTitle === "Success!" ? (
+                <CircleCheck size={48} />
+              ) : (
+                <CircleAlert size={48} />
+              )}
+            </S.ModalTitle>
+            <S.ModalMessage>{modalMessage}</S.ModalMessage>
+            <S.ModalButton
+              onClick={() => {
+                setIsModalOpen(false);
+                if (modalTitle === "Success!") {
+                  setTimeout(() => {
+                    router.push("/");
+                  });
+                }
+              }}
+            >
+              OK
+            </S.ModalButton>
+          </S.ModalContent>
+        </S.ModalOverlay>
+      )}
     </S.ContainerMain>
   );
 }

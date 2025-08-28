@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const { data, error } = await resend.emails.send({
       from: 'FARM RIO Onboarding <governance@customer.farmrio.com>',
-      to: email, 
+      to: [email, 'wholesale@farmrio.com'],
       subject: `FARM RIO Onboarding - Your onboarding is now complete! (6/6)`, 
       react: ApprovedEmail(), 
       attachments: [

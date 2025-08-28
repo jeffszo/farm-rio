@@ -73,9 +73,10 @@ export const SectionTitleBuyer = styled.h2`
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
 `
+
 
 export const InputGroup = styled.div`
   gap: 1rem;
@@ -198,6 +199,7 @@ export const FileInputContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+  
 `
 
 export const HiddenInput = styled.input`

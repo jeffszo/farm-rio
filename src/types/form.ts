@@ -1,4 +1,13 @@
 // types/form.ts
+
+export interface Agent {
+  id: string;
+  name: string;
+  email?: string;
+  country: string;
+}
+
+
 export interface AddressInput {
     street: string;
     zipCode: string;
@@ -13,6 +22,8 @@ export interface CustomerInfo {
     taxId: string;
     dunNumber: string;
     dba?: string | null;
+    country: string;
+    agentId?: string | null;
 }
 
 export interface ApContactInfo {
@@ -32,8 +43,9 @@ export interface BuyerInfo {
     // Novos campos adicionados
     terms: string; // Ex: 'Net 30', 'COD', etc.
     currency: string; // Ex: 'USD', 'EUR', 'BRL'
-    estimatedPurchaseAmount: number; // Valor numérico
+    estimatedPurchaseAmount: string; 
     financialStatements?: File;
+    category: string; 
 }
 
 export interface IFormInputs {
@@ -47,4 +59,6 @@ export interface IFormInputs {
     instagram?: string;
     website?: string;
     joor?: string;
+    country: string;
 }
+
