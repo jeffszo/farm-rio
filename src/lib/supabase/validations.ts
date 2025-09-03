@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // validations.ts
 import { supabaseServerClient } from "./client"
 
