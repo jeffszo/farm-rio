@@ -55,7 +55,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 3fr 2fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
 
@@ -74,6 +74,16 @@ export const FormSection = styled.div`
 
 export const SectionTitle = styled.span`
   
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`
+
+export const SectionTitleTerms = styled.span`
   font-size: 0.95rem;  
   font-weight: 600;     
   color: #2d3748;
@@ -81,17 +91,15 @@ export const SectionTitle = styled.span`
   align-items: center;
   gap: 0.25rem;
   margin-bottom: 0.25rem;
+
 `
 
 export const FormRow = styled.div`
-  display: flex;
-  align-items: center;
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.30rem 0;
+  padding: 0.25rem 0;
 
   strong {
-    margin-right: 0.25rem;
     font-weight: 600;
     color: #2d3748;
   }
@@ -275,28 +283,37 @@ export const Label = styled.label`
 
 export const AddressBlock = styled.div`
   background: #f0f4f8;
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: 0.8rem;
+  border-radius: 4px;
   margin-top: 0.5rem;
-  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e2e8f0;
   color: #2d3748;
-  line-height: 1.4;
+
+  div {
+    font-size: 0.875rem;
+    padding: 0.1rem 0;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #2d3748;
+  }
 `;
 
-export const AddressTitle = styled.span`
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.25rem;
-  display: block; /* Make title take full width for better separation */
+export const AddressTitle = styled.h4`
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1a202c;
 `;
+
 
 // New styles for editable fields
 export const EditableValueContainer = styled.div`
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  /* padding: 0.25rem 0; */
+  gap: 4px;
 `;
 
 export const EditIcon = styled.span`
@@ -308,17 +325,11 @@ export const EditIcon = styled.span`
 `;
 
 export const EditInput = styled.input`
-  flex-grow: 1;
-  padding: 0.375rem 0.5rem;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  color: #2d3748;
-  &:focus {
-    outline: none;
-    border-color: #4a5568;
-    box-shadow: 0 0 0 1px #4a5568;
-  }
+  padding: 4px 8px;
+  font-size: 14px;
+  width: 120px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 `;
 
 export const EditButtonContainer = styled.div`
@@ -400,7 +411,6 @@ export const CopyButton = styled.button`
 // New styles for terms display from page.tsx and page1.tsx
 export const TermsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.50rem;
   margin-top: 0.75rem;
 `;
@@ -429,7 +439,7 @@ export const InfoText = styled.p`
 
 export const AddressContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
   margin-top: 0.75rem;
 `;

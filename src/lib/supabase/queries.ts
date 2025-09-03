@@ -215,11 +215,14 @@ export async function getCustomerValidationDetails(id: string) {
       country,
       agent_id,
       users(email),
-      agent_id (
-      name,
-      email,
-      country
-    )
+      agent_id (name,email,country),
+      internal_comments(
+        id,
+        comment,
+        team_role,
+        created_at,
+        created_by
+      )
     `)
     .eq("id", id)
     .single();
@@ -231,6 +234,11 @@ export async function getCustomerValidationDetails(id: string) {
 
   return data;
 }
+
+
+
+
+
 
 export async function updateDunsNumber(customerId: string, duns: string) {
   const { error } = await supabaseServerClient.from("customer_forms").update({ duns_number: duns, updated_at: new Date().toISOString() }).eq("id", customerId) // Adiciona o timestamp de atualização
@@ -324,5 +332,34 @@ export async function getFeedbackTeams(customerId: string) {
     data: response?.data ?? null,
     error: response?.error ?? null,
   };
+}
+
+export async function getInternalComments(customerId: string) {
+  const { data, error } = await supabaseServerClient
+    .from("internal_comments")
+    .select(`
+      id,
+      comment,
+      team_role,
+      created_at,
+      created_by ( id, email )
+    `)
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(`Erro ao buscar comentários internos: ${error.message}`);
+  }
+
+  // Mapeia os dados para formato pronto para UI (estilo chat)
+  return data.map((c) => ({
+    id: c.id,
+    text: c.comment,
+    team: c.team_role,
+    createdAt: new Date(c.created_at).toLocaleString("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }),
+  }));
 }
 

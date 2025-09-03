@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // src/app/validations/wholesale/[id]/page.tsx
 "use client";
 
@@ -77,6 +79,7 @@ interface CustomerForm {
   credit_feedback?: string; // Added new field for credit feedback
   user_id: string; 
   category: string;
+  joor: string;
   users: {
     email: string;
   };
@@ -97,6 +100,14 @@ interface CreditTerms {
   payment_terms: string;
   credit_limit: string;
   discount: string;
+}
+
+interface InternalComment {
+  id: string;
+  comment: string;
+  team_role: string;
+  created_at: string;
+  created_by?: { email: string };
 }
 
 interface ValidationDetails { // Interface para dados de validação existentes (se houver)
@@ -171,6 +182,12 @@ export default function ValidationDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
+  const [taxComments, setTaxComments] = useState<InternalComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [internalComment, setInternalComment] = useState("");
+
+
+
 
   const [feedback, setFeedback] = useState(""); // Unified feedback state for the textarea
 
@@ -306,6 +323,25 @@ export default function ValidationDetailsPage() {
   : "",
 
         };
+
+if (Array.isArray(data.internal_comments)) {
+  const taxMapped = data.internal_comments
+    .filter((c: any) => c.team_role === "tax")
+    .map((c: any) => ({
+      id: c.id,
+      comment: c.comment,
+      team_role: c.team_role,
+      created_at: c.created_at,
+      created_by: c.created_by?.email || "Team",
+    }));
+
+  setTaxComments(taxMapped);
+} else {
+  setTaxComments([]);
+}
+
+setLoadingComments(false);
+
 
         setCustomerForm(processedData);
         // Log processed address data for debugging
@@ -499,15 +535,22 @@ export default function ValidationDetailsPage() {
     }
 
     console.log("Calling validateCreditCustomer");
-    await api.validateCreditCustomer(id as string, approved, {
-      credit_invoicing_company: creditTerms.invoicing_company,
-      credit_warehouse: creditTerms.warehouse,
-      credit_currency: creditTerms.currency,
-      credit_terms: creditTerms.payment_terms,
-      credit_credit: Number(creditTerms.credit_limit),
-      credit_discount: Number(creditTerms.discount),
-      credit_feedback: feedback.trim() === "" ? undefined : feedback,
-    });
+await api.validateCreditCustomer(
+  id as string,
+  approved,
+  {
+    credit_invoicing_company: creditTerms.invoicing_company,
+    credit_warehouse: creditTerms.warehouse,
+    credit_currency: creditTerms.currency,
+    credit_terms: creditTerms.payment_terms,
+    credit_credit: Number(creditTerms.credit_limit),
+    credit_discount: Number(creditTerms.discount),
+    credit_feedback: feedback.trim() === "" ? undefined : feedback,
+  },
+  internalComment.trim() === "" ? undefined : internalComment, // 🔹 aqui
+  "credit" // 🔹 team_role
+);
+
 
     console.log("Validation completed successfully");
 
@@ -625,7 +668,7 @@ const formatUrl = (url?: string) =>
             <S.FormRow>
               <strong>DBA:</strong> {customerForm.dba_number || "Not provided"}
             </S.FormRow>
-            <S.FormRow className="flex items-center">
+            <S.FormRow>
               <strong>D-U-N-S:</strong>{" "}
               {editingDuns ? (
                 <S.InlineEditWrapper>
@@ -654,7 +697,7 @@ const formatUrl = (url?: string) =>
                   </S.ContainerCheck>
                 </S.InlineEditWrapper>
               ) : (
-                <span className="flex items-center ml-1">
+                <span>
                   {customerForm.duns_number || "Not provided"}
                   <S.EditIcon onClick={() => setEditingDuns(true)}>
                     <Pencil size={16} />
@@ -734,6 +777,23 @@ const formatUrl = (url?: string) =>
     "N/A"
   )}
 </S.FormRow>
+
+
+<S.FormRow>
+  <strong>JOOR:</strong>{" "}
+  {customerForm.joor ? (
+    <a
+      href={formatUrl(customerForm.joor)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Access Profile
+    </a>
+  ) : (
+    "N/A"
+  )}
+</S.FormRow>
+
             <S.FormRow>
                <strong>Photos:</strong>{" "}
               {parsedPhotoUrls.length > 0 ? (
@@ -750,14 +810,45 @@ const formatUrl = (url?: string) =>
               )}
 
             </S.FormRow>
+
+
+             <S.FormRow>
+              <strong>Branding Mix:</strong>{" "}
+              {(() => {
+                try {
+                  const parsed = JSON.parse(customerForm.branding_mix);
+                  if (Array.isArray(parsed)) {
+                    return (
+                      <ul
+                        style={{
+                          marginTop: "0.5rem",
+                          paddingLeft: "1.2rem",
+                          listStyleType: "disc",
+                        }}
+                      >
+                        {parsed.map((item: string, index: number) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return customerForm.branding_mix || "Not provided";
+                } catch {
+                  return customerForm.branding_mix || "Not provided";
+                }
+              })()}
+            </S.FormRow>
           </S.FormSection>
+
+
           <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
             </S.SectionTitle>
             <S.FormRow>
               <strong>Billing Addresses:</strong>
-              {customerForm.billing_address && customerForm.billing_address.length > 0 ? (
+              {customerForm.billing_address &&
+              customerForm.billing_address.length > 0 ? (
                 customerForm.billing_address.map((address, index) => (
                   <S.AddressBlock key={index}>
                     <S.AddressTitle>Address {index + 1}</S.AddressTitle>
@@ -770,7 +861,8 @@ const formatUrl = (url?: string) =>
             </S.FormRow>
             <S.FormRow>
               <strong>Shipping Addresses:</strong>
-              {customerForm.shipping_address && customerForm.shipping_address.length > 0 ? (
+              {customerForm.shipping_address &&
+              customerForm.shipping_address.length > 0 ? (
                 customerForm.shipping_address.map((address, index) => (
                   <S.AddressBlock key={index}>
                     <S.AddressTitle>Address {index + 1}</S.AddressTitle>
@@ -781,9 +873,6 @@ const formatUrl = (url?: string) =>
                 <div>No shipping addresses provided.</div>
               )}
             </S.FormRow>
-            
-            
-
           </S.FormSection>
 
 
@@ -834,19 +923,23 @@ const formatUrl = (url?: string) =>
           )}   
 
           <S.FormSection>
-
-                        <S.SectionTitle>
-              <MessageSquare  size={16} /> Team Feedback
+            <S.SectionTitle>
+              <MessageSquare size={16} /> Internal Comments (Tax)
             </S.SectionTitle>
-            <S.FormRow>
-  <strong>Tax Feedback:</strong>{" "}
-{customerForm.tax_feedback && customerForm.tax_feedback.trim() !== ""
-  ? customerForm.tax_feedback
-  : "No feedback provided by Tax Team."}
-
-</S.FormRow>
-
-
+            {loadingComments ? (
+              <S.FormRow>Loading comments...</S.FormRow>
+            ) : taxComments.length > 0 ? (
+              taxComments.map((comment) => (
+                <S.FormRow key={comment.id}>
+                  <span>{comment.comment}</span>{" "}
+                  <em style={{ fontSize: "0.8rem", color: "#666" }}>
+                    ({new Date(comment.created_at).toLocaleString()})
+                  </em>
+                </S.FormRow>
+              ))
+            ) : (
+              <S.FormRow>No comments from Governance Team.</S.FormRow>
+            )}
           </S.FormSection>
 
                    
@@ -869,6 +962,16 @@ const formatUrl = (url?: string) =>
                               placeholder="Explain the reason for rejection or add relevant..."
                             />
                           </S.FeedbackGroup>
+
+                                     <S.FeedbackGroup>
+                                      <S.Label htmlFor="internalComment">Internal Comments</S.Label>
+                                      <S.Textarea
+                                        id="internalComment"
+                                        value={internalComment}
+                                        onChange={(e) => setInternalComment(e.target.value)}
+                                        placeholder="Write internal notes for other teams (not visible to the client)..."
+                                      />
+                                    </S.FeedbackGroup>
                         
 
 

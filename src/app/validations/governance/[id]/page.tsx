@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/validations/csc/[id]/page.tsx
 "use client";
@@ -32,6 +33,14 @@ interface Address {
   state: string;
   county: string;
   country: string;
+}
+
+interface InternalComment {
+  id: string;
+  comment: string;
+  team_role: string;
+  created_at: string;
+  created_by?: { email: string };
 }
 
 interface CustomerForm {
@@ -95,6 +104,9 @@ export default function ValidationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingApprove, setLoadingApprove] = useState(false);
+    const [internalComment, setInternalComment] = useState("");
+
+
   const [feedback, setFeedback] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
       const [loadingReview, setloadingReview] = useState(false);
@@ -109,6 +121,9 @@ export default function ValidationDetailsPage() {
   // States for editable DUNS field ONLY
   const [editingDuns, setEditingDuns] = useState(false);
   const [editedDuns, setEditedDuns] = useState("");
+  const [wholesaleComments, setWholesaleComments] = useState<InternalComment[]>([]);
+  const [creditComments, setCreditComments] = useState<InternalComment[]>([]);
+const [loadingComments, setLoadingComments] = useState(true);
 
   const [validation, setValidation] = useState<ValidationDetails | null>(null);
 
@@ -133,6 +148,9 @@ export default function ValidationDetailsPage() {
   //   }
   // };
 
+
+
+
   useEffect(() => {
     const fetchValidationDetails = async () => {
       // Ensure id is a string before passing to API
@@ -146,127 +164,138 @@ export default function ValidationDetailsPage() {
   }, [id]);
 
   useEffect(() => {
-    const fetchCustomerDetails = async () => {
-      try {
-        setLoading(true);
-        // Ensure id is a string before passing to API
-        if (typeof id === "string") {
-          const data = await api.getCustomerValidationDetails(id);
-          if (!data) throw new Error("Formulário não encontrado.");
-          // Map API response to CustomerForm type
-          const customerFormData: CustomerForm = {
-            id: data.id,
-            customer_name: data.customer_name,
-            sales_tax_id: data.sales_tax_id,
-            duns_number: data.duns_number,
-            dba_number: data.dba_number,
-            category: data.category,
-            currency: data.currency,
-            resale_certificate: data.resale_certificate,
-            photo_urls:
-              "photo_urls" in data
-                ? Array.isArray(data.photo_urls)
-                  ? data.photo_urls
-                  : typeof data.photo_urls === "string"
-                  ? (() => {
-                      try {
-                        const parsed = JSON.parse(data.photo_urls);
-                        return Array.isArray(parsed) ? parsed : [];
-                      } catch {
-                        return [];
-                      }
-                    })()
-                  : []
-                : [],
-            instagram: "instagram" in data && typeof data.instagram === "string" ? data.instagram : "",
-            website: "website" in data ? (typeof data.website === "string" ? data.website : (data.website ? String(data.website) : "")) : "",
-            branding_mix: "branding_mix" in data
-              ? typeof data.branding_mix === "string"
-                ? data.branding_mix
-                : data.branding_mix
-                ? JSON.stringify(data.branding_mix)
-                : ""
-              : "",
-            joor: "joor" in data && typeof data.joor === "string" ? data.joor : "",
-            financial_statements: "financial_statements" in data
-              ? typeof data.financial_statements === "string"
-                ? data.financial_statements
-                : data.financial_statements
-                ? JSON.stringify(data.financial_statements)
-                : ""
-              : "",
-            billing_address: data.billing_address ?? "",
-            shipping_address: data.shipping_address ?? "",
-            ap_contact_name: typeof data.ap_contact_name === "string"
-              ? data.ap_contact_name
-              : data.ap_contact_name
-              ? String(data.ap_contact_name)
-              : "",
-            ap_contact_email: data.ap_contact_email ?? "",
-            buyer_name: data.buyer_name ?? "",
-            buyer_email: data.buyer_email ?? "",
-            status: data.status,
-            created_at: data.created_at,
-            wholesale_feedback: "wholesale_feedback" in data
-              ? typeof data.wholesale_feedback === "string"
-                ? data.wholesale_feedback
-                : data.wholesale_feedback
-                ? JSON.stringify(data.wholesale_feedback)
-                : ""
-              : "",
-            credit_feedback: "credit_feedback" in data
-              ? typeof data.credit_feedback === "string"
-                ? data.credit_feedback
-                : data.credit_feedback
-                ? JSON.stringify(data.credit_feedback)
-                : ""
-              : "",
-            csc_initial_feedback: "csc_initial_feedback" in data
-              ? typeof data.csc_initial_feedback === "string"
-                ? data.csc_initial_feedback
-                : data.csc_initial_feedback
-                ? JSON.stringify(data.csc_initial_feedback)
-                : ""
-              : "",
-            csc_final_feedback: "csc_final_feedback" in data
-              ? typeof data.csc_final_feedback === "string"
-                ? data.csc_final_feedback
-                : data.csc_final_feedback
-                ? JSON.stringify(data.csc_final_feedback)
-                : ""
-              : "",
-            user_id: data.user_id ?? "",
-            users: Array.isArray(data.users)
-              ? (data.users[0] && typeof data.users[0].email === "string"
-                  ? { email: data.users[0].email }
-                  : { email: "" })
-              : (data.users && typeof (data.users as { email?: unknown }).email === "string"
-                  ? { email: (data.users as { email: string }).email }
-                  : { email: "" }),
-                       agent: data.agent_id
-    ? {
-        name: data.agent_id.name ?? "",
-        email: data.agent_id.email ?? "",
-        country: data.agent_id.country ?? "",
-      }
-    : undefined,
-          };
-          setCustomerForm(customerFormData);
-          // Initialize editable DUNS state with fetched data
-          setEditedDuns(customerFormData.duns_number || "");
-        }
-      } catch (err) {
-        console.error("Erro ao buscar detalhes do cliente:", err);
-        setError(err instanceof Error ? err.message : "Erro desconhecido");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCustomerDetails = async () => {
+    if (!id) return;
 
-    if (id) fetchCustomerDetails();
-  }, [id]);
+    try {
+      setLoading(true);
+      setLoadingComments(true);
+      setError(null);
 
-  // Function to handle saving edits for D-U-N-S
+      let data: any; // use "any" ou tipagem correta da API
+
+      if (typeof id === "string") {
+        data = await api.getCustomerValidationDetails(id);
+      }
+
+      if (!data) throw new Error("Formulário não encontrado.");
+
+      // --- Mapear dados do cliente ---
+      const customerFormData: CustomerForm = {
+        id: data.id,
+        customer_name: data.customer_name,
+        sales_tax_id: data.sales_tax_id,
+        duns_number: data.duns_number,
+        dba_number: data.dba_number,
+        category: data.category,
+        currency: data.currency,
+        resale_certificate: data.resale_certificate,
+        photo_urls: Array.isArray(data.photo_urls)
+          ? data.photo_urls
+          : typeof data.photo_urls === "string"
+          ? (() => {
+              try {
+                const parsed = JSON.parse(data.photo_urls);
+                return Array.isArray(parsed) ? parsed : [];
+              } catch {
+                return [];
+              }
+            })()
+          : [],
+        instagram: typeof data.instagram === "string" ? data.instagram : "",
+        website:
+          typeof data.website === "string"
+            ? data.website
+            : data.website
+            ? String(data.website)
+            : "",
+        branding_mix:
+          typeof data.branding_mix === "string"
+            ? data.branding_mix
+            : data.branding_mix
+            ? JSON.stringify(data.branding_mix)
+            : "",
+        joor: typeof data.joor === "string" ? data.joor : "",
+        financial_statements:
+          typeof data.financial_statements === "string"
+            ? data.financial_statements
+            : data.financial_statements
+            ? JSON.stringify(data.financial_statements)
+            : "",
+        billing_address: data.billing_address ?? "",
+        shipping_address: data.shipping_address ?? "",
+        ap_contact_name:
+          typeof data.ap_contact_name === "string" ? data.ap_contact_name : "",
+        ap_contact_email: data.ap_contact_email ?? "",
+        buyer_name: data.buyer_name ?? "",
+        buyer_email: data.buyer_email ?? "",
+        status: data.status,
+        created_at: data.created_at,
+        wholesale_feedback: data.wholesale_feedback ?? "",
+        credit_feedback: data.credit_feedback ?? "",
+        csc_initial_feedback: data.csc_initial_feedback ?? "",
+        csc_final_feedback: data.csc_final_feedback ?? "",
+        user_id: data.user_id ?? "",
+        users: Array.isArray(data.users)
+          ? { email: data.users[0]?.email ?? "" }
+          : data.users?.email
+          ? { email: data.users.email }
+          : { email: "" },
+        agent: data.agent_id
+          ? {
+              name: data.agent_id.name ?? "",
+              email: data.agent_id.email ?? "",
+              country: data.agent_id.country ?? "",
+            }
+          : undefined,
+      };
+
+      setCustomerForm(customerFormData);
+      setEditedDuns(customerFormData.duns_number || "");
+
+      // --- Mapear comentários internos do wholesale ---
+if (Array.isArray(data.internal_comments)) {
+  const wholesaleMapped = data.internal_comments
+    .filter((c: any) => c.team_role === "wholesale")
+    .map((c: any) => ({
+      id: c.id,
+      comment: c.comment,
+      team_role: c.team_role,
+      created_at: c.created_at,
+      created_by: c.created_by?.email || "Team",
+    }));
+
+  const creditMapped = data.internal_comments
+    .filter((c: any) => c.team_role === "credit")
+    .map((c: any) => ({
+      id: c.id,
+      comment: c.comment,
+      team_role: c.team_role,
+      created_at: c.created_at,
+      created_by: c.created_by?.email || "Team",
+    }));
+
+  setWholesaleComments(wholesaleMapped);
+  setCreditComments(creditMapped);
+} else {
+  setWholesaleComments([]);
+  setCreditComments([]);
+}
+
+    } catch (err) {
+      console.error("Erro ao buscar detalhes do cliente:", err);
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      setWholesaleComments([]);
+    } finally {
+      setLoading(false);
+      setLoadingComments(false); // garante que o loading dos comentários seja finalizado
+    }
+  };
+
+  fetchCustomerDetails();
+}, [id]);
+
+
   const handleSaveDuns = async () => {
     if (!customerForm || typeof id !== "string") return; // Ensure customerForm and id are valid
     try {
@@ -291,7 +320,8 @@ export default function ValidationDetailsPage() {
     }
   };
 
- const handleApproval = async (approved: boolean) => {
+
+const handleApproval = async (approved: boolean) => {
   if (!id || typeof id !== "string") {
     console.error("ID do cliente não encontrado.");
     return;
@@ -308,19 +338,18 @@ export default function ValidationDetailsPage() {
   }
 
   try {
-    // Define o loading correto para cada ação
     if (approved) {
       setLoadingApprove(true);
     } else {
       setloadingReview(true);
     }
 
-    // Chamar a função adequada com base no status, passando o feedback
     if (
       customerForm?.status === "approved by the wholesale team" ||
       customerForm?.status === "review requested by the compliance team - customer"
     ) {
-      await api.validateCSCInitialCustomer(id, approved, feedback);
+      // envia feedback + comentário interno
+      await api.validateCSCInitialCustomer(id, approved, feedback, internalComment, "csc_initial" );
 
       // Envio de e-mail CSC inicial
       try {
@@ -332,16 +361,11 @@ export default function ValidationDetailsPage() {
         const endpoint = approved
           ? "/api/send/csc_initial/send-approved-email"
           : "/api/send/csc_initial/send-review-email";
-        const emailResponse = await fetch(endpoint, {
+        await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(emailPayload),
         });
-        if (emailResponse.ok) {
-          console.log("Email sent successfully!");
-        } else {
-          console.error("Failed to send email:", await emailResponse.text());
-        }
       } catch (emailError) {
         console.error("Error sending email:", emailError);
       }
@@ -349,7 +373,8 @@ export default function ValidationDetailsPage() {
       customerForm?.status === "approved by the credit team" ||
       customerForm?.status === "review requested by the governance final team - customer"
     ) {
-      await api.validateCSCFinalCustomer(id, approved, feedback);
+      // envia feedback + comentário interno
+      await api.validateCSCFinalCustomer(id, approved, feedback, internalComment, "csc_final");
 
       // Envio de e-mail CSC final
       try {
@@ -361,16 +386,11 @@ export default function ValidationDetailsPage() {
         const endpoint = approved
           ? "/api/send/csc_final/send-approved-email"
           : "/api/send/csc_final/send-review-email";
-        const emailResponse = await fetch(endpoint, {
+        await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(emailPayload),
         });
-        if (emailResponse.ok) {
-          console.log("Email sent successfully!");
-        } else {
-          console.error("Failed to send email:", await emailResponse.text());
-        }
       } catch (emailError) {
         console.error("Error sending email:", emailError);
       }
@@ -378,7 +398,6 @@ export default function ValidationDetailsPage() {
       throw new Error("Customer status is not valid for Governance validation");
     }
 
-    // Modal com mensagem diferente para aprovação e revisão
     setModalContent({
       title: approved ? "Approved!" : "Review!",
       description: approved
@@ -387,16 +406,20 @@ export default function ValidationDetailsPage() {
       shouldRedirect: true,
     });
     setShowModal(true);
+
+    // limpa comentário depois de salvar
+    setInternalComment("");
   } catch (error) {
     console.error("Erro ao validar cliente:", error);
     setModalContent({
       title: "Erro",
-      description: `Houve um erro: ${error instanceof Error ? error.message : String(error)}`,
+      description: `Houve um erro: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       shouldRedirect: false,
     });
     setShowModal(true);
   } finally {
-    // Reseta apenas o loading que foi ativado
     if (approved) {
       setLoadingApprove(false);
     } else {
@@ -404,6 +427,8 @@ export default function ValidationDetailsPage() {
     }
   }
 };
+
+
 
 
 
@@ -425,18 +450,26 @@ const formatUrl = (url?: string) =>
 
 
   // Helper function to render an address
-  const renderAddress = (address: Address) => (
-    <>
-      {address.street && <p>{address.street}</p>}
-      {address.city && address.state && address.zipCode && (
-        <p>
-          {address.city}, {address.state} {address.zipCode}
-        </p>
-      )}
-      {address.county && <p>{address.county}</p>}
-      {address.country && <p>{address.country}</p>}
-    </>
-  );
+const renderAddress = (address: Address) => {
+  const parts: string[] = [];
+
+   const street = address.street || "";
+  const city = address.city || "";
+  const state = address.state || "";
+  const zipCode = address.zipCode || "";
+  const county = address.county || "";
+  const country = address.country || "";
+
+  if (street) parts.push(street);
+  if (city) parts.push(city);
+  if (state) parts.push(state);
+  if (zipCode) parts.push(zipCode);
+  if (county) parts.push(county);
+  if (country) parts.push(country);
+
+  return <p>{parts.join(", ") || "Not provided"}</p>;
+};
+
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Erro: {error}</S.Message>;
@@ -444,7 +477,6 @@ const formatUrl = (url?: string) =>
 
   let parsedBillingAddresses: Address[] = [];
   try {
-    // Only parse if customerForm.billing_address exists and is a string
     if (
       customerForm.billing_address &&
       typeof customerForm.billing_address === "string"
@@ -541,7 +573,10 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
             <S.FormRow>
               <strong>Name:</strong> {customerForm.customer_name}
             </S.FormRow>
-           <S.FormRow>
+           <S.FormRow style={{
+            display: "flex",
+            gap: "0.5rem"
+           }}>
   <strong>Tax ID:</strong>
   <S.ValueWithCopy>
     {customerForm.sales_tax_id}
@@ -702,52 +737,83 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                 "Not sent"
               )}
             </S.FormRow>
+
+             <S.FormRow>
+              <strong>Branding Mix:</strong>{" "}
+              {(() => {
+                try {
+                  const parsed = JSON.parse(customerForm.branding_mix);
+                  if (Array.isArray(parsed)) {
+                    return (
+                      <ul
+                        style={{
+                          marginTop: "0.5rem",
+                          paddingLeft: "1.2rem",
+                          listStyleType: "disc",
+                        }}
+                      >
+                        {parsed.map((item: string, index: number) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return customerForm.branding_mix || "Not provided";
+                } catch {
+                  return customerForm.branding_mix || "Not provided";
+                }
+              })()}
+            </S.FormRow>
           </S.FormSection>
+
+          
 
           {/* Addresses Section */}
-          <S.FormSection>
-            <S.SectionTitle>
-              <MapPin size={16} /> Addresses
-            </S.SectionTitle>
-            {parsedBillingAddresses.length > 0 ? (
-              parsedBillingAddresses.map((address, index) => (
-                <S.AddressBlock key={`billing-${index}`}>
-                  <S.AddressTitle>
-                    Billing Address{" "}
-                    {parsedBillingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No billing address provided.</S.AddressBlock>
-            )}
+<S.FormSection>
+  <S.SectionTitle>
+    <MapPin size={16} /> Addresses
+  </S.SectionTitle>
 
-            {parsedShippingAddresses.length > 0 ? (
-              parsedShippingAddresses.map((address, index) => (
-                <S.AddressBlock key={`shipping-${index}`}>
-                  <S.AddressTitle>
-                    Shipping Address{" "}
-                    {parsedShippingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No shipping address provided.</S.AddressBlock>
-            )}
-          </S.FormSection>
+  {/* Billing Addresses */}
+  <S.FormRow>
+    <strong>Billing Addresses:</strong>
+    {parsedBillingAddresses && parsedBillingAddresses.length > 0 ? (
+      parsedBillingAddresses.map((address, index) => (
+        <S.AddressBlock key={`billing-${index}`}>
+          <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+          <div>{renderAddress(address)}</div>
+        </S.AddressBlock>
+      ))
+    ) : (
+      <div>No billing addresses provided.</div>
+    )}
+  </S.FormRow>
+
+  {/* Shipping Addresses */}
+  <S.FormRow>
+    <strong>Shipping Addresses:</strong>
+    {parsedShippingAddresses && parsedShippingAddresses.length > 0 ? (
+      parsedShippingAddresses.map((address, index) => (
+        <S.AddressBlock key={`shipping-${index}`}>
+          <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+          <div>{renderAddress(address)}</div>
+        </S.AddressBlock>
+      ))
+    ) : (
+      <div>No shipping addresses provided.</div>
+    )}
+  </S.FormRow>
+</S.FormSection>
+
+
+
+
           {/* Contact Information Section */}
           <S.FormSection>
             <S.SectionTitle>
               <Mail size={16} /> Billing Contacts
             </S.SectionTitle>
-            {/* <S.FormRow>
-              <strong>AP Contact Name:</strong> {customerForm.ap_contact_name || "N/A"}
-            </S.FormRow>
-            <S.FormRow>
-              <strong>AP Contact Email:</strong> {customerForm.ap_contact_email || "N/A"}
-            </S.FormRow> */}
+
             <S.FormRow>
               <strong>Buyer Name:</strong> {customerForm.buyer_name || "N/A"}
             </S.FormRow>
@@ -759,7 +825,7 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               <strong>Buyer Category:</strong> {customerForm.category || "N/A"}
             </S.FormRow>
 
-
+{/* 
                 <S.Divider />
 
               
@@ -782,13 +848,18 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
   ) : (
     "No feedback available."
   )}
-</S.FormRow>
+</S.FormRow> */}
 
 
           </S.FormSection>
 
           {/* Conditional Rendering for Wholesale and Credit Terms */}
-          {(customerForm.status === "approved by the credit team" || customerForm.status === "approved by the wholesale team" || customerForm.status === "finished" || customerForm.status === "review requested by the governance final team - customer" ) && validation && (
+{(customerForm.status === "approved by the credit team" ||
+  customerForm.status === "approved by the wholesale team" ||
+  customerForm.status === "finished" ||
+  customerForm.status === "review requested by the governance final team - customer" ||
+  (customerForm.status as string) === "review requested by the compliance team - customer") && validation && (
+
             <>
               {/* Wholesale Terms Section */}
               <S.FormSection>
@@ -797,39 +868,39 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                 </S.MainSectionTitle>
                 <S.TermsGrid>
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <Building2 size={16} /> Invoicing Company:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>
                       {validation.wholesale_invoicing_company || "N/A"}
                     </S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <Warehouse size={16} /> Warehouse:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>{validation.wholesale_warehouse || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <CreditCard size={16} /> Company Currency:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>{validation.wholesale_currency || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <Calendar size={16} /> Payment Terms:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>{validation.terms || "N/A"}</S.InfoText>
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <DollarSign size={16} />  Estimated Puchase Amount Per Season:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>
                       {validation.estimated_purchase_amount !== undefined &&
                       validation.estimated_purchase_amount !== null
@@ -839,9 +910,9 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                   </S.TermsSection>
 
                   <S.TermsSection>
-                    <S.SectionTitle>
+                    <S.SectionTitleTerms>
                       <Percent size={16} /> Discount:
-                    </S.SectionTitle>
+                    </S.SectionTitleTerms>
                     <S.InfoText>
                       {validation.wholesale_discount !== undefined &&
                       validation.wholesale_discount !== null
@@ -851,6 +922,55 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
                   </S.TermsSection>
                 </S.TermsGrid>
               </S.FormSection>
+{(customerForm.status === "approved by the wholesale team" ||
+  (customerForm.status as string) === "review requested by the compliance team - customer") && (
+
+  <S.FormSection>
+    <S.SectionTitle>
+      <MessageSquare size={16} /> Internal Comments (Wholesale)
+    </S.SectionTitle>
+    {loadingComments ? (
+      <S.FormRow>Loading comments...</S.FormRow>
+    ) : wholesaleComments.length > 0 ? (
+      wholesaleComments.map((comment) => (
+        <S.FormRow key={comment.id}>
+          <span>{comment.comment}</span>{" "}
+          <em style={{ fontSize: "0.8rem", color: "#666" }}>
+            ({new Date(comment.created_at).toLocaleString()})
+          </em>
+        </S.FormRow>
+      ))
+    ) : (
+      <S.FormRow>No comments from Wholesale Team.</S.FormRow>
+    )}
+  </S.FormSection>
+)}
+
+{customerForm.status === "approved by the credit team" && (
+  <S.FormSection>
+    <S.SectionTitle>
+      <MessageSquare size={16} /> Internal Comments (Credit)
+    </S.SectionTitle>
+    {loadingComments ? (
+      <S.FormRow>Loading comments...</S.FormRow>
+    ) : creditComments.length > 0 ? (
+      creditComments.map((comment) => (
+        <S.FormRow key={comment.id}>
+          <span>{comment.comment}</span>{" "}
+          <em style={{ fontSize: "0.8rem", color: "#666" }}>
+            ({new Date(comment.created_at).toLocaleString()})
+          </em>
+        </S.FormRow>
+      ))
+    ) : (
+      <S.FormRow>No comments from Credit Team.</S.FormRow>
+    )}
+  </S.FormSection>
+)}
+
+
+
+
 
               {/* Credit Terms Section */}
               {/* <S.FormSection>
@@ -931,6 +1051,18 @@ validation.credit_discount !== null &&
   </S.FeedbackGroup>
 )}
 
+
+{customerForm.status !== "finished" && customerForm.status !== "approved by the credit team" &&  (
+ <S.FeedbackGroup>
+  <S.Label htmlFor="internalComment">Internal Comments</S.Label>
+  <S.Textarea
+    id="internalComment"
+    value={internalComment}
+    onChange={(e) => setInternalComment(e.target.value)}
+    placeholder="Write internal notes for other teams (not visible to the client)..."
+  />
+</S.FeedbackGroup>
+)}
 
 <S.ButtonContainer>
   {customerForm.status !== "review requested by the governance final team - customer" &&

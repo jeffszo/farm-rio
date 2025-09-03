@@ -118,6 +118,7 @@ const formatAddress = (address: AddressDetail): string => {
   const county =
     address.county || address.address_county || address.suburb || "";
   const country = address.country || address.address_country || "";
+  
 
   if (street) parts.push(street);
   if (city) parts.push(city);
@@ -140,6 +141,8 @@ export default function ValidationDetailsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
+  const [internalComment, setInternalComment] = useState("");
+
     const [loadingReview, setloadingReview] = useState(false);
 
 
@@ -509,7 +512,7 @@ useEffect(() => {
     }
   };
   fetchWarehouses();
-}, [terms.wholesale_invoicing_company]);
+}, [terms.wholesale_invoicing_company, terms.wholesale_warehouse]);
 
 
   const handleTermChange = (
@@ -552,15 +555,23 @@ useEffect(() => {
           }
 
           // Atualiza status no banco
-          await api.validateWholesaleCustomer(id as string, false, {
-            wholesale_invoicing_company: terms.wholesale_invoicing_company,
-            wholesale_warehouse: terms.wholesale_warehouse,
-            wholesale_currency: terms.wholesale_currency,
-            wholesale_terms: terms.wholesale_terms,
-            wholesale_credit: Number(terms.wholesale_credit),
-            wholesale_discount: Number(terms.wholesale_discount),
-            wholesale_feedback: feedback.trim(),
-          });
+await api.validateWholesaleCustomer(
+  id as string,
+  false,
+  {
+    wholesale_invoicing_company: terms.wholesale_invoicing_company,
+    wholesale_warehouse: terms.wholesale_warehouse,
+    wholesale_currency: terms.wholesale_currency,
+    wholesale_terms: terms.wholesale_terms,
+    wholesale_credit: Number(terms.wholesale_credit),
+    wholesale_discount: Number(terms.wholesale_discount),
+    wholesale_feedback: feedback.trim(),
+  },
+  false, // isReview
+  internalComment.trim() === "" ? undefined : internalComment
+);
+
+
 
           console.log("Validation (rejection) completed successfully");
 
@@ -618,15 +629,22 @@ useEffect(() => {
     }
 
     // Atualiza status no banco
-    await api.validateWholesaleCustomer(id as string, true, {
-      wholesale_invoicing_company: terms.wholesale_invoicing_company,
-      wholesale_warehouse: terms.wholesale_warehouse,
-      wholesale_currency: terms.wholesale_currency,
-      wholesale_terms: terms.wholesale_terms,
-      wholesale_credit: Number(terms.wholesale_credit),
-      wholesale_discount: Number(terms.wholesale_discount),
-      wholesale_feedback: feedback.trim() === "" ? undefined : feedback,
-    });
+await api.validateWholesaleCustomer(
+  id as string,
+  true,
+  {
+    wholesale_invoicing_company: terms.wholesale_invoicing_company,
+    wholesale_warehouse: terms.wholesale_warehouse,
+    wholesale_currency: terms.wholesale_currency,
+    wholesale_terms: terms.wholesale_terms,
+    wholesale_credit: Number(terms.wholesale_credit),
+    wholesale_discount: Number(terms.wholesale_discount),
+    wholesale_feedback: feedback.trim() === "" ? undefined : feedback,
+  },
+  false, // isReview
+  internalComment.trim() === "" ? undefined : internalComment
+);
+
 
     console.log("Validation (approval) completed successfully");
 
@@ -699,7 +717,12 @@ useEffect(() => {
       setloadingReview(true);
       console.log("Reviewing form for client editing...", { customerId: id });
 
-      await api.reviewCustomer(id as string, feedback);
+      await api.reviewCustomer(
+  id as string,
+  feedback,
+  internalComment.trim() === "" ? undefined : internalComment
+);
+
 
       try {
         const emailPayload = {
@@ -1012,6 +1035,9 @@ const formatUrl = (url?: string) =>
               })()}
             </S.FormRow>
           </S.FormSection>
+
+
+
           <S.FormSection>
             <S.SectionTitle>
               <MapPin size={16} /> Addresses
@@ -1045,6 +1071,11 @@ const formatUrl = (url?: string) =>
               )}
             </S.FormRow>
           </S.FormSection>
+
+          
+
+
+
           <S.FormSection>
             <S.SectionTitle>
               <Mail size={16} /> Billing Contacts
@@ -1235,6 +1266,16 @@ const formatUrl = (url?: string) =>
             placeholder="Explain the reason for rejection or add relevant..."
           />
         </S.FeedbackGroup>
+
+        <S.FeedbackGroup>
+  <S.Label htmlFor="internalComment">Internal Comments</S.Label>
+  <S.Textarea
+    id="internalComment"
+    value={internalComment}
+    onChange={(e) => setInternalComment(e.target.value)}
+    placeholder="Write internal notes for other teams (not visible to the client)..."
+  />
+</S.FeedbackGroup>
 
 <S.ButtonContainer>
   {customerForm.status === "finished" ? (

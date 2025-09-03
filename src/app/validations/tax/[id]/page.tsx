@@ -1,10 +1,13 @@
 // src/app/validations/tax/[id]/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "../../../../lib/supabase/index"; // Ensure `api` imports your validation functions
 import * as S from "./styles"; // Assuming you have specific or global styles for this page
+
 import { User, MapPin, Mail, CircleCheck, Copy, Check, MessageSquare, CircleAlert } from "lucide-react"; // Importamos o CircleAlert aqui
 
 interface Address {
@@ -15,6 +18,15 @@ interface Address {
   county: string;
   country: string;
 }
+
+interface InternalComment {
+  id: string;
+  comment: string;
+  team_role: string;
+  created_at: string;
+  created_by?: { email: string };
+}
+
 
 interface CustomerForm {
   id: string;
@@ -55,6 +67,10 @@ export default function TaxValidationDetailsPage() {
         const [loadingReview, setloadingReview] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [cscComments, setCSCComments] = useState<InternalComment[]>([]);
+  const [internalComment, setInternalComment] = useState("");
+
+  const [loadingComments, setLoadingComments] = useState(true);
   const [showModal, setShowModal] = useState(false);
 const [modalContent, setModalContent] = useState({
   title: "",
@@ -65,74 +81,85 @@ const [modalContent, setModalContent] = useState({
   // Removed unused taxStatus state
   const router = useRouter();
 
-  useEffect(() => {
+useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
         setLoading(true);
+
         if (typeof id === "string") {
-          const data = await api.getCustomerValidationDetails(id); // Ensure this function fetches all relevant data
+          const data = await api.getCustomerValidationDetails(id);
           if (!data) throw new Error("Form not found.");
+
           setCustomerForm({
             ...data,
-                   users: {
-            email: Array.isArray(data.users)
-              ? ((data.users[0] as { email?: string })?.email ?? "")
-              : ((data.users as { email?: string })?.email ?? ""),
-          },
-           financial_statements:
-  data.financial_statements && typeof data.financial_statements === "string"
-    ? data.financial_statements.trim()
-    : "",
+            users: {
+              email: Array.isArray(data.users)
+                ? ((data.users[0] as { email?: string })?.email ?? "")
+                : ((data.users as { email?: string })?.email ?? ""),
+            },
+            financial_statements:
+              data.financial_statements &&
+              typeof data.financial_statements === "string"
+                ? data.financial_statements.trim()
+                : "",
             photo_urls: "photo_urls" in data
               ? Array.isArray(data.photo_urls)
                 ? data.photo_urls
                 : typeof data.photo_urls === "string"
-                  ? JSON.parse(data.photo_urls)
-                  : typeof data.photo_urls === "object" && data.photo_urls !== null
-                    ? []
-                    : []
+                ? JSON.parse(data.photo_urls)
+                : []
               : [],
-            instagram: "instagram" in data
-              ? typeof data.instagram === "string"
-                ? data.instagram
-                : ""
-              : "",
-            website: "website" in data
-              ? typeof data.website === "string"
+            instagram:
+              typeof data.instagram === "string" ? data.instagram : "",
+            website:
+              typeof data.website === "string"
                 ? data.website
                 : typeof data.website === "object" && data.website !== null
-                  ? JSON.stringify(data.website)
-                  : ""
-              : "",
-                joor: "joor" in data
-            ? typeof data.joor === "string"
-              ? data.joor
-              : data.joor
+                ? JSON.stringify(data.website)
+                : "",
+            joor:
+              typeof data.joor === "string"
+                ? data.joor
+                : data.joor
                 ? JSON.stringify(data.joor)
-                : ""
-            : "", 
-            branding_mix: "branding_mix" in data
-              ? typeof data.branding_mix === "string"
+                : "",
+            branding_mix:
+              typeof data.branding_mix === "string"
                 ? data.branding_mix
-                : typeof data.branding_mix === "object" && data.branding_mix !== null
-                  ? JSON.stringify(data.branding_mix)
-                  : ""
-              : "",
-            // Add any other missing fields with default values if needed
+                : typeof data.branding_mix === "object" &&
+                  data.branding_mix !== null
+                ? JSON.stringify(data.branding_mix)
+                : "",
           });
-          // setFeedback(data.csc_initial_feedback || "");// Initialize feedback with existing notes if any
-          // setTaxStatus(data.tax_status || "approved"); // Initialize status with existing
+
+          // --- Mapear apenas comentários internos do CSC Initial ---
+          if (Array.isArray(data.internal_comments)) {
+            const cscInitialMapped = data.internal_comments
+              .filter((c: any) => c.team_role === "csc_initial")
+              .map((c: any) => ({
+                id: c.id,
+                comment: c.comment,
+                team_role: c.team_role,
+                created_at: c.created_at,
+                created_by: c.created_by?.email || "Team",
+              }));
+
+            setCSCComments(cscInitialMapped);
+          }
         }
       } catch (err) {
         console.error("Error fetching client details:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
+        setLoadingComments(false);
       }
     };
 
     if (id) fetchCustomerDetails();
   }, [id]);
+
+
 
   const handleApproval = async (approved: boolean) => {
   try {
@@ -159,11 +186,15 @@ const [modalContent, setModalContent] = useState({
     }
 
     // Valida cliente no time de Tax
-    await api.validateTaxCustomer(id, approved, {
-      tax_status: approved ? "approved" : "rejected",
-      tax_feedback: feedback.trim() === "" ? undefined : feedback,
-    });
-
+    await api.validateTaxCustomer(
+      id,
+      approved,
+      {
+        tax_status: approved ? "approved" : "rejected",
+        tax_feedback: feedback.trim() === "" ? undefined : feedback,
+      },
+      internalComment.trim() === "" ? undefined : internalComment
+    );
     // ✅ Envio de e-mail para o time de Tax
     try {
       const emailPayload = {
@@ -234,18 +265,25 @@ const formatUrl = (url?: string) =>
 
 
   // Helper function to render an address
-  const renderAddress = (address: Address) => (
-    <>
-      {address.street && <p>{address.street}</p>}
-      {address.city && address.state && address.zipCode && (
-        <p>
-          {address.city}, {address.state} {address.zipCode}
-        </p>
-      )}
-      {address.county && <p>{address.county}</p>}
-      {address.country && <p>{address.country}</p>}
-    </>
-  );
+const renderAddress = (address: Address) => {
+  const parts: string[] = [];
+
+   const street = address.street || "";
+  const city = address.city || "";
+  const state = address.state || "";
+  const zipCode = address.zipCode || "";
+  const county = address.county || "";
+  const country = address.country || "";
+
+  if (street) parts.push(street);
+  if (city) parts.push(city);
+  if (state) parts.push(state);
+  if (zipCode) parts.push(zipCode);
+  if (county) parts.push(county);
+  if (country) parts.push(country);
+
+  return <p>{parts.join(", ") || "Not provided"}</p>;
+};
 
   if (loading) return <S.Message>Loading...</S.Message>;
   if (error) return <S.Message>Error: {error}</S.Message>;
@@ -342,7 +380,10 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
             <S.FormRow>
               <strong>Name:</strong> {customerForm.customer_name}
             </S.FormRow>
-<S.FormRow>
+<S.FormRow style={{
+            display: "flex",
+            gap: "0.5rem"
+           }}>
   <strong>Tax ID:</strong>
   <S.ValueWithCopy>
     {customerForm.sales_tax_id}
@@ -431,38 +472,45 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               )}
             </S.FormRow>
           </S.FormSection>
-          <S.FormSection>
-            <S.SectionTitle>
-              <MapPin size={16} /> Addresses
-            </S.SectionTitle>
-            {parsedBillingAddresses.length > 0 ? (
-              parsedBillingAddresses.map((address, index) => (
-                <S.AddressBlock key={`billing-${index}`}>
-                  <S.AddressTitle>
-                    Billing Address{" "}
-                    {parsedBillingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No billing address provided.</S.AddressBlock>
-            )}
 
-            {parsedShippingAddresses.length > 0 ? (
-              parsedShippingAddresses.map((address, index) => (
-                <S.AddressBlock key={`shipping-${index}`}>
-                  <S.AddressTitle>
-                    Shipping Address{" "}
-                    {parsedShippingAddresses.length > 1 ? index + 1 : ""}:
-                  </S.AddressTitle>
-                  {renderAddress(address)}
-                </S.AddressBlock>
-              ))
-            ) : (
-              <S.AddressBlock>No shipping address provided.</S.AddressBlock>
-            )}
-          </S.FormSection>
+
+<S.FormSection>
+  <S.SectionTitle>
+    <MapPin size={16} /> Addresses
+  </S.SectionTitle>
+
+  {/* Billing Addresses */}
+  <S.FormRow>
+    <strong>Billing Addresses:</strong>
+    {parsedBillingAddresses && parsedBillingAddresses.length > 0 ? (
+      parsedBillingAddresses.map((address, index) => (
+        <S.AddressBlock key={`billing-${index}`}>
+          <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+          <div>{renderAddress(address)}</div>
+        </S.AddressBlock>
+      ))
+    ) : (
+      <div>No billing addresses provided.</div>
+    )}
+  </S.FormRow>
+
+  {/* Shipping Addresses */}
+  <S.FormRow>
+    <strong>Shipping Addresses:</strong>
+    {parsedShippingAddresses && parsedShippingAddresses.length > 0 ? (
+      parsedShippingAddresses.map((address, index) => (
+        <S.AddressBlock key={`shipping-${index}`}>
+          <S.AddressTitle>Address {index + 1}</S.AddressTitle>
+          <div>{renderAddress(address)}</div>
+        </S.AddressBlock>
+      ))
+    ) : (
+      <div>No shipping addresses provided.</div>
+    )}
+  </S.FormRow>
+</S.FormSection>
+
+
           <S.FormSection>
             <S.SectionTitle>
               <Mail size={16} /> Billing Contacts
@@ -478,15 +526,30 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               <strong>Buyer Category:</strong> {customerForm.category}
             </S.FormRow>
 
-                        <S.Divider /> 
 
-                        <S.SectionTitle>
-              <MessageSquare  size={16} /> Governance Team Feedback
-            </S.SectionTitle>
-                                   <S.FormRow>
-              <strong>Feedback:</strong> {customerForm.csc_initial_feedback || "No feedback provided by Governance Team."}
-            </S.FormRow>
+                        
           </S.FormSection>
+
+          <S.FormSection>
+            <S.SectionTitle>
+              <MessageSquare size={16} /> Internal Comments (Governance)
+            </S.SectionTitle>
+            {loadingComments ? (
+              <S.FormRow>Loading comments...</S.FormRow>
+            ) : cscComments.length > 0 ? (
+              cscComments.map((comment) => (
+                <S.FormRow key={comment.id}>
+                  <span>{comment.comment}</span>{" "}
+                  <em style={{ fontSize: "0.8rem", color: "#666" }}>
+                    ({new Date(comment.created_at).toLocaleString()})
+                  </em>
+                </S.FormRow>
+              ))
+            ) : (
+              <S.FormRow>No comments from Governance Team.</S.FormRow>
+            )}
+          </S.FormSection>
+
         </S.FormDetails>
 
         {/* Feedback/Notes field for the Tax team */}
@@ -501,6 +564,16 @@ const handleCopyToClipboard = async (text: string, field: 'taxId') => {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Explain the reason for review or add relevant..."
+            />
+          </S.FeedbackGroup>
+
+           <S.FeedbackGroup>
+            <S.Label htmlFor="internalComment">Internal Comments</S.Label>
+            <S.Textarea
+              id="internalComment"
+              value={internalComment}
+              onChange={(e) => setInternalComment(e.target.value)}
+              placeholder="Write internal notes for other teams (not visible to the client)..."
             />
           </S.FeedbackGroup>
         {/* )} */}

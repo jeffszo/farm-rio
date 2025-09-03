@@ -7,9 +7,17 @@ const nextConfig: NextConfig = {
   webpack(config) {
     config.cache = {
       type: "filesystem",
-      maxMemoryGenerations: 1, 
+      maxMemoryGenerations: 1,
     };
     return config;
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+      },
+    ],
   },
 };
 

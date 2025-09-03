@@ -101,7 +101,7 @@ export async function validateCustomer(
 
 
 // Nova função para validação inicial do CSC
-export async function validateCSCInitialCustomer(customerId: string, approved: boolean, feedback: string) {
+export async function validateCSCInitialCustomer(customerId: string, approved: boolean, feedback: string, internalComment?: string, p0?: string) {
   // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
@@ -135,6 +135,10 @@ export async function validateCSCInitialCustomer(customerId: string, approved: b
     throw new Error(`Erro ao validar cliente pelo CSC Inicial: ${error.message}`);
   }
 
+    if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "csc_initial", internalComment);
+  }
+
 
 }
 
@@ -145,8 +149,12 @@ interface TaxDetails {
   // Adicione quaisquer outros campos específicos para validação fiscal (por exemplo, tax IDs, certificates, etc.)
 }
 
-export async function validateTaxCustomer(customerId: string, approved: boolean, taxDetails: TaxDetails) {
-  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+export async function validateTaxCustomer(
+  customerId: string,
+  approved: boolean,
+  taxDetails: TaxDetails,
+  internalComment?: string
+) {
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
@@ -157,11 +165,7 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // const customerEmail = customerData.email;
-  // const customerName = customerData.customer_name;
-
   const newStatus = approved ? getNextStatus("tax") : "review requested by the tax team";
-  // const statusMessageForEmail = approved ? "aprovado pela equipe Fiscal" : "rejeitado pela equipe Fiscal";
 
   const updateData = {
     status: newStatus,
@@ -179,7 +183,11 @@ export async function validateTaxCustomer(customerId: string, approved: boolean,
     throw new Error(`Erro ao validar cliente pelo time de Tributário (Tax): ${error.message}`);
   }
 
+  if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "tax", internalComment);
+  }
 }
+
 
 // Existing function, now reflecting the new flow's status update
 export async function validateWholesaleCustomer(
@@ -190,11 +198,12 @@ export async function validateWholesaleCustomer(
     wholesale_warehouse: string;
     wholesale_currency: string;
     wholesale_terms?: string | string[];
-    wholesale_credit: number | null; // Alterado para aceitar null
-    wholesale_discount: number | null; // Alterado para aceitar null
+    wholesale_credit: number | null;
+    wholesale_discount: number | null;
     wholesale_feedback?: string;
   },
-  isReview?: boolean
+  isReview?: boolean,
+  internalComment?: string
 ) {
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
@@ -212,9 +221,15 @@ export async function validateWholesaleCustomer(
     ? getNextStatus("wholesale")
     : "rejected by the wholesale team";
 
-  // CORREÇÃO: Trata valores nulos ou vazios para os campos numéricos
-  const wholesaleCreditValue = (typeof terms.wholesale_credit === "string" && terms.wholesale_credit === "") ? null : terms.wholesale_credit;
-  const wholesaleDiscountValue = (typeof terms.wholesale_discount === "string" && terms.wholesale_discount === "") ? null : terms.wholesale_discount;
+  const wholesaleCreditValue =
+    typeof terms.wholesale_credit === "string" && terms.wholesale_credit === ""
+      ? null
+      : terms.wholesale_credit;
+
+  const wholesaleDiscountValue =
+    typeof terms.wholesale_discount === "string" && terms.wholesale_discount === ""
+      ? null
+      : terms.wholesale_discount;
 
   const updateData = {
     status: newStatus,
@@ -225,8 +240,8 @@ export async function validateWholesaleCustomer(
     wholesale_terms: Array.isArray(terms.wholesale_terms)
       ? terms.wholesale_terms.join(", ")
       : terms.wholesale_terms ?? null,
-    wholesale_credit: wholesaleCreditValue, // Usa o valor corrigido
-    wholesale_discount: wholesaleDiscountValue, // Usa o valor corrigido
+    wholesale_credit: wholesaleCreditValue,
+    wholesale_discount: wholesaleDiscountValue,
     wholesale_feedback: terms.wholesale_feedback ?? null,
     updated_at: new Date().toISOString(),
   };
@@ -241,8 +256,13 @@ export async function validateWholesaleCustomer(
     throw new Error(`Erro ao validar cliente do atacado: ${error.message}`);
   }
 
+  if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "wholesale", internalComment);
+  }
+
   return data;
 }
+
 
 
 // Existing function, now reflecting the new flow's status update
@@ -256,8 +276,8 @@ interface CreditTerms {
   credit_feedback?: string; // Adicionado para passar feedback ao e-mail
 }
 
-export async function validateCreditCustomer(customerId: string, approved: boolean, creditTerms: CreditTerms) {
-  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+export async function validateCreditCustomer(
+customerId: string, approved: boolean, creditTerms: CreditTerms, internalComment?: string, p0?: string) {
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
@@ -268,11 +288,7 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // const customerEmail = customerData.email;
-  // const customerName = customerData.customer_name;
-
-  const newStatus = approved ? getNextStatus("credit") : "review requested by the credit team"; // MODIFICAÇÃO AQUI
-  // const statusMessageForEmail = approved ? "aprovado pela equipe de Crédito" : "rejeitado pela equipe de Crédito";
+  const newStatus = approved ? getNextStatus("credit") : "review requested by the credit team";
 
   const updateData = {
     status: newStatus,
@@ -296,11 +312,15 @@ export async function validateCreditCustomer(customerId: string, approved: boole
     throw new Error(`Erro ao validar cliente pelo time de crédito: ${error.message}`);
   }
 
+  if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "credit", internalComment);
+  }
 }
 
+
 // Existing function, now for the final CSC review
-export async function validateCSCFinalCustomer(customerId: string, approved: boolean, feedback: string | null = null) {
-  // Obter os dados atuais do cliente antes de atualizar para pegar o email e nome
+export async function validateCSCFinalCustomer(
+customerId: string, approved: boolean, feedback: string | null = null, internalComment?: string, p0?: string) {
   const { data: customerData, error: fetchError } = await supabaseServerClient
     .from("customer_forms")
     .select("customer_name")
@@ -311,18 +331,14 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
     throw new Error(`Erro ao buscar dados do cliente: ${fetchError?.message}`);
   }
 
-  // Define o novo status com base na aprovação
   const newStatus = approved ? getNextStatus("csc_final") : "review requested by the governance final team";
   
   const updateData: { status: string; updated_at: string; csc_final_status?: string; csc_final_feedback?: string | null; } = {
     status: newStatus,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    csc_final_status: approved ? "aprovado" : "reprovado"
   };
 
-  // Adiciona o status final do CSC ao objeto de atualização
-  updateData.csc_final_status = approved ? "aprovado" : "reprovado";
-
-  // Adiciona o feedback se ele existir
   if (feedback && feedback.trim() !== "") {
     updateData.csc_final_feedback = feedback;
   }
@@ -335,21 +351,32 @@ export async function validateCSCFinalCustomer(customerId: string, approved: boo
   if (error) {
     throw new Error(`Erro ao validar cliente pelo governance final: ${error.message}`);
   }
+
+  if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "csc_final", internalComment);
+  }
 }
 
 
 
-export async function reviewCustomer(customerId: string, feedback: string | null = null) {
+export async function reviewCustomer(
+  customerId: string,
+  feedback: string | null = null,
+  internalComment?: string
+) {
   console.log(`Revisando cliente ${customerId} para edição...`);
 
-
-  const updateData: { status: string; updated_at: string; wholesale_feedback?: string | null; } = {
-    status: "review requested by the wholesale team", // O NOVO STATUS
+  const updateData: {
+    status: string;
+    updated_at: string;
+    wholesale_feedback?: string | null;
+  } = {
+    status: "review requested by the wholesale team",
     updated_at: new Date().toISOString(),
   };
 
   if (feedback) {
-    updateData.wholesale_feedback = feedback; // Adiciona o feedback se houver
+    updateData.wholesale_feedback = feedback;
   }
 
   const { error } = await supabaseServerClient
@@ -362,7 +389,31 @@ export async function reviewCustomer(customerId: string, feedback: string | null
     throw new Error(`Falha ao enviar formulário para revisão: ${error.message}`);
   }
 
+  // 🔹 Salva comentário interno se informado
+  if (internalComment && internalComment.trim() !== "") {
+    await saveInternalComment(customerId, "wholesale", internalComment);
+  }
+
   return { success: true };
 }
 
+
+export async function saveInternalComment(
+  customerId: string,
+  teamRole: "csc_initial" | "tax" | "wholesale" | "credit" | "csc_final",
+  comment: string
+) {
+
+
+  const { error } = await supabaseServerClient
+    .from("internal_comments")
+    .insert({
+      customer_id: customerId,
+      team_role: teamRole,
+      comment    });
+
+  if (error) {
+    throw new Error(`Erro ao adicionar comentário interno: ${error.message}`);
+  }
+}
 

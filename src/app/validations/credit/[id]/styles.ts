@@ -47,7 +47,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+   grid-template-columns: 2fr 3fr 2fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
   align-items: stretch; /* garante mesma altura dos cards */
@@ -81,7 +81,7 @@ export const SectionTitle = styled.h3`
 export const FormRow = styled.div`
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.30rem 0;
+  padding: 0.25rem 0;
 
   strong {
     font-weight: 600;
@@ -348,9 +348,8 @@ export const EditWrapper = styled.div`
 
 export const InlineEditWrapper = styled.div`
   display: inline-flex;
-  align-items: center; 
+  align-items: center;
   gap: 4px;
-  
 `
 
 export const SmallInput = styled.input`
@@ -424,12 +423,22 @@ export const ContainerCheck = styled.div`
 
 export const AddressBlock = styled.div`
   background: #f0f4f8;
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: 0.8rem;
+  border-radius: 4px;
   margin-top: 0.5rem;
-  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e2e8f0;
   color: #2d3748;
-  line-height: 1.4;
+
+  div {
+    font-size: 0.875rem;
+    padding: 0.1rem 0;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #2d3748;
+  }
 `;
 
 export const AddressTitle = styled.span`

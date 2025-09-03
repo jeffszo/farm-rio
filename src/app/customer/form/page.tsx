@@ -885,6 +885,10 @@ export default function OnboardingForm() {
     setshippingAddress((prev) => [...prev, prev.length]);
   };
 
+  const addBillingAddress = () => {
+  setbillingAddress((prev) => [...prev, prev.length]);
+};
+
   const removeShippingAddress = (indexToRemove: number) => {
     if (shippingAddress.length <= 1) return;
     setshippingAddress((prev) =>
@@ -901,33 +905,37 @@ export default function OnboardingForm() {
     setValue(`billingAddress.${indexToRemove}`, {} as AddressInput);
   };
 
-  const handleSameAsBilling = () => {
-    const currentBillingAddress = getValues("billingAddress.0");
-    if (currentBillingAddress) {
-      setValue("shippingAddress.0.street", currentBillingAddress.street || "");
-      setValue(
-        "shippingAddress.0.zipCode",
-        currentBillingAddress.zipCode || ""
-      );
-      setValue("shippingAddress.0.city", currentBillingAddress.city || "");
-      setValue("shippingAddress.0.state", currentBillingAddress.state || "");
-      setValue("shippingAddress.0.county", currentBillingAddress.county || "");
-      setValue(
-        "shippingAddress.0.country",
-        currentBillingAddress.country || ""
-      );
-      clearErrors("shippingAddress.0.street");
-      clearErrors("shippingAddress.0.zipCode");
-      clearErrors("shippingAddress.0.city");
-      clearErrors("shippingAddress.0.state");
-      clearErrors("shippingAddress.0.county");
-      clearErrors("shippingAddress.0.country");
-      console.log("Shipping address populated based on billing address.");
-    } else {
-      console.warn("Billing address not found to copy.");
+const handleSameAsBilling = () => {
+  const billing = getValues("billingAddress");
+
+  if (!billing || billing.length === 0) {
+    console.warn("No billing addresses found to copy.");
+    return;
+  }
+
+  billing.forEach((billingAddr: AddressInput, index: number) => {
+    if (billingAddr) {
+      setValue(`shippingAddress.${index}.street`, billingAddr.street || "");
+      setValue(`shippingAddress.${index}.zipCode`, billingAddr.zipCode || "");
+      setValue(`shippingAddress.${index}.city`, billingAddr.city || "");
+      setValue(`shippingAddress.${index}.state`, billingAddr.state || "");
+      setValue(`shippingAddress.${index}.county`, billingAddr.county || "");
+      setValue(`shippingAddress.${index}.country`, billingAddr.country || "");
+
+      // limpa erros desse shipping
+      clearErrors(`shippingAddress.${index}.street`);
+      clearErrors(`shippingAddress.${index}.zipCode`);
+      clearErrors(`shippingAddress.${index}.city`);
+      clearErrors(`shippingAddress.${index}.state`);
+      clearErrors(`shippingAddress.${index}.county`);
+      clearErrors(`shippingAddress.${index}.country`);
     }
-    setIsSameAsBilling(true);
-  };
+  });
+
+  console.log("✅ All shipping addresses populated based on billing addresses.");
+  setIsSameAsBilling(true);
+};
+
 
   useEffect(() => {}, []);
 
@@ -1294,159 +1302,168 @@ export default function OnboardingForm() {
             <S.CompactSection>
               <S.SectionTitle>Shipping and Billing Information</S.SectionTitle>
               <S.ResponsiveGrid>
-                <S.AddressSection>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <S.AddressTitle>Billing Address</S.AddressTitle>
-                  </div>
+   <S.AddressSection>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    <S.AddressTitle>Billing Address</S.AddressTitle>
+  </div>
 
-                  {billingAddress.map((index) => (
-                    <div
-                      key={index}
-                      style={{
-                        marginBottom:
-                          index < billingAddress.length - 1 ? "1.5rem" : "0",
-                        paddingBottom:
-                          index < billingAddress.length - 1 ? "1.5rem" : "0",
-                        borderBottom:
-                          index < billingAddress.length - 1
-                            ? "1px dashed #eee"
-                            : "none",
-                      }}
-                    >
-                      <S.AddressHeader>
-                        {index > 0 && (
-                          <div
-                            style={{ fontSize: "0.875rem", color: "#71717a" }}
-                          >
-                            Billing Address {index + 1}
-                          </div>
-                        )}
-                        {index > 0 && (
-                          <S.RemoveButton
-                            type="button"
-                            onClick={() => removeBillingAddress(index)}
-                          >
-                            <Trash2 size={16} />
-                          </S.RemoveButton>
-                        )}
-                      </S.AddressHeader>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.street`}>
-                            Street and Number
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.street`}
-                            {...register(`billingAddress.${index}.street`, {
-                              required: "Street is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.street}
-                          />
-                          {errors.billingAddress?.[index]?.street && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].street.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.zipCode`}>
-                            ZIP Code
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.zipCode`}
-                            {...register(`billingAddress.${index}.zipCode`, {
-                              required: "ZIP code is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.zipCode}
-                          />
-                          {errors.billingAddress?.[index]?.zipCode && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].zipCode.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.city`}>
-                            City
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.city`}
-                            {...register(`billingAddress.${index}.city`, {
-                              required: "City is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.city}
-                          />
-                          {errors.billingAddress?.[index]?.city && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].city.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.state`}>
-                            State
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.state`}
-                            {...register(`billingAddress.${index}.state`, {
-                              required: "State is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.state}
-                          />
-                          {errors.billingAddress?.[index]?.state && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].state.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.county`}>
-                            County
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.county`}
-                            {...register(`billingAddress.${index}.county`, {
-                              required: "County is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.county}
-                          />
-                          {errors.billingAddress?.[index]?.county && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].county.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.country`}>
-                            Country
-                          </S.Label>
-                          <S.Input
-                            id={`billingAddress.${index}.country`}
-                            {...register(`billingAddress.${index}.country`, {
-                              required: "Country is required",
-                            })}
-                            error={!!errors.billingAddress?.[index]?.country}
-                          />
-                          {errors.billingAddress?.[index]?.country && (
-                            <S.ErrorMessage>
-                              {errors.billingAddress[index].country.message}
-                            </S.ErrorMessage>
-                          )}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                    </div>
-                  ))}
-                </S.AddressSection>
+  {billingAddress.map((index) => (
+    <div
+      key={index}
+      style={{
+        marginBottom:
+          index < billingAddress.length - 1 ? "1.5rem" : "0",
+        paddingBottom:
+          index < billingAddress.length - 1 ? "1.5rem" : "0",
+        borderBottom:
+          index < billingAddress.length - 1
+            ? "1px dashed #eee"
+            : "none",
+      }}
+    >
+      <S.AddressHeader>
+        {index > 0 && (
+          <div
+            style={{ fontSize: "0.875rem", color: "#71717a" }}
+          >
+            Billing Address {index + 1}
+          </div>
+        )}
+        {index > 0 && (
+          <S.RemoveButton
+            type="button"
+            onClick={() => removeBillingAddress(index)}
+          >
+            <Trash2 size={16} />
+          </S.RemoveButton>
+        )}
+      </S.AddressHeader>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.street`}>
+            Street and Number
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.street`}
+            {...register(`billingAddress.${index}.street`, {
+              required: "Street is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.street}
+          />
+          {errors.billingAddress?.[index]?.street && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].street.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.zipCode`}>
+            ZIP Code
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.zipCode`}
+            {...register(`billingAddress.${index}.zipCode`, {
+              required: "ZIP code is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.zipCode}
+          />
+          {errors.billingAddress?.[index]?.zipCode && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].zipCode.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.city`}>
+            City
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.city`}
+            {...register(`billingAddress.${index}.city`, {
+              required: "City is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.city}
+          />
+          {errors.billingAddress?.[index]?.city && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].city.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.state`}>
+            State
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.state`}
+            {...register(`billingAddress.${index}.state`, {
+              required: "State is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.state}
+          />
+          {errors.billingAddress?.[index]?.state && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].state.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.county`}>
+            County
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.county`}
+            {...register(`billingAddress.${index}.county`, {
+              required: "County is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.county}
+          />
+          {errors.billingAddress?.[index]?.county && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].county.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.country`}>
+            Country
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.country`}
+            {...register(`billingAddress.${index}.country`, {
+              required: "Country is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.country}
+          />
+          {errors.billingAddress?.[index]?.country && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].country.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+    </div>
+  ))}
+
+  {/* Botão para adicionar mais billing address */}
+  <S.AddAddressButton
+    type="button"
+    onClick={addBillingAddress}
+  >
+    <Plus size={16} /> Add another billing address
+  </S.AddAddressButton>
+</S.AddressSection>
+
 
                 <S.AddressSection>
                   <div
@@ -1477,6 +1494,8 @@ export default function OnboardingForm() {
                             : "none",
                       }}
                     >
+                    
+
                       <S.AddressHeader>
                         {index > 0 && (
                           <div
@@ -1602,6 +1621,8 @@ export default function OnboardingForm() {
                           )}
                         </S.InputGroup>
                       </S.FieldRowAddress>
+
+                      
                     </div>
                   ))}
 

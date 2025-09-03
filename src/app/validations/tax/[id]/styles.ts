@@ -54,7 +54,7 @@ export const StatusBadge = styled.span<{ status: string }>`
 
 export const FormDetails = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);  grid-template-columns: 2fr 3fr 2fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
 
@@ -82,19 +82,15 @@ export const SectionTitle = styled.h3`
 `
 
 export const FormRow = styled.div`
-  display: flex; /* Certifique-se que o FormRow é um flex container */
-  align-items: center; /* Centraliza verticalmente o conteúdo */
   font-size: 0.875rem;
   color: #4a5568;
-  padding: 0.20rem 0;
+  padding: 0.25rem 0;
 
   strong {
     font-weight: 600;
     color: #2d3748;
-    margin-right: 8px; /* Adicionado para espaçar o label do valor */
-    white-space: nowrap; /* Evita quebra de linha no label */
   }
-`;
+`
 
 
 export const TermsContainer = styled.div`
@@ -275,20 +271,30 @@ export const Label = styled.label`
 
 export const AddressBlock = styled.div`
   background: #f0f4f8;
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: 0.8rem;
+  border-radius: 4px;
   margin-top: 0.5rem;
-  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e2e8f0;
   color: #2d3748;
-  line-height: 1.4;
+
+  div {
+    font-size: 0.875rem;
+    padding: 0.1rem 0;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #2d3748;
+  }
+`;
+export const AddressTitle = styled.h4`
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1a202c;
 `;
 
-export const AddressTitle = styled.span`
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.25rem;
-  display: block; /* Make title take full width for better separation */
-`;
 
 // New styles for editable fields
 export const EditableValueContainer = styled.div`

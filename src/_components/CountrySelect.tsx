@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from "react";
+import Image from "next/image";
 import Select, { SingleValue } from "react-select";
 
 interface CountryOption {
@@ -23,7 +24,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   options = [], // default para array vazio
   error,
   placeholder = "Select country",
-}) => { 
+}) => {
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
@@ -36,7 +37,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
         borderColor: error ? "red" : "#18181b",
       },
     }),
-    valueContainer: (base: any, props: any) => ({
+    valueContainer: (base: any) => ({
       ...base,
       padding: "0 8px",
       display: "flex",
@@ -82,9 +83,11 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   const formatOptionLabel = (option: CountryOption) => (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
       {option.value && (
-        <img
+        <Image
           src={`https://flagcdn.com/24x18/${option.value.toLowerCase()}.png`}
           alt={option.label}
+          width={24}
+          height={18}
           style={{ borderRadius: "2px" }}
         />
       )}
@@ -92,16 +95,14 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     </div>
   );
 
-  // Seleciona a opção correspondente ao valor ou null
-  const selectedOption =
-    options.find((opt) => opt.value === value) || null;
+  const selectedOption = options.find((opt) => opt.value === value) || null;
 
   return (
     <div>
       <Select
         value={selectedOption}
         onChange={(selectedOption: SingleValue<CountryOption>) => {
-          handleChange(selectedOption?.value || ""); // seguro para null/undefined
+          handleChange(selectedOption?.value || "");
         }}
         options={options}
         styles={customStyles}

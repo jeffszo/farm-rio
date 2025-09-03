@@ -432,6 +432,10 @@ useEffect(() => {
     }
   };
 
+    const addBillingAddress = () => {
+  setbillingAddress((prev) => [...prev, prev.length]);
+};
+
  
 
 
@@ -1045,55 +1049,168 @@ const onSubmit = async (formData: IFormInputs) => {
             <S.CompactSection>
               <S.SectionTitle>Shipping and Billing Information</S.SectionTitle>
               <S.ResponsiveGrid>
-                <S.AddressSection>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <S.AddressTitle>Billing Address</S.AddressTitle>
-                  </div>
-                  {billingAddress.map((index) => (
-                    <div key={index} style={{ marginBottom: index < billingAddress.length - 1 ? "1.5rem" : "0", paddingBottom: index < billingAddress.length - 1 ? "1.5rem" : "0", borderBottom: index < billingAddress.length - 1 ? "1px dashed #eee" : "none" }}>
-                      <S.AddressHeader>
-                        {index > 0 && (<div style={{ fontSize: "0.875rem", color: "#71717a" }}>Billing Address {index + 1}</div>)}
-                        {index > 0 && (<S.RemoveButton type="button" onClick={() => removeBillingAddress(index)}><Trash2 size={16} /></S.RemoveButton>)}
-                      </S.AddressHeader>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.street`}>Street and Number</S.Label>
-                          <S.Input id={`billingAddress.${index}.street`} {...register(`billingAddress.${index}.street`, { required: "Street is required" })} error={!!errors.billingAddress?.[index]?.street} />
-                          {errors.billingAddress?.[index]?.street && <S.ErrorMessage>{errors.billingAddress[index].street.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.zipCode`}>ZIP Code</S.Label>
-                          <S.Input id={`billingAddress.${index}.zipCode`} {...register(`billingAddress.${index}.zipCode`, { required: "ZIP code is required" })} error={!!errors.billingAddress?.[index]?.zipCode} />
-                          {errors.billingAddress?.[index]?.zipCode && <S.ErrorMessage>{errors.billingAddress[index].zipCode.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.city`}>City</S.Label>
-                          <S.Input id={`billingAddress.${index}.city`} {...register(`billingAddress.${index}.city`, { required: "City is required" })} error={!!errors.billingAddress?.[index]?.city} />
-                          {errors.billingAddress?.[index]?.city && <S.ErrorMessage>{errors.billingAddress[index].city.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.state`}>State</S.Label>
-                          <S.Input id={`billingAddress.${index}.state`} {...register(`billingAddress.${index}.state`, { required: "State is required" })} error={!!errors.billingAddress?.[index]?.state} />
-                          {errors.billingAddress?.[index]?.state && <S.ErrorMessage>{errors.billingAddress[index].state.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                      <S.FieldRowAddress>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.county`}>County</S.Label>
-                          <S.Input id={`billingAddress.${index}.county`} {...register(`billingAddress.${index}.county`, { required: "County is required" })} error={!!errors.billingAddress?.[index]?.county} />
-                          {errors.billingAddress?.[index]?.county && <S.ErrorMessage>{errors.billingAddress[index].county.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                        <S.InputGroup>
-                          <S.Label htmlFor={`billingAddress.${index}.country`}>Country</S.Label>
-                          <S.Input id={`billingAddress.${index}.country`} {...register(`billingAddress.${index}.country`, { required: "Country is required" })} error={!!errors.billingAddress?.[index]?.country} />
-                          {errors.billingAddress?.[index]?.country && <S.ErrorMessage>{errors.billingAddress[index].country.message}</S.ErrorMessage>}
-                        </S.InputGroup>
-                      </S.FieldRowAddress>
-                    </div>
-                  ))}
-                </S.AddressSection>
+               <S.AddressSection>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    <S.AddressTitle>Billing Address</S.AddressTitle>
+  </div>
+
+  {billingAddress.map((index) => (
+    <div
+      key={index}
+      style={{
+        marginBottom:
+          index < billingAddress.length - 1 ? "1.5rem" : "0",
+        paddingBottom:
+          index < billingAddress.length - 1 ? "1.5rem" : "0",
+        borderBottom:
+          index < billingAddress.length - 1
+            ? "1px dashed #eee"
+            : "none",
+      }}
+    >
+      <S.AddressHeader>
+        {index > 0 && (
+          <div
+            style={{ fontSize: "0.875rem", color: "#71717a" }}
+          >
+            Billing Address {index + 1}
+          </div>
+        )}
+        {index > 0 && (
+          <S.RemoveButton
+            type="button"
+            onClick={() => removeBillingAddress(index)}
+          >
+            <Trash2 size={16} />
+          </S.RemoveButton>
+        )}
+      </S.AddressHeader>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.street`}>
+            Street and Number
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.street`}
+            {...register(`billingAddress.${index}.street`, {
+              required: "Street is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.street}
+          />
+          {errors.billingAddress?.[index]?.street && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].street.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.zipCode`}>
+            ZIP Code
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.zipCode`}
+            {...register(`billingAddress.${index}.zipCode`, {
+              required: "ZIP code is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.zipCode}
+          />
+          {errors.billingAddress?.[index]?.zipCode && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].zipCode.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.city`}>
+            City
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.city`}
+            {...register(`billingAddress.${index}.city`, {
+              required: "City is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.city}
+          />
+          {errors.billingAddress?.[index]?.city && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].city.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.state`}>
+            State
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.state`}
+            {...register(`billingAddress.${index}.state`, {
+              required: "State is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.state}
+          />
+          {errors.billingAddress?.[index]?.state && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].state.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+      <S.FieldRowAddress>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.county`}>
+            County
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.county`}
+            {...register(`billingAddress.${index}.county`, {
+              required: "County is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.county}
+          />
+          {errors.billingAddress?.[index]?.county && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].county.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+        <S.InputGroup>
+          <S.Label htmlFor={`billingAddress.${index}.country`}>
+            Country
+          </S.Label>
+          <S.Input
+            id={`billingAddress.${index}.country`}
+            {...register(`billingAddress.${index}.country`, {
+              required: "Country is required",
+            })}
+            error={!!errors.billingAddress?.[index]?.country}
+          />
+          {errors.billingAddress?.[index]?.country && (
+            <S.ErrorMessage>
+              {errors.billingAddress[index].country.message}
+            </S.ErrorMessage>
+          )}
+        </S.InputGroup>
+      </S.FieldRowAddress>
+    </div>
+  ))}
+
+  {/* Botão para adicionar mais billing address */}
+  <S.AddAddressButton
+    type="button"
+    onClick={addBillingAddress}
+  >
+    <Plus size={16} /> Add another billing address
+  </S.AddAddressButton>
+</S.AddressSection>
+
                 <S.AddressSection>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
                     <S.AddressTitle>Shipping Address</S.AddressTitle>
@@ -1222,6 +1339,30 @@ const onSubmit = async (formData: IFormInputs) => {
                   </S.Input>
                   {errors.buyerInfo?.terms && <S.ErrorMessage>{errors.buyerInfo.terms.message}</S.ErrorMessage>}
                 </S.InputGroup>
+                
+                                  <S.InputGroup>
+  <S.Label htmlFor="buyerCategory">Category</S.Label>
+  <S.Input
+    as="select"
+    id="buyerCategory"
+    {...register("buyerInfo.category", {
+      required: "Category is required",
+    })}
+    error={!!errors.buyerInfo?.category}
+  >
+    <option value="">Select a category</option>
+    <option value="Apparel">Apparel</option>
+    <option value="Swim">Swim</option>
+    <option value="Shoes">Shoes</option>
+    <option value="Handbags">Handbags</option>
+    <option value="Accessories">Accessories</option>
+    <option value="Others">Others</option>   
+  </S.Input>
+  {errors.buyerInfo?.category && (
+    <S.ErrorMessage>{errors.buyerInfo.category.message}</S.ErrorMessage>
+  )}
+</S.InputGroup>
+
                 <S.InputGroup>
                   <S.Label htmlFor="currency">Currency</S.Label>
                   <S.Input as="select" id="currency"  {...register("buyerInfo.currency", { required: "Currency is required", validate: (value) => value !== "" || "Please select a currency" })} error={!!errors.buyerInfo?.currency}>
@@ -1266,29 +1407,6 @@ const onSubmit = async (formData: IFormInputs) => {
                                 </S.InputGroup>
                 
 
-
-                                  <S.InputGroup>
-  <S.Label htmlFor="buyerCategory">Category</S.Label>
-  <S.Input
-    as="select"
-    id="buyerCategory"
-    {...register("buyerInfo.category", {
-      required: "Category is required",
-    })}
-    error={!!errors.buyerInfo?.category}
-  >
-    <option value="">Select a category</option>
-    <option value="Apparel">Apparel</option>
-    <option value="Swim">Swim</option>
-    <option value="Shoes">Shoes</option>
-    <option value="Handbags">Handbags</option>
-    <option value="Accessories">Accessories</option>
-    <option value="Others">Others</option>   
-  </S.Input>
-  {errors.buyerInfo?.category && (
-    <S.ErrorMessage>{errors.buyerInfo.category.message}</S.ErrorMessage>
-  )}
-</S.InputGroup>
 
 
 

@@ -39,7 +39,9 @@ class SupabaseAPI implements AuthAPI {
   validateCreditCustomer = validations.validateCreditCustomer
   validateCSCInitialCustomer = validations.validateCSCInitialCustomer
   validateCSCFinalCustomer = validations.validateCSCFinalCustomer
+  saveInternalComment = validations.saveInternalComment
   reviewCustomer = validations.reviewCustomer
+
 
   // Query methods
   getPendingWholesaleValidations = queries.getPendingWholesaleValidations
@@ -53,6 +55,7 @@ class SupabaseAPI implements AuthAPI {
   getCustomerFormById   = queries.getCustomerFormById
   getFeedbackTeams = queries.getFeedbackTeams  
   resetFormStatus = queries.resetFormStatus
+  getInternalComments = queries.getInternalComments
 
   uploadResaleCertificate = storage.uploadResaleCertificate
   uploadImage = storage.uploadImage
